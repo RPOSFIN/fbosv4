@@ -1,0 +1,116 @@
+tch Date",
+  "Balance Payment Status",
+  "Outstanding Amount",
+  "Responsible Person",
+  "Price Difference",
+  "Recommended Vendor",
+  "Actual Vendor",
+  "Next Action",
+  "Next Action Date",
+  "Last Price",
+  "Current Price",
+  "Target Dispatch Date",
+  "Days Delayed",
+  "Priority",
+  "process stage",
+  "Remarks",
+  "Artwork ID",
+  "Approved By",
+  "Approval Mode",
+  "Artwork File Link",
+  "Cylinder ID",
+  "Cylinder Vendor",
+  "Last Used Date",
+  "Cylinder Cost",
+  "No Of Colors",
+  "Reusable",
+];
+
+var LEGACY_OPS_TABS = ["03_Cylinder_Master", "04_Artwork_Master"];
+
+function extendOrderMasterUnifiedHeaders() {
+  var ss = getSpreadsheet();
+  var sh = ss.getSheetByName(TAB_ORDER);
+  if (!sh) throw new Error(TAB_ORDER + " tab missing");
+  var lastCol = Math.max(sh.getLastColumn(), 1);
+  var existing = sh
+    .getRange(1, 1, 1, lastCol)
+    .getValues()[0]
+    .map(function (h) {
+      return String(h || "").trim();
+    })
+    .filter(function (h) {
+      return h.length > 0;
+    });
+  var added = [];
+  ORDER_UNIFIED_HEADERS.forEach(function (header) {
+    if (existing.indexOf(header) >= 0) return;
+    existing.push(header);
+    sh.getRange(1, existing.length).setValue(header);
+    added.push(header);
+  });
+  if (added.length) {
+    sh.getRange(1, 1, 1, existing.length)
+      .setFontWeight("bold")
+      .setBackground("#1e293b")
+      .setFontColor("#e2e8f0");
+    sh.setFrozenRows(1);
+  }
+  logSync(
+    "apps_script",
+    TAB_ORDER,
+    added.length,
+    "ok",
+    "Unified order headers added: " + added.join(", ")
+  );
+  return { existing: existing.length, added: added };
+}
+
+function hideLegacyOpsMasterTabs() {
+  var ss = getSpreadsheet();
+  var hidden = [];
+  LEGACY_OPS_TABS.forEach(function (name) {
+    var sh = ss.getSheetByName(name);
+    if (sh && !sh.isSheetHidden()) {
+      sh.hideSheet();
+      hidden.push(name);
+    }
+  });
+  return hidden;
+}
+
+/** Order + Artwork + Cylinder → one tab. Does NOT hide legacy tabs until data migrated. */
+function setupUnifiedOrderMaster() {
+  var ext = extendOrderMasterUnifiedHeaders();
+  return { headers: ext, note: "Source input TBD — structure only" };
+}
+
+/** Minimal ClickUp → 07_Lead_CRM (matches 26-27 lead pipeline) */
+var TAB_LEADS = "07_Lead_CRM";
+var LEAD_CRM_HEADERS = [
+  "Lead ID",
+  "Client Name",
+  "Contact No",
+  "Lead Status",
+  "Assigned To",
+  "Priority",
+  "Due Date",
+  "Comments",
+  "Start Date",
+];
+
+function initializeLeadCrmSheet() {
+  var ss = getSpreadsheet();
+  var sh = ss.getSheetByName(TAB_LEADS);
+  if (!sh) sh = ss.insertSheet(TAB_LEADS);
+  if (sh.getLastRow() > 1) {
+    return extendLeadCrmMinimalHeaders();
+  }
+  sh.clear();
+  sh.getRange(1, 1, 1, LEAD_CRM_HEADERS.length).setValues([LEAD_CRM_HEADERS]);
+  sh.setFrozenRows(1);
+  sh.getRange(1, 1, 1, LEAD_CRM_HEADERS.length)
+    .setFontWeight("bold")
+    .setBackground("#1e293b")
+    .setFontColor("#e2e8f0");
+  logSync("apps

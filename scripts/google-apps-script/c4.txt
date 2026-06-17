@@ -1,0 +1,122 @@
+   R(dt.parent_group) +
+    ',"*Bad Debt*")';
+  var emergencyFund =
+    "MAX(0," + bankCash + "-" + configLookup("EMERGENCY_FUND_TARGET") + ")";
+  var reserveFund =
+    "MAX(0," +
+    bankCash +
+    "-" +
+    configLookup("EMERGENCY_FUND_TARGET") +
+    "-" +
+    configLookup("RESERVE_FUND_TARGET") +
+    ")";
+  var bankRecon =
+    'IF(' +
+    bankCash +
+    '>0,"Synced from Tally","Awaiting bank sync")';
+  var salePurchaseRecon =
+    "IFERROR(ABS(" +
+    receivable +
+    "+" +
+    collections +
+    "-" +
+    salesVouchers +
+    '),"")';
+  var revenue =
+    "SUMIFS(" +
+    R(dt.closing_balance) +
+    "," +
+    R(dt.data_type) +
+    ',"ledger",' +
+    R(dt.parent_group) +
+    ',"*Sales Account*")+SUMIFS(' +
+    R(dt.amount) +
+    "," +
+    R(dt.data_type) +
+    ',"voucher",' +
+    R(dt.parent_group) +
+    ',"*Sales*")';
+  var directCost =
+    "SUMIFS(" +
+    R(dt.closing_balance) +
+    "," +
+    R(dt.data_type) +
+    ',"ledger",' +
+    R(dt.parent_group) +
+    ',"*Direct Expenses*")+SUMIFS(' +
+    R(dt.debit) +
+    "," +
+    R(dt.data_type) +
+    ',"voucher",' +
+    R(dt.parent_group) +
+    ',"*Direct*")';
+  var payments =
+    "SUMIFS(" +
+    R(dt.debit) +
+    "," +
+    R(dt.data_type) +
+    ',"voucher",' +
+    R(dt.voucher_type) +
+    ',"*Payment*")+SUMIFS(' +
+    R(dt.debit) +
+    "," +
+    R(dt.data_type) +
+    ',"voucher",' +
+    R(dt.voucher_type) +
+    ',"*Paid*")';
+  var openingCash =
+    "SUMIFS(" +
+    R(dt.opening_balance) +
+    "," +
+    R(dt.data_type) +
+    ',"bank_cash")';
+  var aging = function (min, max) {
+    var crit = max ? ',"<=",' + max : "";
+    return (
+      "SUMIFS(" +
+      R(dt.outstanding_amount) +
+      "," +
+      R(dt.data_type) +
+      ',"receivable",' +
+      R(dt.overdue_days) +
+      ',">=' +
+      min +
+      '"' +
+      (max ? "," + R(dt.overdue_days) + ',"<=' + max + '"' : "") +
+      ")"
+    );
+  };
+
+  return {
+    Receivable: "=" + receivable,
+    Payable: "=" + payable,
+    "Free Cash": "=" + bankCash,
+    Sales: "=" + salesVouchers,
+    Expenses: "=" + expenses,
+    Collections: "=" + collections,
+    "Overdue Amount": "=" + overdueAmt,
+    "Overdue Parties": "=" + overdueParties,
+    "Overdue Collections": "=" + overdueAmt,
+    "Bad Debts": "=" + badDebts,
+    "Emergency Fund": "=" + emergencyFund,
+    "Reserve Fund": "=" + reserveFund,
+    "BANK RECONCILIATION": "=" + bankRecon,
+    "SALE PURCHASE RECONCILIATION": "=" + salePurchaseRecon,
+    RECEIVABLE: "=" + receivable,
+    PAYABLE: "=" + payable,
+    EXPENSES: "=" + expenses,
+    COLLECTIONS: "=" + collections,
+    Revenue: "=" + revenue,
+    "Direct Cost": "=" + directCost,
+    "Gross Profit": "=IFERROR(" + revenue + "-" + directCost + ',"")',
+    "Gross Profit %":
+      '=IFERROR(IF(' +
+      revenue +
+      ">0,(" +
+      revenue +
+      "-" +
+      directCost +
+      ")/" +
+      revenue +
+      ',""),"")',
+    "Operating Expenses

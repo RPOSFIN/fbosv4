@@ -1,0 +1,280 @@
+) return 0;
+  var now = new Date().toISOString();
+  var matrix = records.map(function (rec) {
+    rec.synced_at = rec.synced_at || now;
+    if (!rec.data_type && rec.record_type) rec.data_type = rec.record_type;
+    return FINANCE_HEADERS.map(function (h) {
+      return rec[h] != null ? rec[h] : "";
+    });
+  });
+  sh.getRange(2, 1, matrix.length, FINANCE_HEADERS.length).setValues(matrix);
+  return records.length;
+}
+
+/** Tally cloud script POST — poora data ek hi tab mein replace */
+function doPost(e) {
+  try {
+    var body = JSON.parse(e.postData.contents || "{}");
+    if (
+      body.action === "tally_finance" ||
+      body.action === "tally_finance_sync" ||
+      body.action === "tally_vouchers"
+    ) {
+      var records = body.records || [];
+      var n = replaceFinanceSheetRows(records);
+      var imported = syncFinanceToSupabase();
+      return jsonOut({ ok: true, tab: TAB_FINANCE, sheet_rows: n, supabase_rows: imported });
+    }
+    return jsonOut({ ok: false, message: "Use action tally_finance with records[]" });
+  } catch (err) {
+    return jsonOut({ ok: false, message: String(err) });
+  }
+}
+
+function doGet() {
+  return jsonOut({
+    ok: true,
+    service: "FBOS Finance Hub",
+    tab: TAB_FINANCE,
+    sync: "every 2 hours",
+  });
+}
+
+function jsonOut(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(
+    ContentService.MimeType.JSON
+  );
+}
+
+/** 06_Finance_Sync column refs for dashboard formulas */
+var FIN_COL = {
+  data_type: "A",
+  parent_group: "H",
+  voucher_type: "E",
+  party_name: "F",
+  debit: "J",
+  credit: "K",
+  amount: "L",
+  closing_balance: "N",
+  outstanding_amount: "O",
+  bill_date: "Q",
+  due_date: "R",
+  overdue_days: "S",
+  balance: "V",
+};
+
+function finRange(col) {
+  return "'" + TAB_FINANCE + "'!" + col + ":" + col;
+}
+
+function finSumif(type, col) {
+  return (
+    "SUMIF(" +
+    finRange(FIN_COL.data_type) +
+    ',"' +
+    type +
+    '",' +
+    finRange(col) +
+    ")"
+  );
+}
+
+function finSumifs(sumCol, filters) {
+  var parts = [finRange(sumCol), finRange(FIN_COL.data_type), '"voucher"'];
+  filters.forEach(function (f) {
+    parts.push(finRange(f.col));
+    parts.push('"' + f.crit + '"');
+  });
+  return "SUMIFS(" + parts.join(",") + ")";
+}
+
+/** CONFIG keys for fund targets (optional manual targets) */
+function ensureConfigFinanceKeys() {
+  var ss = getSpreadsheet();
+  var sh = ss.getSheetByName("CONFIG");
+  if (!sh) return;
+  var keys = [
+    ["EMERGENCY_FUND_TARGET", 500000, "Min cash buffer (INR)"],
+    ["RESERVE_FUND_TARGET", 1000000, "Reserve cash target (INR)"],
+    ["MONTHLY_FIXED_OVERHEAD", 0, "Operating expenses override (INR)"],
+  ];
+  var existing = {};
+  var last = Math.max(sh.getLastRow(), 1);
+  var vals = sh.getRange(1, 1, last, 3).getValues();
+  vals.forEach(function (row) {
+    if (row[0]) existing[String(row[0]).trim()] = true;
+  });
+  keys.forEach(function (k) {
+    if (!existing[k[0]]) sh.appendRow(k);
+  });
+}
+
+function configLookup(key) {
+  return (
+    "IFERROR(INDEX(CONFIG!B:B,MATCH(\"" +
+    key +
+    "\",CONFIG!A:A,0)),0)"
+  );
+}
+
+/** All finance KPI formulas sourced from 06_Finance_Sync (Tally import) */
+function financeDashboardFormulas_() {
+  var R = finRange;
+  var dt = FIN_COL;
+  var bankCash = finSumif("bank_cash", dt.balance);
+  var receivable = finSumif("receivable", dt.outstanding_amount);
+  var payable = finSumif("payable", dt.outstanding_amount);
+  var salesVouchers =
+    finSumifs(dt.amount, [{ col: dt.parent_group, crit: "*Sales*" }]) +
+    "+SUMIFS(" +
+    R(dt.credit) +
+    "," +
+    R(dt.data_type) +
+    ',"voucher",' +
+    R(dt.voucher_type) +
+    ',"*Sales*")';
+  var expenses =
+    finSumifs(dt.debit, [{ col: dt.parent_group, crit: "*Expenses*" }]) +
+    "+SUMIFS(" +
+    R(dt.debit) +
+    "," +
+    R(dt.data_type) +
+    ',"voucher",' +
+    R(dt.parent_group) +
+    ',"*Direct*")+' +
+    configLookup("MONTHLY_FIXED_OVERHEAD");
+  var collections =
+    "SUMIFS(" +
+    R(dt.credit) +
+    "," +
+    R(dt.data_type) +
+    ',"voucher",' +
+    R(dt.voucher_type) +
+    ',"*Receipt*")+SUMIFS(' +
+    R(dt.credit) +
+    "," +
+    R(dt.data_type) +
+    ',"voucher",' +
+    R(dt.voucher_type) +
+    ',"*Collection*")';
+  var overdueAmt =
+    "SUMIFS(" +
+    R(dt.outstanding_amount) +
+    "," +
+    R(dt.data_type) +
+    ',"receivable",' +
+    R(dt.overdue_days) +
+    ',">0")';
+  var overdueParties =
+    "IFERROR(ROWS(UNIQUE(FILTER(" +
+    R(dt.party_name) +
+    "," +
+    R(dt.data_type) +
+    '="receivable",' +
+    R(dt.overdue_days) +
+    ">0," +
+    R(dt.outstanding_amount) +
+    ">0))),0)";
+  var badDebts =
+    "SUMIFS(" +
+    R(dt.outstanding_amount) +
+    "," +
+    R(dt.data_type) +
+    ',"receivable",' +
+    R(dt.parent_group) +
+    ',"*Bad Debt*")+SUMIFS(' +
+    R(dt.closing_balance) +
+    "," +
+    R(dt.data_type) +
+    ',"ledger",' +
+    R(dt.parent_group) +
+    ',"*Bad Debt*")';
+  var emergencyFund =
+    "MAX(0," + bankCash + "-" + configLookup("EMERGENCY_FUND_TARGET") + ")";
+  var reserveFund =
+    "MAX(0," +
+    bankCash +
+    "-" +
+    configLookup("EMERGENCY_FUND_TARGET") +
+    "-" +
+    configLookup("RESERVE_FUND_TARGET") +
+    ")";
+  var bankRecon =
+    'IF(' +
+    bankCash +
+    '>0,"Synced from Tally","Awaiting bank sync")';
+  var salePurchaseRecon =
+    "IFERROR(ABS(" +
+    receivable +
+    "+" +
+    collections +
+    "-" +
+    salesVouchers +
+    '),"")';
+  var revenue =
+    "SUMIFS(" +
+    R(dt.closing_balance) +
+    "," +
+    R(dt.data_type) +
+    ',"ledger",' +
+    R(dt.parent_group) +
+    ',"*Sales Account*")+SUMIFS(' +
+    R(dt.amount) +
+    "," +
+    R(dt.data_type) +
+    ',"voucher",' +
+    R(dt.parent_group) +
+    ',"*Sales*")';
+  var directCost =
+    "SUMIFS(" +
+    R(dt.closing_balance) +
+    "," +
+    R(dt.data_type) +
+    ',"ledger",' +
+    R(dt.parent_group) +
+    ',"*Direct Expenses*")+SUMIFS(' +
+    R(dt.debit) +
+    "," +
+    R(dt.data_type) +
+    ',"voucher",' +
+    R(dt.parent_group) +
+    ',"*Direct*")';
+  var payments =
+    "SUMIFS(" +
+    R(dt.debit) +
+    "," +
+    R(dt.data_type) +
+    ',"voucher",' +
+    R(dt.voucher_type) +
+    ',"*Payment*")+SUMIFS(' +
+    R(dt.debit) +
+    "," +
+    R(dt.data_type) +
+    ',"voucher",' +
+    R(dt.voucher_type) +
+    ',"*Paid*")';
+  var openingCash =
+    "SUMIFS(" +
+    R(dt.opening_balance) +
+    "," +
+    R(dt.data_type) +
+    ',"bank_cash")';
+  var aging = function (min, max) {
+    var crit = max ? ',"<=",' + max : "";
+    return (
+      "SUMIFS(" +
+      R(dt.outstanding_amount) +
+      "," +
+      R(dt.data_type) +
+      ',"receivable",' +
+      R(dt.overdue_days) +
+      ',">=' +
+      min +
+      '"' +
+      (max ? "," + R(dt.overdue_days) + ',"<=' + max + '"' : "") +
+      ")"
+    );
+  };
+
+  return {
+    Receivable: "=" + receivabl

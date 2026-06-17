@@ -1,0 +1,41 @@
+================================================================================
+FBOS — ADHURA SETUP DOBARA START (Resume)
+================================================================================
+
+07_Lead_CRM already OK. Ye steps baaki incomplete kaam finish karenge:
+  - Dashboard finance formulas (6 labels fix)
+  - Legacy tabs hide (06A, 06B, 06C)
+  - ClickUp refresh + 2-hour auto sync
+
+--------------------------------------------------------------------------------
+OPTION A — Apps Script (recommended, 3 min)
+--------------------------------------------------------------------------------
+
+1) Sheet → Extensions → Apps Script
+
+2) Code.gs ki poori file replace karo:
+   fbos-v1\scripts\google-apps-script\Code.gs
+   (Ctrl+A paste → Save)
+
+3) Deploy → Manage deployments → Edit (pencil) → New version → Deploy
+   (Web app URL same rahega)
+
+4) Dropdown se choose: resumeFbosSetup → ▶ Run → Allow
+
+5) 00_Sync_Status check — message: "resumeFbosSetup complete"
+
+--------------------------------------------------------------------------------
+OPTION B — Terminal (after redeploy only)
+--------------------------------------------------------------------------------
+
+cd fbos-v1
+node scripts/resume-hub-setup.mjs
+
+--------------------------------------------------------------------------------
+OPTION C — Tally Finance (server WSIPL-89-72, alag step)
+--------------------------------------------------------------------------------
+
+06_Finance_Sync abhi 0 rows — Tally cloud script chahiye.
+Dekho: scripts/tally-cloud/INSTALL-HINDI.txt
+
+================================================================================

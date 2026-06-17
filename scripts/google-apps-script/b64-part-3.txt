@@ -1,0 +1,1 @@
+(()=>{const c=atob(window.__b64);monaco.editor.getModels()[0].setValue(c);return {len:c.length,hasResume:c.includes('resumeFbosSetup')};})()

@@ -1,0 +1,35 @@
+================================================================================
+CURSOR AUTO ALLOW ON — 30 second setup
+================================================================================
+
+STEP 1 — Cursor Settings (ek baar)
+-----------------------------------
+1) Ctrl + ,  (Settings)
+2) Left side: "Cursor Settings" (Cursor ka apna tab)
+3) "Agents" section
+4) "Run Mode" ya "Auto-Run" choose karo:
+
+   BEST (safe + kam prompts):
+   → "Auto-review"  (recommended Cursor 3.6+)
+
+   MAX (sab auto, koi prompt nahi):
+   → "Run Everything"  (purana YOLO mode)
+
+5) Save / close
+
+STEP 2 — Project rule (already done)
+------------------------------------
+File ban chuki hai:
+  fbos-v1\.cursor\permissions.json
+  fbos-v1\.cursor\rules\auto-allow-fbos.mdc
+
+STEP 3 — Chat mein likho
+-------------------------
+"allow" ya "auto allow on" — agent rukega nahi
+
+NOTE
+----
+Google Sheet / Apps Script par kabhi-kabhi GOOGLE ka "Allow" popup
+aata hai (OAuth) — woh Cursor nahi, Google ka hai. Us par click karna padega.
+
+================================================================================

@@ -1,0 +1,1 @@
+(()=>{const ed=monaco.editor.getModels()[0];const code=(window.__codeParts||[]).join('');ed.setValue(code);ed.pushUndoStop();return {len:code.length,hasSales:code.includes('setupSalesDashboardFormulas'),hasPendingFix:code.includes('IFERROR(ROWS(FILTER'),hasOrderFix:code.includes('IFERROR((')};})()

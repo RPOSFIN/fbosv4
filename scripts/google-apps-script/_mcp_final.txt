@@ -1,0 +1,1 @@
+(()=>{const code=(window.__codeParts||[]).join('');monaco.editor.getModels()[0].setValue(code);return {len:code.length,hasSetup:code.includes('setupSingleSheetFinance')};})()

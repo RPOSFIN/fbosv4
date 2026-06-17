@@ -1,0 +1,6 @@
+data_type,company_name,voucher_date,voucher_no,voucher_type,party_name,ledger_name,parent_group,description,debit,credit,amount,opening_balance,closing_balance,outstanding_amount,bill_no,bill_date,due_date,overdue_days,bank_name,account_no,balance,as_on_date,gst_no,reference,narration,synced_at
+voucher,Flexiflair Tech Private Limited,2026-06-11,SV-001,Sales,ABC Traders,ABC Traders,,LED Invoice,0,50000,50000,,,,,,,,,,,,,,June sale,
+ledger,Flexiflair Tech Private Limited,,,,,Cash A/c,Cash-in-Hand,Cash ledger,,,,5000,5000,,,,,,,,,,,,
+receivable,Flexiflair Tech Private Limited,,,,ABC Traders,ABC Traders,Sundry Debtors,Outstanding,,,,,,25000,BILL-01,2026-06-01,2026-07-01,0,,,,,,,
+payable,Flexiflair Tech Private Limited,,,,XYZ Supplier,XYZ Supplier,Sundry Creditors,Outstanding,,,,,,12000,BILL-02,2026-06-05,2026-07-05,0,,,,,,,
+bank_cash,Flexiflair Tech Private Limited,,,,,HDFC Current,HDFC Bank,,,,,,,,,,,HDFC Bank,,850000,2026-06-11,,,

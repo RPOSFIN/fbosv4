@@ -1,0 +1,80 @@
+| /'06_Finance'!/.test(f)) return true;
+  return false;
+}
+
+/** Scan dashboard — replace any 06A/06B/06C/06_Finance formulas with 06_Finance_Sync KPIs */
+function replaceLegacyFinanceFormulasOnDashboard() {
+  var ss = getSpreadsheet();
+  var dash = ss.getSheetByName("01_Dashboard");
+  if (!dash) throw new Error("01_Dashboard tab missing");
+  var formulaMap = financeDashboardFormulas_();
+  var range = dash.getDataRange();
+  var formulas = range.getFormulas();
+  var values = range.getValues();
+  var replaced = [];
+  var unresolved = [];
+
+  for (var r = 0; r < formulas.length; r++) {
+    for (var c = 0; c < formulas[r].length; c++) {
+      if (!formulaUsesLegacyFinanceTab(formulas[r][c])) continue;
+      var label =
+        (c > 0 ? String(values[r][c - 1] || "").trim() : "") ||
+        (c > 1 ? String(values[r][c - 2] || "").trim() : "");
+      var newFormula = formulaMap[label];
+      if (!newFormula && label.toUpperCase) {
+        newFormula = formulaMap[label.toUpperCase()] || formulaMap[label];
+      }
+      if (newFormula) {
+        dash.getRange(r + 1, c + 1).setFormula(newFormula);
+        replaced.push(label || "R" + (r + 1) + "C" + (c + 1));
+      } else {
+        unresolved.push({ row: r + 1, col: c + 1, label: label, was: formulas[r][c] });
+      }
+    }
+  }
+  logSync(
+    "apps_script",
+    "01_Dashboard",
+    replaced.length,
+    unresolved.length ? "partial" : "ok",
+    "Legacy finance refs replaced: " +
+      replaced.length +
+      ", unresolved: " +
+      unresolved.length
+  );
+  return { replaced: replaced, unresolved: unresolved };
+}
+
+/** Hide old finance tabs — data ab sirf 06_Finance_Sync se */
+function hideLegacyFinanceTabs() {
+  var ss = getSpreadsheet();
+  var hidden = [];
+  LEGACY_FINANCE_TABS.forEach(function (name) {
+    var sh = ss.getSheetByName(name);
+    if (sh && !sh.isSheetHidden()) {
+      sh.hideSheet();
+      hidden.push(name);
+    }
+  });
+  return hidden;
+}
+
+/**
+ * ONE-SHEET finance setup:
+ * 1) Dashboard formulas → 06_Finance_Sync only
+ * 2) Replace any leftover 06A/06B/06C references
+ * 3) Hide legacy tabs (optional but recommended)
+ */
+function setupSingleSheetFinance() {
+  ensureConfigFinanceKeys();
+  var step1 = setupFinanceDashboardFormulas();
+  var step2 = replaceLegacyFinanceFormulasOnDashboard();
+  var step3 = hideLegacyFinanceTabs();
+  return {
+    formulasApplied: step1.applied.length,
+    formulasMissed: step1.missed,
+    legacyReplaced: step2.replaced.length,
+    legacyUnresolved: step2.unresolved,
+    tabsHidden: step3,
+  };
+}

@@ -1,0 +1,97 @@
+": "=" + expenses,
+    EBITDA:
+      "=IFERROR((" +
+      revenue +
+      "-" +
+      directCost +
+      ")-(" +
+      expenses +
+      '),"")',
+    Payments: "=" + payments,
+    "Net Cash Flow": "=IFERROR(" + collections + "-" + payments + ',"")',
+    "Opening Cash": "=" + openingCash,
+    "Closing Cash": "=" + bankCash,
+    "0-30 Days":
+      "=" +
+      aging(0, 30) +
+      "+SUMIFS(" +
+      R(dt.outstanding_amount) +
+      "," +
+      R(dt.data_type) +
+      ',"receivable",' +
+      R(dt.overdue_days) +
+      ',"<=0")',
+    "31-60 Days": "=" + aging(31, 60),
+    "61-90 Days": "=" + aging(61, 90),
+    "90+ Days": "=" + aging(91, 9999),
+    "Collection Trend": "=IFERROR(COUNTIFS(" + R(dt.data_type) + ',"voucher",' + R(dt.voucher_type) + ',"*Receipt*"),0)',
+    "Receivable Trend": "=" + receivable,
+    "PAYABLE TREND": "=" + payable,
+    "PROFIT TREND":
+      "=IFERROR((" + revenue + "-" + directCost + ")-(" + expenses + '),"")',
+  };
+}
+
+/** Find label on dashboard and set formula one column to the right */
+function applyFormulaByLabel(sheet, label, formula) {
+  var finder = sheet.createTextFinder(String(label)).matchEntireCell(true);
+  var cell = finder.findNext();
+  if (!cell) {
+    finder = sheet.createTextFinder(String(label));
+    cell = finder.findNext();
+  }
+  if (!cell) return false;
+  var target = sheet.getRange(cell.getRow(), cell.getColumn() + 1);
+  target.setFormula(formula);
+  return true;
+}
+
+/**
+ * STEP — Wire 01_Dashboard FINANCE (+ P&L / Cash / WC) to 06_Finance_Sync
+ * Run once after initializeFinanceSheet
+ */
+function setupFinanceDashboardFormulas() {
+  var ss = getSpreadsheet();
+  var dash = ss.getSheetByName("01_Dashboard");
+  if (!dash) throw new Error("01_Dashboard tab missing");
+  ensureConfigFinanceKeys();
+  var formulas = financeDashboardFormulas_();
+  var applied = [];
+  var missed = [];
+  Object.keys(formulas).forEach(function (label) {
+    if (applyFormulaByLabel(dash, label, formulas[label])) {
+      applied.push(label);
+    } else {
+      missed.push(label);
+    }
+  });
+  logSync(
+    "apps_script",
+    "01_Dashboard",
+    applied.length,
+    missed.length ? "partial" : "ok",
+    "Finance formulas: " + applied.length + " set, " + missed.length + " labels not found"
+  );
+  return { applied: applied, missed: missed };
+}
+
+var LEGACY_FINANCE_TABS = [
+  "06A_Receivable",
+  "06B_Payable",
+  "06C_Collections",
+  "06_Finance",
+];
+
+function formulaUsesLegacyFinanceTab(formula) {
+  if (!formula) return false;
+  var f = String(formula);
+  if (f.indexOf("06_Finance_Sync") >= 0) return false;
+  for (var i = 0; i < LEGACY_FINANCE_TABS.length; i++) {
+    if (f.indexOf(LEGACY_FINANCE_TABS[i]) >= 0) return true;
+  }
+  if (/06_Finance[^_S]/.test(f) || /'06_Finance'!/.test(f)) return true;
+  return false;
+}
+
+/** Scan dashboard — replace any 06A/06B/06C/06_Finance formulas with 06_Finance_Sync KPIs */
+function replaceLegacyFinanceFormulasOn

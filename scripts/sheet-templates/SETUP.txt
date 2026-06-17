@@ -1,0 +1,83 @@
+FBOS GOOGLE SHEET HUB — SETUP (Sheet-only mode, no Cevious port 9007 on laptop)
+================================================================================
+
+STEP 1 — CREATE GOOGLE SHEET TABS
+---------------------------------
+Open your master sheet (GOOGLE_SHEET_ID) and import CSV templates from:
+  scripts/sheet-templates/
+
+Create these tabs (File → Import → Upload CSV → Insert new sheet):
+
+  Tab name              CSV file                    Purpose
+  07_Lead_CRM           01_Leads_CRM.csv            Sales leads (already exists — add missing columns)
+  08_Operations_Jobs    02_Operations_Jobs.csv      Production / jobs
+  09_Finance_Tally      03_Finance_Tally.csv        Tally vouchers / finance
+  06_Clients            04_Clients.csv              Client master
+  05_Followups          05_Followups.csv            Follow-up tracker
+
+Share sheet: Anyone with the link → Viewer (for FBOS CSV pull)
+
+Note each tab GID from URL (...#gid=123456) and add to .env.local:
+  GOOGLE_SHEET_GID=339902754
+  GOOGLE_SHEET_GID_OPERATIONS=<gid of 08_Operations_Jobs>
+  GOOGLE_SHEET_GID_FINANCE=<gid of 09_Finance_Tally>
+
+
+STEP 2 — SUPABASE MIGRATION
+---------------------------
+Run in Supabase SQL Editor:
+  supabase/migrations/007_sheet_hub_extended.sql
+
+
+STEP 3 — GOOGLE APPS SCRIPT (4x daily → Supabase)
+-------------------------------------------------
+1. Sheet → Extensions → Apps Script
+2. Paste scripts/google-apps-script/Code.gs
+3. Project Settings → Script Properties:
+     SUPABASE_URL          = (from .env.local)
+     SUPABASE_SERVICE_KEY  = (service role key — keep secret)
+     SPREADSHEET_ID        = 1Pi6Mz7P5oYkLutsWLrM8aoos4ijXtmEuessFvd4oUBI
+     SYNC_SECRET           = (any random string — same in FBOS .env.local)
+4. Run setupDailyTriggers once (triggers: 8:00, 12:00, 16:00, 20:00)
+5. Deploy → New deployment → Web app:
+     Execute as: Me | Who has access: Anyone
+   Copy URL → GOOGLE_WEBAPP_URL in .env.local
+
+
+STEP 4 — FBOS .env.local
+------------------------
+SHEET_SYNC_SECRET=your-random-secret
+GOOGLE_WEBAPP_URL=https://script.google.com/macros/s/.../exec
+GOOGLE_SHEET_GID_OPERATIONS=...
+GOOGLE_SHEET_GID_FINANCE=...
+
+(TALLY_HOST optional — not needed for sheet-only mode)
+
+
+STEP 5 — TALLY → SHEET (cloud server WSIPL-89-72)
+-------------------------------------------------
+Apps Script CANNOT reach Tally (private network).
+On cloud server only:
+
+1. Copy scripts/tally-cloud/TallyToSheet.ps1
+2. Set env GOOGLE_WEBAPP_URL = Apps Script deploy URL
+3. Task Scheduler → 4x daily run:
+   powershell -ExecutionPolicy Bypass -File C:\path\TallyToSheet.ps1
+
+This POSTs vouchers to Sheet → Apps Script syncs to Supabase.
+
+
+DATA FLOW
+---------
+Tally (cloud) → TallyToSheet.ps1 → Google Sheet 09_Finance_Tally
+Google Sheet (all tabs) → Apps Script syncAllToSupabase → Supabase
+Supabase → FBOS Frontend (Lead Master, Finance, Dashboard)
+
+Manual option: paste Tally export into 09_Finance_Tally tab — sync still works.
+
+
+TEST
+----
+Apps Script editor → Run syncAllToSupabase
+FBOS → /integrations → Sync GSheet
+Or POST /api/webhooks/sheet-sync with Bearer SHEET_SYNC_SECRET

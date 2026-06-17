@@ -1,0 +1,30 @@
+================================================================================
+TALLY → 06_Finance_Sync (WSIPL-89-72 server par)
+================================================================================
+
+Jab ye chalega tab Finance dashboard mein numbers aayenge (abhi 0 hai).
+
+ONE-CLICK (recommended)
+-----------------------
+WSIPL-89-72 par (Tally cloud machine — yahi server hai, alag RDP nahi):
+
+  1) scripts\tally-cloud\ folder copy karo server par
+  2) Install-TallySync.bat par RIGHT-CLICK → Run as administrator
+
+Ye automatically karega:
+  - C:\FBOS\TallySync\ mein TallyToSheet.ps1 copy
+  - GOOGLE_WEBAPP_URL machine env set
+  - Task Scheduler har 2 ghante (FBOS_TallyToSheet_2h)
+  - Ek test run
+
+MANUAL (agar bat fail ho)
+-------------------------
+STEP 1 — Files copy → C:\FBOS\TallySync\TallyToSheet.ps1
+STEP 2 — Machine env GOOGLE_WEBAPP_URL = web app exec URL
+STEP 3 — Test: powershell -ExecutionPolicy Bypass -File .\TallyToSheet.ps1
+         (Tally same machine par port 9007 — host 127.0.0.1)
+STEP 4 — Task Scheduler har 2h (ya Install-TallySync.ps1 -SkipScheduler:$false)
+
+Success = 06_Finance_Sync rows + 00_Sync_Status mein tally log.
+
+================================================================================

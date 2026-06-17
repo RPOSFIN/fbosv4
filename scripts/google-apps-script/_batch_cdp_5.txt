@@ -1,0 +1,1 @@
+(() => { const ed = monaco.editor.getEditors()[0]; const v = window.__fbosParts.join(""); ed.setValue(v); ed.pushUndoStop(); return { len: v.length, hasSales: v.includes("setupSalesDashboardFormulas"), hasPendingFix: v.includes("IFERROR(ROWS(FILTER"), hasOrderFix: v.includes("IFERROR((") }; })()

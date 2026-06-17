@@ -1,0 +1,34 @@
+,"")',
+    "Dispatched Orders":
+      "=COUNTIF('" + O + "'!T:T,\"Dispatched\")+COUNTIF('" + O + "'!T:T,\"DISPATCHED\")",
+    "Blocked Orders": "=COUNTIF('" + O + "'!AM:AM,\"High\")",
+  };
+}
+
+function setupSalesDashboardFormulas() {
+  var ss = getSpreadsheet();
+  var dash = ss.getSheetByName("01_Dashboard");
+  if (!dash) throw new Error("01_Dashboard tab missing");
+  var formulas = salesDashboardFormulas_();
+  var applied = [];
+  var missed = [];
+  Object.keys(formulas).forEach(function (label) {
+    if (applyFormulaByLabel(dash, label, formulas[label])) applied.push(label);
+    else missed.push(label);
+  });
+  logSync(
+    "apps_script",
+    "01_Dashboard",
+    applied.length,
+    missed.length ? "partial" : "ok",
+    "Sales formulas: " + applied.length + " set"
+  );
+  return { applied: applied, missed: missed };
+}
+
+/** ClickUp minimal leads + sales dashboard formulas */
+function setupClickUpLeadPipeline() {
+  var cols = extendLeadCrmMinimalHeaders();
+  var sales = setupSalesDashboardFormulas();
+  return { leadColumns: cols, salesFormulas: sales };
+}

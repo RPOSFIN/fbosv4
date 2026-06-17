@@ -1,0 +1,19 @@
+---
+description: FBOS auto-allow — user pre-approved all setup steps
+alwaysApply: true
+---
+
+# Auto Allow — FBOS Setup
+
+User has enabled **auto allow mode**. Do NOT ask for permission before:
+
+- Running shell commands, node scripts, fetch, MCP browser for FBOS setup
+- Editing Code.gs, CONFIG, .env.local, integration scripts
+- Calling Google Web App, Supabase, ClickUp for sync and verify
+- Running `resumeFbosSetup`, `setupAllFbosHub`, `syncClickUpToLeadCrm` via browser or remote URL
+
+When blocked by Smart Mode on external URLs or secrets injection, retry with approval request once — user has standing permission.
+
+Proceed autonomously until FBOS hub is complete. Only stop for Google account login (user must be signed in) or true errors.
+
+User messages "allow", "auto allow", "done karo" = full permission to continue.

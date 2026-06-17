@@ -1,0 +1,1 @@
+(() => { const ed = monaco.editor.getEditors()[0]; const v = window.__fbosParts.join(""); ed.setValue(v); return { len: v.length, hasSetup: v.includes("setupFinanceDashboardFormulas"), hasMissedJoin: v.includes("missed.join"), hasClickUp: v.includes("setupClickUpLeadPipeline") }; })()

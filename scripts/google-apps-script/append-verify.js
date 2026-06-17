@@ -1,0 +1,1 @@
+(() => { const v = monaco.editor.getEditors()[0].getValue(); return JSON.stringify({ len: v.length, hasSetup: v.includes('setupUnifiedOrderMaster'), hasFinance: v.includes('setupSingleSheetFinance') }); })()

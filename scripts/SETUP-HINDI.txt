@@ -1,0 +1,60 @@
+================================================================================
+FBOS FINANCE SETUP — EK HI SHEET (Hindi)
+Tab: 09_Finance_Tally — voucher + ledger + receivable + payable + bank
+================================================================================
+
+PURANI TABS (06A/06B/06C) — USE MAT KARO:
+  Dashboard ab sirf 06_Finance_Sync se chalega.
+  Apps Script run: setupSingleSheetFinance
+  (purani tabs hide ho jayengi)
+
+STEP 0 — EDITOR ACCESS (ZAROORI)
+--------------------------------
+Sheet ab "View only" hai (Flexi Flair shared drive).
+Owner ko bolo: dashmeshfoils@gmail.com ko EDITOR access do.
+Jab "View only" hat jaye tab hi Apps Script khulega.
+
+STEP 1 — GOOGLE APPS SCRIPT ✅ DONE
+----------------------------------
+Web App deployed. Har 2 ghante sync trigger set.
+
+Agla step: STEP 4 — Tally cloud (WSIPL-89-72)
+
+STEP 1 (reference) — GOOGLE SHEET
+---------------------------------
+1. Kholo: https://docs.google.com/spreadsheets/d/1Pi6Mz7P5oYkLutsWLrM8aoos4ijXtmEuessFvd4oUBI
+
+2. Extensions → Apps Script → paste: scripts/google-apps-script/Code.gs
+
+3. Script Properties:
+   SUPABASE_URL, SUPABASE_SERVICE_KEY, SPREADSHEET_ID, SHEET_SYNC_SECRET
+
+4. Run EK BAAR:
+   initializeFinanceSheet      ← sirf 09_Finance_Tally + 00_Sync_Status
+   setupEvery2HourTriggers     ← har 2 ghante
+
+5. Deploy Web App → URL → .env.local GOOGLE_WEBAPP_URL
+
+STEP 2 — SUPABASE
+-----------------
+Run: supabase/migrations/007_sheet_hub_extended.sql
+
+STEP 3 — .env.local
+-------------------
+GOOGLE_SHEET_GID_FINANCE=<09_Finance_Tally tab ka gid URL se>
+GOOGLE_WEBAPP_URL=<deploy url>
+
+(Lead/Ops tabs baad mein — ab skip)
+
+STEP 4 — TALLY CLOUD (WSIPL-89-72)
+----------------------------------
+TallyToSheet.ps1 har 2 ghante Task Scheduler
+
+FLOW
+----
+Tally → ek hi sheet 09_Finance_Tally → Supabase → /receivables
+
+data_type column:
+  voucher | ledger | receivable | payable | bank_cash
+
+================================================================================

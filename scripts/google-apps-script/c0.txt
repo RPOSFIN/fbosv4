@@ -1,0 +1,112 @@
+/**
+ * FBOS — ONE Tally Finance Sheet → Supabase
+ * Phase 1: Finance only (Leads/Ops baad mein)
+ *
+ * Run once:
+ *   initializeFinanceSheet   — ek hi tab 09_Finance_Tally + heads
+ *   setupEvery2HourTriggers  — har 2 ghante sync
+ */
+
+var TAB_FINANCE = "06_Finance_Sync";
+var TAB_STATUS = "00_Sync_Status";
+
+var FINANCE_HEADERS = [
+  "data_type",
+  "company_name",
+  "voucher_date",
+  "voucher_no",
+  "voucher_type",
+  "party_name",
+  "ledger_name",
+  "parent_group",
+  "description",
+  "debit",
+  "credit",
+  "amount",
+  "opening_balance",
+  "closing_balance",
+  "outstanding_amount",
+  "bill_no",
+  "bill_date",
+  "due_date",
+  "overdue_days",
+  "bank_name",
+  "account_no",
+  "balance",
+  "as_on_date",
+  "gst_no",
+  "reference",
+  "narration",
+  "synced_at",
+];
+
+function getProp(key, fallback) {
+  var v = PropertiesService.getScriptProperties().getProperty(key);
+  return v ? String(v).trim() : fallback || "";
+}
+
+function getSpreadsheet() {
+  var id = getProp("SPREADSHEET_ID");
+  if (id) return SpreadsheetApp.openById(id);
+  return SpreadsheetApp.getActiveSpreadsheet();
+}
+
+function logSync(source, tab, rows, status, message) {
+  try {
+    var sh = getSpreadsheet().getSheetByName(TAB_STATUS);
+    if (!sh) return;
+    sh.appendRow([
+      new Date().toISOString(),
+      source,
+      tab,
+      rows,
+      status,
+      message || "",
+    ]);
+  } catch (e) {}
+}
+
+/** STEP 1 — Sirf finance tab + sync log (purani 10/11/12/13 tabs manually delete kar sakte ho) */
+function initializeFinanceSheet() {
+  var ss = getSpreadsheet();
+  var defs = [
+    { name: TAB_STATUS, headers: ["sync_time", "source", "tab", "rows", "status", "message"] },
+    { name: TAB_FINANCE, headers: FINANCE_HEADERS },
+  ];
+  defs.forEach(function (def) {
+    var sh = ss.getSheetByName(def.name);
+    if (!sh) sh = ss.insertSheet(def.name);
+    sh.clear();
+    sh.getRange(1, 1, 1, def.headers.length).setValues([def.headers]);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, def.headers.length)
+      .setFontWeight("bold")
+      .setBackground("#1e293b")
+      .setFontColor("#e2e8f0");
+    sh.autoResizeColumns(1, def.headers.length);
+  });
+  logSync("apps_script", TAB_FINANCE, 0, "ok", "Finance master sheet ready (one tab for all Tally data)");
+}
+
+/** Backward compatible name */
+function initializeFbosMasterSheet() {
+  initializeFinanceSheet();
+}
+
+function sheetByName(name) {
+  var sh = getSpreadsheet().getSheetByName(name);
+  if (!sh) throw new Error("Tab missing: " + name + " — run initializeFinanceSheet");
+  return sh;
+}
+
+function rowsFromFinanceSheet() {
+  var sh = sheetByName(TAB_FINANCE);
+  var values = sh.getDataRange().getValues();
+  if (values.length < 2) return [];
+  var headers = values[0].map(function (h) {
+    return String(h || "").trim().toLowerCase().replace(/\s+/g, "_");
+  });
+  var rows = [];
+  for (var r = 1; r < values.length; r++) {
+    var obj = {};
+    var empt

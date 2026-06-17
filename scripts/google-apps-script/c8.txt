@@ -1,0 +1,113 @@
+_script", TAB_LEADS, 0, "ok", "Minimal ClickUp lead CRM ready");
+  return LEAD_CRM_HEADERS.length;
+}
+
+/** Update row-1 headers only — existing lead rows preserved */
+function extendLeadCrmMinimalHeaders() {
+  var ss = getSpreadsheet();
+  var sh = ss.getSheetByName(TAB_LEADS);
+  if (!sh) return initializeLeadCrmSheet();
+  var width = Math.max(sh.getLastColumn(), LEAD_CRM_HEADERS.length);
+  var row1 = sh.getRange(1, 1, 1, width).getValues()[0];
+  LEAD_CRM_HEADERS.forEach(function (h, i) {
+    if (String(row1[i] || "").trim() !== h) {
+      sh.getRange(1, i + 1).setValue(h);
+    }
+  });
+  sh.setFrozenRows(1);
+  sh.getRange(1, 1, 1, LEAD_CRM_HEADERS.length)
+    .setFontWeight("bold")
+    .setBackground("#1e293b")
+    .setFontColor("#e2e8f0");
+  logSync("apps_script", TAB_LEADS, sh.getLastRow() - 1, "ok", "Lead headers updated (data kept)");
+  return LEAD_CRM_HEADERS.length;
+}
+
+function leadRange(col) {
+  return "'" + TAB_LEADS + "'!" + col + ":" + col;
+}
+
+/** SALES dashboard — 07_Lead_CRM + 02_Order_Master (orders separate) */
+function salesDashboardFormulas_() {
+  var L = TAB_LEADS;
+  var O = TAB_ORDER;
+  var today = "TODAY()";
+  return {
+    "Total Leads":
+      "=COUNTA(FILTER(" +
+      leadRange("A") +
+      "," +
+      leadRange("A") +
+      '<>""))',
+    "Today's Followups":
+      "=COUNTIFS(" +
+      leadRange("G") +
+      "," +
+      today +
+      "," +
+      leadRange("D") +
+      ',"<>WON",' +
+      leadRange("D") +
+      ',"<>LOST")',
+    "Dormant Leads":
+      "=COUNTIFS(" +
+      leadRange("G") +
+      ",<" +
+      today +
+      "-30," +
+      leadRange("D") +
+      ',"<>WON",' +
+      leadRange("D") +
+      ',"<>LOST")',
+    "Pending Followups":
+      "=COUNTIFS(" +
+      leadRange("G") +
+      ",<" +
+      today +
+      "," +
+      leadRange("D") +
+      ',"<>WON",' +
+      leadRange("D") +
+      ',"<>LOST",' +
+      leadRange("G") +
+      ',"<>")',
+    "Leads by Source":
+      "=COUNTA(FILTER(" +
+      leadRange("D") +
+      "," +
+      leadRange("D") +
+      '="NEW"))',
+    "Pending Quotations":
+      "=COUNTIF(" + leadRange("D") + ',"QUOATED")',
+    "Leads by Material Type":
+      "=COUNTIF(" + leadRange("D") + ',"QUALIFIED")',
+    "NOT YET STARTED": "=COUNTIF(" + leadRange("D") + ',"NEW")',
+    "Lost Orders": "=COUNTIF(" + leadRange("D") + ',"LOST")',
+    "ERROR IN DATA FILLING":
+      "=SUMPRODUCT((" +
+      leadRange("C") +
+      '="")+(' +
+      leadRange("G") +
+      '="")+(' +
+      leadRange("E") +
+      '=""),--(' +
+      leadRange("A") +
+      '<>""))',
+    "Total Order":
+      "=COUNTA(FILTER('" +
+      O +
+      "'!A:A,'" +
+      O +
+      "'!A:A<>\"\"))-COUNTIF('" +
+      O +
+      "'!A:A,\"Order ID\")",
+    "Order Conversion %":
+      "=IFERROR(COUNTA(FILTER('" +
+      O +
+      "'!A:A,'" +
+      O +
+      "'!A:A<>\"\"))/(COUNTA(FILTER(" +
+      leadRange("A") +
+      "," +
+      leadRange("A") +
+      '<>""))

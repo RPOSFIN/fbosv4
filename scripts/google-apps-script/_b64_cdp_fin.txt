@@ -1,0 +1,1 @@
+(() => { const t = atob(window.__b64); const ed = monaco.editor.getEditors()[0]; ed.setValue(t); ed.pushUndoStop(); return { len: t.length, hasResume: t.includes("resumeFbosSetup"), hasNormalize: t.includes("normalizeDashLabel") }; })()

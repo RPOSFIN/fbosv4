@@ -1,0 +1,2 @@
+-- Apply the full Phase 2 migration in Supabase SQL Editor:
+-- File: supabase/migrations/001_phase2_complete.sql

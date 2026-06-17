@@ -1,0 +1,239 @@
+/**
+ * FBOS — ONE Tally Finance Sheet → Supabase
+ * Phase 1: Finance only (Leads/Ops baad mein)
+ *
+ * Run once:
+ *   initializeFinanceSheet   — ek hi tab 09_Finance_Tally + heads
+ *   setupEvery2HourTriggers  — har 2 ghante sync
+ */
+
+var TAB_FINANCE = "06_Finance_Sync";
+var TAB_STATUS = "00_Sync_Status";
+
+var FINANCE_HEADERS = [
+  "data_type",
+  "company_name",
+  "voucher_date",
+  "voucher_no",
+  "voucher_type",
+  "party_name",
+  "ledger_name",
+  "parent_group",
+  "description",
+  "debit",
+  "credit",
+  "amount",
+  "opening_balance",
+  "closing_balance",
+  "outstanding_amount",
+  "bill_no",
+  "bill_date",
+  "due_date",
+  "overdue_days",
+  "bank_name",
+  "account_no",
+  "balance",
+  "as_on_date",
+  "gst_no",
+  "reference",
+  "narration",
+  "synced_at",
+];
+
+function getProp(key, fallback) {
+  var v = PropertiesService.getScriptProperties().getProperty(key);
+  return v ? String(v).trim() : fallback || "";
+}
+
+function getSpreadsheet() {
+  var id = getProp("SPREADSHEET_ID");
+  if (id) return SpreadsheetApp.openById(id);
+  return SpreadsheetApp.getActiveSpreadsheet();
+}
+
+function logSync(source, tab, rows, status, message) {
+  try {
+    var sh = getSpreadsheet().getSheetByName(TAB_STATUS);
+    if (!sh) return;
+    sh.appendRow([
+      new Date().toISOString(),
+      source,
+      tab,
+      rows,
+      status,
+      message || "",
+    ]);
+  } catch (e) {}
+}
+
+/** STEP 1 — Sirf finance tab + sync log (purani 10/11/12/13 tabs manually delete kar sakte ho) */
+function initializeFinanceSheet() {
+  var ss = getSpreadsheet();
+  var defs = [
+    { name: TAB_STATUS, headers: ["sync_time", "source", "tab", "rows", "status", "message"] },
+    { name: TAB_FINANCE, headers: FINANCE_HEADERS },
+  ];
+  defs.forEach(function (def) {
+    var sh = ss.getSheetByName(def.name);
+    if (!sh) sh = ss.insertSheet(def.name);
+    sh.clear();
+    sh.getRange(1, 1, 1, def.headers.length).setValues([def.headers]);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, def.headers.length)
+      .setFontWeight("bold")
+      .setBackground("#1e293b")
+      .setFontColor("#e2e8f0");
+    sh.autoResizeColumns(1, def.headers.length);
+  });
+  logSync("apps_script", TAB_FINANCE, 0, "ok", "Finance master sheet ready (one tab for all Tally data)");
+}
+
+/** Backward compatible name */
+function initializeFbosMasterSheet() {
+  initializeFinanceSheet();
+}
+
+function sheetByName(name) {
+  var sh = getSpreadsheet().getSheetByName(name);
+  if (!sh) throw new Error("Tab missing: " + name + " — run initializeFinanceSheet");
+  return sh;
+}
+
+function rowsFromFinanceSheet() {
+  var sh = sheetByName(TAB_FINANCE);
+  var values = sh.getDataRange().getValues();
+  if (values.length < 2) return [];
+  var headers = values[0].map(function (h) {
+    return String(h || "").trim().toLowerCase().replace(/\s+/g, "_");
+  });
+  var rows = [];
+  for (var r = 1; r < values.length; r++) {
+    var obj = {};
+    var empty = true;
+    for (var c = 0; c < headers.length; c++) {
+      var val = values[r][c];
+      if (val !== "" && val != null) empty = false;
+      obj[headers[c]] = val == null ? "" : String(val).trim();
+    }
+    if (!empty) rows.push(obj);
+  }
+  return rows;
+}
+
+function supabaseRequest(method, path, body, extraHeaders) {
+  var url = getProp("SUPABASE_URL").replace(/\/$/, "") + "/rest/v1/" + path;
+  var key = getProp("SUPABASE_SERVICE_KEY");
+  if (!url || !key) throw new Error("Set SUPABASE_URL and SUPABASE_SERVICE_KEY");
+  var headers = {
+    apikey: key,
+    Authorization: "Bearer " + key,
+    "Content-Type": "application/json",
+    Prefer: "return=representation",
+  };
+  if (extraHeaders) {
+    for (var k in extraHeaders) headers[k] = extraHeaders[k];
+  }
+  var opts = { method: method, muteHttpExceptions: true, headers: headers };
+  if (body) opts.payload = JSON.stringify(body);
+  return UrlFetchApp.fetch(url, opts);
+}
+
+function rowToFinancePayload(row) {
+  var debit = parseFloat(row.debit) || 0;
+  var credit = parseFloat(row.credit) || 0;
+  var amount =
+    parseFloat(row.amount) ||
+    parseFloat(row.outstanding_amount) ||
+    parseFloat(row.balance) ||
+    parseFloat(row.closing_balance) ||
+    Math.max(debit, credit) ||
+    0;
+  var desc =
+    row.description ||
+    row.narration ||
+    row.ledger_name ||
+    row.party_name ||
+    row.bill_no ||
+    "";
+  if (!desc && !amount) return null;
+
+  return {
+    company: row.company_name || "Flexiflair Tech Private Limited",
+    record_type: row.data_type || row.record_type || "ledger",
+    description: desc,
+    amount: amount,
+    voucher_date: row.voucher_date || row.bill_date || row.as_on_date || null,
+    voucher_no: row.voucher_no || row.bill_no || null,
+    voucher_type: row.voucher_type || row.data_type || null,
+    ledger_name: row.ledger_name || null,
+    party_name: row.party_name || null,
+    debit: debit,
+    credit: credit,
+    reference: row.reference || null,
+    narration: row.narration || null,
+    gst_no: row.gst_no || null,
+    status: "queued",
+    source: "tally",
+  };
+}
+
+/** Sheet → Supabase (pehle purane tally rows delete, phir naye insert) */
+function syncFinanceToSupabase() {
+  var rows = rowsFromFinanceSheet();
+  supabaseRequest("DELETE", "finance_import_queue?source=eq.tally", null, {
+    Prefer: "return=minimal",
+  });
+
+  var batch = [];
+  rows.forEach(function (row) {
+    var p = rowToFinancePayload(row);
+    if (p) batch.push(p);
+  });
+  if (!batch.length) {
+    logSync("apps_script", TAB_FINANCE, 0, "ok", "No finance rows");
+    return 0;
+  }
+  var res = supabaseRequest("POST", "finance_import_queue", batch);
+  if (res.getResponseCode() >= 300) throw new Error(res.getContentText());
+  logSync("apps_script", TAB_FINANCE, batch.length, "ok", "Supabase finance synced");
+  return batch.length;
+}
+
+/** Har 2 ghante — sirf finance sync (Phase 1) */
+function syncAllToSupabase() {
+  var n = 0;
+  try {
+    n = syncFinanceToSupabase();
+  } catch (e) {
+    logSync("apps_script", TAB_FINANCE, 0, "error", String(e));
+  }
+  var webhook = getProp("FBOS_WEBHOOK_URL");
+  var secret = getProp("SYNC_SECRET") || getProp("SHEET_SYNC_SECRET");
+  if (webhook && secret) {
+    try {
+      UrlFetchApp.fetch(webhook, {
+        method: "post",
+        headers: { Authorization: "Bearer " + secret },
+        muteHttpExceptions: true,
+      });
+    } catch (e2) {}
+  }
+  return "finance:" + n;
+}
+
+function setupEvery2HourTriggers() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger("syncAllToSupabase").timeBased().everyHours(2).create();
+}
+
+function setupDailyTriggers() {
+  setupEvery2HourTriggers();
+}
+
+function replaceFinanceSheetRows(records) {
+  var sh = sheetByName(TAB_FINANCE);
+  var last = sh.getLastRow();
+  if (last > 1) sh.deleteRows(2, last - 1);
+  if (!records || !records.length

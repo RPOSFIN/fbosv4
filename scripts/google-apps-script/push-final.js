@@ -1,0 +1,1 @@
+(() => { const ed = monaco.editor.getEditors()[0]; const code = atob(window.__b64 || ''); ed.setValue(code); ed.pushUndoStop(); return JSON.stringify({ len: code.length, hasSetup: code.includes('setupUnifiedOrderMaster') }); })()

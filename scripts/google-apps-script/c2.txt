@@ -1,0 +1,111 @@
+ar n = 0;
+  try {
+    n = syncFinanceToSupabase();
+  } catch (e) {
+    logSync("apps_script", TAB_FINANCE, 0, "error", String(e));
+  }
+  var webhook = getProp("FBOS_WEBHOOK_URL");
+  var secret = getProp("SYNC_SECRET") || getProp("SHEET_SYNC_SECRET");
+  if (webhook && secret) {
+    try {
+      UrlFetchApp.fetch(webhook, {
+        method: "post",
+        headers: { Authorization: "Bearer " + secret },
+        muteHttpExceptions: true,
+      });
+    } catch (e2) {}
+  }
+  return "finance:" + n;
+}
+
+function setupEvery2HourTriggers() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger("syncAllToSupabase").timeBased().everyHours(2).create();
+}
+
+function setupDailyTriggers() {
+  setupEvery2HourTriggers();
+}
+
+function replaceFinanceSheetRows(records) {
+  var sh = sheetByName(TAB_FINANCE);
+  var last = sh.getLastRow();
+  if (last > 1) sh.deleteRows(2, last - 1);
+  if (!records || !records.length) return 0;
+  var now = new Date().toISOString();
+  var matrix = records.map(function (rec) {
+    rec.synced_at = rec.synced_at || now;
+    if (!rec.data_type && rec.record_type) rec.data_type = rec.record_type;
+    return FINANCE_HEADERS.map(function (h) {
+      return rec[h] != null ? rec[h] : "";
+    });
+  });
+  sh.getRange(2, 1, matrix.length, FINANCE_HEADERS.length).setValues(matrix);
+  return records.length;
+}
+
+/** Tally cloud script POST — poora data ek hi tab mein replace */
+function doPost(e) {
+  try {
+    var body = JSON.parse(e.postData.contents || "{}");
+    if (
+      body.action === "tally_finance" ||
+      body.action === "tally_finance_sync" ||
+      body.action === "tally_vouchers"
+    ) {
+      var records = body.records || [];
+      var n = replaceFinanceSheetRows(records);
+      var imported = syncFinanceToSupabase();
+      return jsonOut({ ok: true, tab: TAB_FINANCE, sheet_rows: n, supabase_rows: imported });
+    }
+    return jsonOut({ ok: false, message: "Use action tally_finance with records[]" });
+  } catch (err) {
+    return jsonOut({ ok: false, message: String(err) });
+  }
+}
+
+function doGet() {
+  return jsonOut({
+    ok: true,
+    service: "FBOS Finance Hub",
+    tab: TAB_FINANCE,
+    sync: "every 2 hours",
+  });
+}
+
+function jsonOut(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(
+    ContentService.MimeType.JSON
+  );
+}
+
+/** 06_Finance_Sync column refs for dashboard formulas */
+var FIN_COL = {
+  data_type: "A",
+  parent_group: "H",
+  voucher_type: "E",
+  party_name: "F",
+  debit: "J",
+  credit: "K",
+  amount: "L",
+  closing_balance: "N",
+  outstanding_amount: "O",
+  bill_date: "Q",
+  due_date: "R",
+  overdue_days: "S",
+  balance: "V",
+};
+
+function finRange(col) {
+  return "'" + TAB_FINANCE + "'!" + col + ":" + col;
+}
+
+function finSumif(type, col) {
+  return (
+    "SUMIF(" +
+    finRange(FIN_COL.data_type) +
+    ',"' +
+    type +
+    '

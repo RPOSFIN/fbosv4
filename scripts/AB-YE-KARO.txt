@@ -1,0 +1,59 @@
+================================================================================
+FBOS — SIRF 3 STEP (5 minute) — Hindi
+================================================================================
+
+Pehle auto-setup security block ho gaya (Google login / secrets).
+Neeche 3 step — copy-paste ya import, phir 2 Run.
+
+--------------------------------------------------------------------------------
+STEP 1 — CONFIG file import (2 min)
+--------------------------------------------------------------------------------
+
+1) File Explorer kholo:
+   fbos-v1\scripts\sheet-templates\CONFIG-import-ready.csv
+
+2) Google Sheet kholo (CONFIG tab):
+   https://docs.google.com/spreadsheets/d/1Pi6Mz7P5oYkLutsWLrM8aoos4ijXtmEuessFvd4oUBI/edit#gid=639805728
+
+3) Neeche tab "CONFIG" par click karo
+
+4) Menu: File → Import → Upload → CONFIG-import-ready.csv choose karo
+
+5) Import location: "Replace data at selected cell" → Cell A1 → Import data
+
+   (Purani CONFIG rows replace ho jayengi — theek hai)
+
+--------------------------------------------------------------------------------
+STEP 2 — Apps Script Run #1 (1 min)
+--------------------------------------------------------------------------------
+
+1) Sheet mein: Extensions → Apps Script
+
+2) Upar dropdown se choose: setupAllFbosHub
+
+3) ▶ Run dabao → Allow / Review permissions → Allow
+
+4) Neeche "Execution completed" dikhe — wait 20-30 sec
+
+--------------------------------------------------------------------------------
+STEP 3 — Apps Script Run #2 (1 min)
+--------------------------------------------------------------------------------
+
+1) Dropdown se choose: syncClickUpToLeadCrm
+
+2) ▶ Run dabao
+
+3) Check karo:
+   - Tab 07_Lead_CRM → ClickUp leads dikhen
+   - Tab 00_Sync_Status → nayi line "clickup" / ok
+
+--------------------------------------------------------------------------------
+HO GAYA? Chat mein likho: done
+--------------------------------------------------------------------------------
+
+Problem?
+- "View only" sheet → owner se Editor access mango
+- Run error → CONFIG import dubara STEP 1 se karo
+- Extensions nahi khulta → flexiflairindia@gmail.com se login karo
+
+================================================================================

@@ -1,0 +1,10 @@
+CLICKUP_API_TOKEN     ← pk_212447624_RBFNSO0................AIARWUHXREYV3N
+CLICKUP_TEAM_ID       ← https://app.clickup.com/90161138425/settings/team/90161138425/users?via=settings%20sidebar
+CLICKUP_SPACE_ID      ← https://app.clickup.com/90161138425/v/s/90164530022
+CLICKUP_FOLDER_ID     ← https://app.clickup.com/90161138425/v/f/90166009556/90164530022
+CLICKUP_LIST_ID       ← https://app.clickup.com/90161138425/v/li/901615315973
+
+
+GOOGLE_SHEET_ID       ← https://docs.google.com/spreadsheets/d/1Pi6Mz7P5oYkLutsWLrM8aoos4ijXtmEuessFvd4oUBI/edit?gid=443214491#gid=443214491
+
+TALLY_PORT            ← Aapke Tally setup se
