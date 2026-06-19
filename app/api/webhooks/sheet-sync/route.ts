@@ -41,9 +41,8 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({
-    ok: result.ok,
-    syncedAt: new Date().toISOString(),
     ...result,
+    syncedAt: new Date().toISOString(),
   });
 }
 
@@ -55,3 +54,4 @@ export async function GET() {
     schedule: "Apps Script triggers 4x daily recommended",
   });
 }
+
