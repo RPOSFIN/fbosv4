@@ -1,0 +1,3938 @@
+﻿===== PACKAGE_JSON =====
+{ 
+ 
+     " n a m e " :   " f b o s - v 1 " , 
+ 
+     " v e r s i o n " :   " 0 . 1 . 0 " , 
+ 
+     " p r i v a t e " :   t r u e , 
+ 
+     " s c r i p t s " :   { 
+ 
+         " d e v " :   " n e x t   d e v " , 
+ 
+         " b u i l d " :   " n e x t   b u i l d " , 
+ 
+         " s t a r t " :   " n e x t   s t a r t " , 
+ 
+         " l i n t " :   " e s l i n t " , 
+ 
+         " d b : v e r i f y " :   " n o d e   s c r i p t s / v e r i f y - d a t a b a s e . m j s " , 
+ 
+         " d b : i n t e g r a t i o n s " :   " n o d e   s c r i p t s / a p p l y - i n t e g r a t i o n s - m i g r a t i o n . m j s " , 
+ 
+         " v a l i d a t e " :   " n p m   r u n   l i n t   & &   n p m   r u n   b u i l d   & &   n p m   r u n   d b : v e r i f y " 
+ 
+     } , 
+ 
+     " d e p e n d e n c i e s " :   { 
+ 
+         " @ h u g e i c o n s / c o r e - f r e e - i c o n s " :   " ^ 4 . 2 . 0 " , 
+ 
+         " @ h u g e i c o n s / r e a c t " :   " ^ 1 . 1 . 6 " , 
+ 
+         " @ s u p a b a s e / s s r " :   " ^ 0 . 1 2 . 0 " , 
+ 
+         " @ s u p a b a s e / s u p a b a s e - j s " :   " ^ 2 . 1 0 8 . 1 " , 
+ 
+         " c l a s s - v a r i a n c e - a u t h o r i t y " :   " ^ 0 . 7 . 1 " , 
+ 
+         " c l s x " :   " ^ 2 . 1 . 1 " , 
+ 
+         " d a t e - f n s " :   " ^ 4 . 4 . 0 " , 
+ 
+         " l u c i d e - r e a c t " :   " ^ 1 . 1 7 . 0 " , 
+ 
+         " n e x t " :   " 1 6 . 2 . 9 " , 
+ 
+         " p a p a p a r s e " :   " ^ 5 . 5 . 3 " , 
+ 
+         " r a d i x - u i " :   " ^ 1 . 5 . 0 " , 
+ 
+         " r e a c t " :   " 1 9 . 2 . 4 " , 
+ 
+         " r e a c t - d o m " :   " 1 9 . 2 . 4 " , 
+ 
+         " r e c h a r t s " :   " ^ 3 . 8 . 1 " , 
+ 
+         " s h a d c n " :   " ^ 4 . 1 1 . 0 " , 
+ 
+         " t a i l w i n d - m e r g e " :   " ^ 3 . 6 . 0 " , 
+ 
+         " t w - a n i m a t e - c s s " :   " ^ 1 . 4 . 0 " , 
+ 
+         " z u s t a n d " :   " ^ 5 . 0 . 1 4 " 
+ 
+     } , 
+ 
+     " d e v D e p e n d e n c i e s " :   { 
+ 
+         " @ t a i l w i n d c s s / p o s t c s s " :   " ^ 4 " , 
+ 
+         " @ t y p e s / n o d e " :   " ^ 2 0 " , 
+ 
+         " @ t y p e s / p a p a p a r s e " :   " ^ 5 . 5 . 2 " , 
+ 
+         " @ t y p e s / r e a c t " :   " ^ 1 9 " , 
+ 
+         " @ t y p e s / r e a c t - d o m " :   " ^ 1 9 " , 
+ 
+         " e s l i n t " :   " ^ 9 " , 
+ 
+         " e s l i n t - c o n f i g - n e x t " :   " 1 6 . 2 . 9 " , 
+ 
+         " t a i l w i n d c s s " :   " ^ 4 " , 
+ 
+         " t y p e s c r i p t " :   " ^ 5 " 
+ 
+     } 
+ 
+ } 
+ 
+ 
+ = = = = =   N E X T _ C O N F I G   = = = = = 
+ 
+ i m p o r t   t y p e   {   N e x t C o n f i g   }   f r o m   " n e x t " ; 
+ 
+ 
+ 
+ c o n s t   n e x t C o n f i g :   N e x t C o n f i g   =   { 
+ 
+     e n v :   { 
+ 
+         N E X T _ P U B L I C _ A U T H _ D I S A B L E D :   p r o c e s s . e n v . N E X T _ P U B L I C _ A U T H _ D I S A B L E D , 
+ 
+         F B O S _ A U T H _ D I S A B L E D :   p r o c e s s . e n v . F B O S _ A U T H _ D I S A B L E D , 
+ 
+     } , 
+ 
+ } ; 
+ 
+ 
+ 
+ e x p o r t   d e f a u l t   n e x t C o n f i g ; 
+ 
+ 
+ = = = = =   M I D D L E W A R E   = = = = = 
+ 
+ i m p o r t   {   N e x t R e s p o n s e   }   f r o m   " n e x t / s e r v e r " ; 
+ 
+ 
+ 
+ e x p o r t   f u n c t i o n   m i d d l e w a r e ( )   { 
+ 
+     r e t u r n   N e x t R e s p o n s e . n e x t ( ) ; 
+ 
+ } 
+ 
+ 
+ = = = = =   A P P _ L A Y O U T   = = = = = 
+ 
+ i m p o r t   t y p e   {   M e t a d a t a   }   f r o m   " n e x t " ; 
+ 
+ i m p o r t   {   G e i s t ,   G e i s t _ M o n o ,   F i g t r e e   }   f r o m   " n e x t / f o n t / g o o g l e " ; 
+ 
+ i m p o r t   " . / g l o b a l s . c s s " ; 
+ 
+ i m p o r t   {   c n   }   f r o m   " @ / l i b / u t i l s " ; 
+ 
+ i m p o r t   C l i e n t L a y o u t   f r o m   " @ / c o m p o n e n t s / c l i e n t - l a y o u t " ; 
+ 
+ 
+ 
+ c o n s t   f i g t r e e   =   F i g t r e e ( { 
+ 
+     s u b s e t s :   [ " l a t i n " ] , 
+ 
+     v a r i a b l e :   " - - f o n t - s a n s " , 
+ 
+ } ) ; 
+ 
+ 
+ 
+ c o n s t   g e i s t S a n s   =   G e i s t ( { 
+ 
+     v a r i a b l e :   " - - f o n t - g e i s t - s a n s " , 
+ 
+     s u b s e t s :   [ " l a t i n " ] , 
+ 
+ } ) ; 
+ 
+ 
+ 
+ c o n s t   g e i s t M o n o   =   G e i s t _ M o n o ( { 
+ 
+     v a r i a b l e :   " - - f o n t - g e i s t - m o n o " , 
+ 
+     s u b s e t s :   [ " l a t i n " ] , 
+ 
+ } ) ; 
+ 
+ 
+ 
+ e x p o r t   c o n s t   m e t a d a t a :   M e t a d a t a   =   { 
+ 
+     t i t l e :   " F B O S   V 1 " , 
+ 
+     d e s c r i p t i o n :   " F l e x i f l a i r   B u s i n e s s   O p e r a t i n g   S y s t e m " , 
+ 
+ } ; 
+ 
+ 
+ 
+ e x p o r t   d e f a u l t   f u n c t i o n   R o o t L a y o u t ( { 
+ 
+     c h i l d r e n , 
+ 
+ } :   { 
+ 
+     c h i l d r e n :   R e a c t . R e a c t N o d e ; 
+ 
+ } )   { 
+ 
+     r e t u r n   ( 
+ 
+         < h t m l 
+ 
+             l a n g = " e n " 
+ 
+             c l a s s N a m e = { c n ( 
+ 
+                 " h - f u l l " , 
+ 
+                 " a n t i a l i a s e d " , 
+ 
+                 g e i s t S a n s . v a r i a b l e , 
+ 
+                 g e i s t M o n o . v a r i a b l e , 
+ 
+                 " f o n t - s a n s " , 
+ 
+                 f i g t r e e . v a r i a b l e 
+ 
+             ) } 
+ 
+         > 
+ 
+             < b o d y   c l a s s N a m e = " m i n - h - s c r e e n   b g - s l a t e - 9 5 0   t e x t - w h i t e " > 
+ 
+                 < C l i e n t L a y o u t > 
+ 
+                     { c h i l d r e n } 
+ 
+                 < / C l i e n t L a y o u t > 
+ 
+             < / b o d y > 
+ 
+         < / h t m l > 
+ 
+     ) ; 
+ 
+ } 
+ 
+ 
+ = = = = =   A P P _ P A G E   = = = = = 
+ 
+ " u s e   c l i e n t " ; 
+ 
+ 
+ 
+ e x p o r t   d e f a u l t   f u n c t i o n   P a g e ( )   { 
+ 
+     r e t u r n   ( 
+ 
+         < m a i n   s t y l e = { { p a d d i n g : " 4 0 p x " , c o l o r : " w h i t e " , b a c k g r o u n d : " # 1 1 1 " , m i n H e i g h t : " 1 0 0 v h " } } > 
+ 
+             < h 1 > F B O S   D A S H B O A R D   W O R K I N G < / h 1 > 
+ 
+         < / m a i n > 
+ 
+     ) ; 
+ 
+ } 
+ 
+ 
+ = = = = =   A P P _ E R R O R   = = = = = 
+ 
+ 
+ = = = = =   T S _ C O N F I G   = = = = = 
+ 
+ { 
+ 
+     " c o m p i l e r O p t i o n s " :   { 
+ 
+         " t a r g e t " :   " E S 2 0 1 7 " , 
+ 
+         " l i b " :   [ " d o m " ,   " d o m . i t e r a b l e " ,   " e s n e x t " ] , 
+ 
+         " a l l o w J s " :   t r u e , 
+ 
+         " s k i p L i b C h e c k " :   t r u e , 
+ 
+         " s t r i c t " :   t r u e , 
+ 
+         " n o E m i t " :   t r u e , 
+ 
+         " e s M o d u l e I n t e r o p " :   t r u e , 
+ 
+         " m o d u l e " :   " e s n e x t " , 
+ 
+         " m o d u l e R e s o l u t i o n " :   " b u n d l e r " , 
+ 
+         " r e s o l v e J s o n M o d u l e " :   t r u e , 
+ 
+         " i s o l a t e d M o d u l e s " :   t r u e , 
+ 
+         " j s x " :   " r e a c t - j s x " , 
+ 
+         " i n c r e m e n t a l " :   t r u e , 
+ 
+         " p l u g i n s " :   [ 
+ 
+             { 
+ 
+                 " n a m e " :   " n e x t " 
+ 
+             } 
+ 
+         ] , 
+ 
+         " p a t h s " :   { 
+ 
+             " @ / * " :   [ " . / * " ] 
+ 
+         } 
+ 
+     } , 
+ 
+     " i n c l u d e " :   [ 
+ 
+         " n e x t - e n v . d . t s " , 
+ 
+         " * * / * . t s " , 
+ 
+         " * * / * . t s x " , 
+ 
+         " . n e x t / t y p e s / * * / * . t s " , 
+ 
+         " . n e x t / d e v / t y p e s / * * / * . t s " , 
+ 
+         " * * / * . m t s " 
+ 
+     ] , 
+ 
+     " e x c l u d e " :   [ " n o d e _ m o d u l e s " ] 
+ 
+ } 
+ 
+ 
+ = = = = =   S U P A B A S E _ C L I E N T   = = = = = 
+ 
+ 
+ = = = = =   S U P A B A S E _ S E R V E R   = = = = = 
+ 
+ i m p o r t   {   c r e a t e S e r v e r C l i e n t   }   f r o m   " @ s u p a b a s e / s s r " ; 
+ 
+ i m p o r t   {   c o o k i e s   }   f r o m   " n e x t / h e a d e r s " ; 
+ 
+ i m p o r t   t y p e   {   N e x t R e q u e s t   }   f r o m   " n e x t / s e r v e r " ; 
+ 
+ i m p o r t   {   N e x t R e s p o n s e   }   f r o m   " n e x t / s e r v e r " ; 
+ 
+ i m p o r t   {   g e t S u p a b a s e C o o k i e O p t i o n s   }   f r o m   " @ / l i b / s u p a b a s e / c o o k i e - o p t i o n s " ; 
+ 
+ 
+ 
+ f u n c t i o n   c o p y C o o k i e s ( f r o m :   N e x t R e s p o n s e ,   t o :   N e x t R e s p o n s e )   { 
+ 
+     f r o m . c o o k i e s . g e t A l l ( ) . f o r E a c h ( ( c o o k i e )   = >   { 
+ 
+         t o . c o o k i e s . s e t ( c o o k i e ) ; 
+ 
+     } ) ; 
+ 
+ } 
+ 
+ 
+ 
+ / * * 
+ 
+   *   S e r v e r   C o m p o n e n t s   /   R o u t e   H a n d l e r s   t h a t   o n l y   R E A D   c o o k i e s   ( e . g .   G E T   s e s s i o n ) . 
+ 
+   * / 
+ 
+ e x p o r t   a s y n c   f u n c t i o n   c r e a t e S u p a b a s e S e r v e r C l i e n t ( )   { 
+ 
+     c o n s t   c o o k i e S t o r e   =   a w a i t   c o o k i e s ( ) ; 
+ 
+ 
+ 
+     r e t u r n   c r e a t e S e r v e r C l i e n t ( 
+ 
+         p r o c e s s . e n v . N E X T _ P U B L I C _ S U P A B A S E _ U R L ! , 
+ 
+         p r o c e s s . e n v . N E X T _ P U B L I C _ S U P A B A S E _ A N O N _ K E Y ! , 
+ 
+         { 
+ 
+             c o o k i e O p t i o n s :   g e t S u p a b a s e C o o k i e O p t i o n s ( ) , 
+ 
+             c o o k i e s :   { 
+ 
+                 g e t A l l ( )   { 
+ 
+                     r e t u r n   c o o k i e S t o r e . g e t A l l ( ) ; 
+ 
+                 } , 
+ 
+                 s e t A l l ( c o o k i e s T o S e t )   { 
+ 
+                     t r y   { 
+ 
+                         c o o k i e s T o S e t . f o r E a c h ( ( {   n a m e ,   v a l u e ,   o p t i o n s   } )   = > 
+ 
+                             c o o k i e S t o r e . s e t ( n a m e ,   v a l u e ,   o p t i o n s ) 
+ 
+                         ) ; 
+ 
+                     }   c a t c h   { 
+ 
+                         / /   R e a d - o n l y   S e r v e r   C o m p o n e n t   c o n t e x t 
+ 
+                     } 
+ 
+                 } , 
+ 
+             } , 
+ 
+         } 
+ 
+     ) ; 
+ 
+ } 
+ 
+ 
+ 
+ / * * 
+ 
+   *   R o u t e   H a n d l e r s   t h a t   M U S T   w r i t e   S e t - C o o k i e   ( l o g i n   c a l l b a c k ,   p a s s w o r d   s i g n - i n ,   l o g o u t ) . 
+ 
+   *   C o o k i e s   a r e   a t t a c h e d   t o   t h e   p r o v i d e d   N e x t R e s p o n s e   â ¬    r e q u i r e d   f o r   m a g i c   l i n k   P K C E   f l o w . 
+ 
+   * / 
+ 
+ e x p o r t   f u n c t i o n   c r e a t e S u p a b a s e R o u t e H a n d l e r C l i e n t ( 
+ 
+     r e q u e s t :   N e x t R e q u e s t , 
+ 
+     r e s p o n s e :   N e x t R e s p o n s e 
+ 
+ )   { 
+ 
+     r e t u r n   c r e a t e S e r v e r C l i e n t ( 
+ 
+         p r o c e s s . e n v . N E X T _ P U B L I C _ S U P A B A S E _ U R L ! , 
+ 
+         p r o c e s s . e n v . N E X T _ P U B L I C _ S U P A B A S E _ A N O N _ K E Y ! , 
+ 
+         { 
+ 
+             c o o k i e O p t i o n s :   g e t S u p a b a s e C o o k i e O p t i o n s ( ) , 
+ 
+             c o o k i e s :   { 
+ 
+                 g e t A l l ( )   { 
+ 
+                     r e t u r n   r e q u e s t . c o o k i e s . g e t A l l ( ) ; 
+ 
+                 } , 
+ 
+                 s e t A l l ( c o o k i e s T o S e t )   { 
+ 
+                     c o o k i e s T o S e t . f o r E a c h ( ( {   n a m e ,   v a l u e ,   o p t i o n s   } )   = >   { 
+ 
+                         r e q u e s t . c o o k i e s . s e t ( n a m e ,   v a l u e ) ; 
+ 
+                         r e s p o n s e . c o o k i e s . s e t ( n a m e ,   v a l u e ,   o p t i o n s ) ; 
+ 
+                     } ) ; 
+ 
+                 } , 
+ 
+             } , 
+ 
+         } 
+ 
+     ) ; 
+ 
+ } 
+ 
+ 
+ 
+ / * *   C o p y   a u t h   c o o k i e s   f r o m   a   c a r r i e r   r e s p o n s e   o n t o   a   J S O N / r e d i r e c t   r e s p o n s e .   * / 
+ 
+ e x p o r t   {   c o p y C o o k i e s   } ; 
+ 
+ 
+ 
+ / * *   @ d e p r e c a t e d   U s e   c r e a t e S u p a b a s e S e r v e r C l i e n t   * / 
+ 
+ e x p o r t   c o n s t   c r e a t e S e r v e r S u p a b a s e C l i e n t   =   c r e a t e S u p a b a s e S e r v e r C l i e n t ; 
+ 
+ 
+ = = = = =   S U P A B A S E _ M I D D L E W A R E   = = = = = 
+ 
+ 
+ = = = = =   S T O R E _ F I L E S   = = = = = 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ @ m o d e l c o n t e x t p r o t o c o l \ s d k \ d i s t \ c j s \ e x a m p l e s \ s h a r e d \ i n M e m o r y E v e n t S t o r e . d . t s 
+ 
+ 
+ i m p o r t   {   J S O N R P C M e s s a g e   }   f r o m   ' . . / . . / t y p e s . j s ' ; 
+ 
+ i m p o r t   {   E v e n t S t o r e   }   f r o m   ' . . / . . / s e r v e r / s t r e a m a b l e H t t p . j s ' ; 
+ 
+ / * * 
+ 
+   *   S i m p l e   i n - m e m o r y   i m p l e m e n t a t i o n   o f   t h e   E v e n t S t o r e   i n t e r f a c e   f o r   r e s u m a b i l i t y 
+ 
+   *   T h i s   i s   p r i m a r i l y   i n t e n d e d   f o r   e x a m p l e s   a n d   t e s t i n g ,   n o t   f o r   p r o d u c t i o n   u s e 
+ 
+   *   w h e r e   a   p e r s i s t e n t   s t o r a g e   s o l u t i o n   w o u l d   b e   m o r e   a p p r o p r i a t e . 
+ 
+   * / 
+ 
+ e x p o r t   d e c l a r e   c l a s s   I n M e m o r y E v e n t S t o r e   i m p l e m e n t s   E v e n t S t o r e   { 
+ 
+         p r i v a t e   e v e n t s ; 
+ 
+         / * * 
+ 
+           *   G e n e r a t e s   a   u n i q u e   e v e n t   I D   f o r   a   g i v e n   s t r e a m   I D 
+ 
+           * / 
+ 
+         p r i v a t e   g e n e r a t e E v e n t I d ; 
+ 
+         / * * 
+ 
+           *   E x t r a c t s   t h e   s t r e a m   I D   f r o m   a n   e v e n t   I D 
+ 
+           * / 
+ 
+         p r i v a t e   g e t S t r e a m I d F r o m E v e n t I d ; 
+ 
+         / * * 
+ 
+           *   S t o r e s   a n   e v e n t   w i t h   a   g e n e r a t e d   e v e n t   I D 
+ 
+           *   I m p l e m e n t s   E v e n t S t o r e . s t o r e E v e n t 
+ 
+           * / 
+ 
+         s t o r e E v e n t ( s t r e a m I d :   s t r i n g ,   m e s s a g e :   J S O N R P C M e s s a g e ) :   P r o m i s e < s t r i n g > ; 
+ 
+         / * * 
+ 
+           *   R e p l a y s   e v e n t s   t h a t   o c c u r r e d   a f t e r   a   s p e c i f i c   e v e n t   I D 
+ 
+           *   I m p l e m e n t s   E v e n t S t o r e . r e p l a y E v e n t s A f t e r 
+ 
+           * / 
+ 
+         r e p l a y E v e n t s A f t e r ( l a s t E v e n t I d :   s t r i n g ,   {   s e n d   } :   { 
+ 
+                 s e n d :   ( e v e n t I d :   s t r i n g ,   m e s s a g e :   J S O N R P C M e s s a g e )   = >   P r o m i s e < v o i d > ; 
+ 
+         } ) :   P r o m i s e < s t r i n g > ; 
+ 
+ } 
+ 
+ / / #   s o u r c e M a p p i n g U R L = i n M e m o r y E v e n t S t o r e . d . t s . m a p 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ @ m o d e l c o n t e x t p r o t o c o l \ s d k \ d i s t \ e s m \ e x a m p l e s \ s h a r e d \ i n M e m o r y E v e n t S t o r e . d . t s 
+ 
+ 
+ i m p o r t   {   J S O N R P C M e s s a g e   }   f r o m   ' . . / . . / t y p e s . j s ' ; 
+ 
+ i m p o r t   {   E v e n t S t o r e   }   f r o m   ' . . / . . / s e r v e r / s t r e a m a b l e H t t p . j s ' ; 
+ 
+ / * * 
+ 
+   *   S i m p l e   i n - m e m o r y   i m p l e m e n t a t i o n   o f   t h e   E v e n t S t o r e   i n t e r f a c e   f o r   r e s u m a b i l i t y 
+ 
+   *   T h i s   i s   p r i m a r i l y   i n t e n d e d   f o r   e x a m p l e s   a n d   t e s t i n g ,   n o t   f o r   p r o d u c t i o n   u s e 
+ 
+   *   w h e r e   a   p e r s i s t e n t   s t o r a g e   s o l u t i o n   w o u l d   b e   m o r e   a p p r o p r i a t e . 
+ 
+   * / 
+ 
+ e x p o r t   d e c l a r e   c l a s s   I n M e m o r y E v e n t S t o r e   i m p l e m e n t s   E v e n t S t o r e   { 
+ 
+         p r i v a t e   e v e n t s ; 
+ 
+         / * * 
+ 
+           *   G e n e r a t e s   a   u n i q u e   e v e n t   I D   f o r   a   g i v e n   s t r e a m   I D 
+ 
+           * / 
+ 
+         p r i v a t e   g e n e r a t e E v e n t I d ; 
+ 
+         / * * 
+ 
+           *   E x t r a c t s   t h e   s t r e a m   I D   f r o m   a n   e v e n t   I D 
+ 
+           * / 
+ 
+         p r i v a t e   g e t S t r e a m I d F r o m E v e n t I d ; 
+ 
+         / * * 
+ 
+           *   S t o r e s   a n   e v e n t   w i t h   a   g e n e r a t e d   e v e n t   I D 
+ 
+           *   I m p l e m e n t s   E v e n t S t o r e . s t o r e E v e n t 
+ 
+           * / 
+ 
+         s t o r e E v e n t ( s t r e a m I d :   s t r i n g ,   m e s s a g e :   J S O N R P C M e s s a g e ) :   P r o m i s e < s t r i n g > ; 
+ 
+         / * * 
+ 
+           *   R e p l a y s   e v e n t s   t h a t   o c c u r r e d   a f t e r   a   s p e c i f i c   e v e n t   I D 
+ 
+           *   I m p l e m e n t s   E v e n t S t o r e . r e p l a y E v e n t s A f t e r 
+ 
+           * / 
+ 
+         r e p l a y E v e n t s A f t e r ( l a s t E v e n t I d :   s t r i n g ,   {   s e n d   } :   { 
+ 
+                 s e n d :   ( e v e n t I d :   s t r i n g ,   m e s s a g e :   J S O N R P C M e s s a g e )   = >   P r o m i s e < v o i d > ; 
+ 
+         } ) :   P r o m i s e < s t r i n g > ; 
+ 
+ } 
+ 
+ / / #   s o u r c e M a p p i n g U R L = i n M e m o r y E v e n t S t o r e . d . t s . m a p 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ @ r e d u x j s \ t o o l k i t \ s r c \ c o n f i g u r e S t o r e . t s 
+ 
+ 
+ i m p o r t   t y p e   { 
+ 
+     R e d u c e r , 
+ 
+     R e d u c e r s M a p O b j e c t , 
+ 
+     M i d d l e w a r e , 
+ 
+     A c t i o n , 
+ 
+     S t o r e E n h a n c e r , 
+ 
+     S t o r e , 
+ 
+     U n k n o w n A c t i o n , 
+ 
+ }   f r o m   ' r e d u x ' 
+ 
+ i m p o r t   { 
+ 
+     a p p l y M i d d l e w a r e , 
+ 
+     c r e a t e S t o r e , 
+ 
+     c o m p o s e , 
+ 
+     c o m b i n e R e d u c e r s , 
+ 
+     i s P l a i n O b j e c t , 
+ 
+ }   f r o m   ' . / r e d u x I m p o r t s ' 
+ 
+ i m p o r t   t y p e   {   D e v T o o l s E n h a n c e r O p t i o n s   a s   D e v T o o l s O p t i o n s   }   f r o m   ' . / d e v t o o l s E x t e n s i o n ' 
+ 
+ i m p o r t   {   c o m p o s e W i t h D e v T o o l s   }   f r o m   ' . / d e v t o o l s E x t e n s i o n ' 
+ 
+ 
+ 
+ i m p o r t   t y p e   { 
+ 
+     T h u n k M i d d l e w a r e F o r , 
+ 
+     G e t D e f a u l t M i d d l e w a r e , 
+ 
+ }   f r o m   ' . / g e t D e f a u l t M i d d l e w a r e ' 
+ 
+ i m p o r t   {   b u i l d G e t D e f a u l t M i d d l e w a r e   }   f r o m   ' . / g e t D e f a u l t M i d d l e w a r e ' 
+ 
+ i m p o r t   t y p e   { 
+ 
+     E x t r a c t D i s p a t c h E x t e n s i o n s , 
+ 
+     E x t r a c t S t o r e E x t e n s i o n s , 
+ 
+     E x t r a c t S t a t e E x t e n s i o n s , 
+ 
+     U n k n o w n I f N o n S p e c i f i c , 
+ 
+ }   f r o m   ' . / t s H e l p e r s ' 
+ 
+ i m p o r t   t y p e   {   T u p l e   }   f r o m   ' . / u t i l s ' 
+ 
+ i m p o r t   t y p e   {   G e t D e f a u l t E n h a n c e r s   }   f r o m   ' . / g e t D e f a u l t E n h a n c e r s ' 
+ 
+ i m p o r t   {   b u i l d G e t D e f a u l t E n h a n c e r s   }   f r o m   ' . / g e t D e f a u l t E n h a n c e r s ' 
+ 
+ 
+ 
+ / * * 
+ 
+   *   O p t i o n s   f o r   ` c o n f i g u r e S t o r e ( ) ` . 
+ 
+   * 
+ 
+   *   @ p u b l i c 
+ 
+   * / 
+ 
+ e x p o r t   i n t e r f a c e   C o n f i g u r e S t o r e O p t i o n s < 
+ 
+     S   =   a n y , 
+ 
+     A   e x t e n d s   A c t i o n   =   U n k n o w n A c t i o n , 
+ 
+     M   e x t e n d s   T u p l e < M i d d l e w a r e s < S > >   =   T u p l e < M i d d l e w a r e s < S > > , 
+ 
+     E   e x t e n d s   T u p l e < E n h a n c e r s >   =   T u p l e < E n h a n c e r s > , 
+ 
+     P   =   S , 
+ 
+ >   { 
+ 
+     / * * 
+ 
+       *   A   s i n g l e   r e d u c e r   f u n c t i o n   t h a t   w i l l   b e   u s e d   a s   t h e   r o o t   r e d u c e r ,   o r   a n 
+ 
+       *   o b j e c t   o f   s l i c e   r e d u c e r s   t h a t   w i l l   b e   p a s s e d   t o   ` c o m b i n e R e d u c e r s ( ) ` . 
+ 
+       * / 
+ 
+     r e d u c e r :   R e d u c e r < S ,   A ,   P >   |   R e d u c e r s M a p O b j e c t < S ,   A ,   P > 
+ 
+ 
+ 
+     / * * 
+ 
+       *   A n   a r r a y   o f   R e d u x   m i d d l e w a r e   t o   i n s t a l l ,   o r   a   c a l l b a c k   r e c e i v i n g   ` g e t D e f a u l t M i d d l e w a r e `   a n d   r e t u r n i n g   a   T u p l e   o f   m i d d l e w a r e . 
+ 
+       *   I f   n o t   s u p p l i e d ,   d e f a u l t s   t o   t h e   s e t   o f   m i d d l e w a r e   r e t u r n e d   b y   ` g e t D e f a u l t M i d d l e w a r e ( ) ` . 
+ 
+       * 
+ 
+       *   @ e x a m p l e   ` m i d d l e w a r e :   ( g D M )   = >   g D M ( ) . c o n c a t ( l o g g e r ,   a p i M i d d l e w a r e ,   y o u r C u s t o m M i d d l e w a r e ) ` 
+ 
+       *   @ s e e   h t t p s : / / r e d u x - t o o l k i t . j s . o r g / a p i / g e t D e f a u l t M i d d l e w a r e # i n t e n d e d - u s a g e 
+ 
+       * / 
+ 
+     m i d d l e w a r e ? :   ( g e t D e f a u l t M i d d l e w a r e :   G e t D e f a u l t M i d d l e w a r e < S > )   = >   M 
+ 
+ 
+ 
+     / * * 
+ 
+       *   W h e t h e r   t o   e n a b l e   R e d u x   D e v T o o l s   i n t e g r a t i o n .   D e f a u l t s   t o   ` t r u e ` . 
+ 
+       * 
+ 
+       *   A d d i t i o n a l   c o n f i g u r a t i o n   c a n   b e   d o n e   b y   p a s s i n g   R e d u x   D e v T o o l s   o p t i o n s 
+ 
+       * / 
+ 
+     d e v T o o l s ? :   b o o l e a n   |   D e v T o o l s O p t i o n s 
+ 
+ 
+ 
+     / * * 
+ 
+       *   W h e t h e r   t o   c h e c k   f o r   d u p l i c a t e   m i d d l e w a r e   i n s t a n c e s .   D e f a u l t s   t o   ` t r u e ` . 
+ 
+       * / 
+ 
+     d u p l i c a t e M i d d l e w a r e C h e c k ? :   b o o l e a n 
+ 
+ 
+ 
+     / * * 
+ 
+       *   T h e   i n i t i a l   s t a t e ,   s a m e   a s   R e d u x ' s   c r e a t e S t o r e . 
+ 
+       *   Y o u   m a y   o p t i o n a l l y   s p e c i f y   i t   t o   h y d r a t e   t h e   s t a t e 
+ 
+       *   f r o m   t h e   s e r v e r   i n   u n i v e r s a l   a p p s ,   o r   t o   r e s t o r e   a   p r e v i o u s l y   s e r i a l i z e d 
+ 
+       *   u s e r   s e s s i o n .   I f   y o u   u s e   ` c o m b i n e R e d u c e r s ( ) `   t o   p r o d u c e   t h e   r o o t   r e d u c e r 
+ 
+       *   f u n c t i o n   ( e i t h e r   d i r e c t l y   o r   i n d i r e c t l y   b y   p a s s i n g   a n   o b j e c t   a s   ` r e d u c e r ` ) , 
+ 
+       *   t h i s   m u s t   b e   a n   o b j e c t   w i t h   t h e   s a m e   s h a p e   a s   t h e   r e d u c e r   m a p   k e y s . 
+ 
+       * / 
+ 
+     / /   w e   i n f e r   h e r e ,   a n d   i n s t e a d   c o m p l a i n   i f   t h e   r e d u c e r   d o e s n ' t   m a t c h 
+ 
+     p r e l o a d e d S t a t e ? :   P 
+ 
+ 
+ 
+     / * * 
+ 
+       *   T h e   s t o r e   e n h a n c e r s   t o   a p p l y .   S e e   R e d u x ' s   ` c r e a t e S t o r e ( ) ` . 
+ 
+       *   A l l   e n h a n c e r s   w i l l   b e   i n c l u d e d   b e f o r e   t h e   D e v T o o l s   E x t e n s i o n   e n h a n c e r . 
+ 
+       *   I f   y o u   n e e d   t o   c u s t o m i z e   t h e   o r d e r   o f   e n h a n c e r s ,   s u p p l y   a   c a l l b a c k 
+ 
+       *   f u n c t i o n   t h a t   w i l l   r e c e i v e   a   ` g e t D e f a u l t E n h a n c e r s `   f u n c t i o n   t h a t   r e t u r n s   a   T u p l e , 
+ 
+       *   a n d   s h o u l d   r e t u r n   a   T u p l e   o f   e n h a n c e r s   ( s u c h   a s   ` g e t D e f a u l t E n h a n c e r s ( ) . c o n c a t ( o f f l i n e ) ` ) . 
+ 
+       *   I f   y o u   o n l y   n e e d   t o   a d d   m i d d l e w a r e ,   y o u   c a n   u s e   t h e   ` m i d d l e w a r e `   p a r a m e t e r   i n s t e a d . 
+ 
+       * / 
+ 
+     e n h a n c e r s ? :   ( g e t D e f a u l t E n h a n c e r s :   G e t D e f a u l t E n h a n c e r s < M > )   = >   E 
+ 
+ } 
+ 
+ 
+ 
+ e x p o r t   t y p e   M i d d l e w a r e s < S >   =   R e a d o n l y A r r a y < M i d d l e w a r e < { } ,   S > > 
+ 
+ 
+ 
+ t y p e   E n h a n c e r s   =   R e a d o n l y A r r a y < S t o r e E n h a n c e r > 
+ 
+ 
+ 
+ / * * 
+ 
+   *   A   R e d u x   s t o r e   r e t u r n e d   b y   ` c o n f i g u r e S t o r e ( ) ` .   S u p p o r t s   d i s p a t c h i n g 
+ 
+   *   s i d e - e f f e c t f u l   _ t h u n k s _   i n   a d d i t i o n   t o   p l a i n   a c t i o n s . 
+ 
+   * 
+ 
+   *   @ p u b l i c 
+ 
+   * / 
+ 
+ e x p o r t   t y p e   E n h a n c e d S t o r e < 
+ 
+     S   =   a n y , 
+ 
+     A   e x t e n d s   A c t i o n   =   U n k n o w n A c t i o n , 
+ 
+     E   e x t e n d s   E n h a n c e r s   =   E n h a n c e r s , 
+ 
+ >   =   E x t r a c t S t o r e E x t e n s i o n s < E >   & 
+ 
+     S t o r e < S ,   A ,   U n k n o w n I f N o n S p e c i f i c < E x t r a c t S t a t e E x t e n s i o n s < E > > > 
+ 
+ 
+ 
+ / * * 
+ 
+   *   A   f r i e n d l y   a b s t r a c t i o n   o v e r   t h e   s t a n d a r d   R e d u x   ` c r e a t e S t o r e ( ) `   f u n c t i o n . 
+ 
+   * 
+ 
+   *   @ p a r a m   o p t i o n s   T h e   s t o r e   c o n f i g u r a t i o n . 
+ 
+   *   @ r e t u r n s   A   c o n f i g u r e d   R e d u x   s t o r e . 
+ 
+   * 
+ 
+   *   @ p u b l i c 
+ 
+   * / 
+ 
+ e x p o r t   f u n c t i o n   c o n f i g u r e S t o r e < 
+ 
+     S   =   a n y , 
+ 
+     A   e x t e n d s   A c t i o n   =   U n k n o w n A c t i o n , 
+ 
+     M   e x t e n d s   T u p l e < M i d d l e w a r e s < S > >   =   T u p l e < [ T h u n k M i d d l e w a r e F o r < S > ] > , 
+ 
+     E   e x t e n d s   T u p l e < E n h a n c e r s >   =   T u p l e < 
+ 
+         [ S t o r e E n h a n c e r < {   d i s p a t c h :   E x t r a c t D i s p a t c h E x t e n s i o n s < M >   } > ,   S t o r e E n h a n c e r ] 
+ 
+     > , 
+ 
+     P   =   S , 
+ 
+ > ( o p t i o n s :   C o n f i g u r e S t o r e O p t i o n s < S ,   A ,   M ,   E ,   P > ) :   E n h a n c e d S t o r e < S ,   A ,   E >   { 
+ 
+     c o n s t   g e t D e f a u l t M i d d l e w a r e   =   b u i l d G e t D e f a u l t M i d d l e w a r e < S > ( ) 
+ 
+ 
+ 
+     c o n s t   { 
+ 
+         r e d u c e r   =   u n d e f i n e d , 
+ 
+         m i d d l e w a r e , 
+ 
+         d e v T o o l s   =   t r u e , 
+ 
+         d u p l i c a t e M i d d l e w a r e C h e c k   =   t r u e , 
+ 
+         p r e l o a d e d S t a t e   =   u n d e f i n e d , 
+ 
+         e n h a n c e r s   =   u n d e f i n e d , 
+ 
+     }   =   o p t i o n s   | |   { } 
+ 
+ 
+ 
+     l e t   r o o t R e d u c e r :   R e d u c e r < S ,   A ,   P > 
+ 
+ 
+ 
+     i f   ( t y p e o f   r e d u c e r   = = =   ' f u n c t i o n ' )   { 
+ 
+         r o o t R e d u c e r   =   r e d u c e r 
+ 
+     }   e l s e   i f   ( i s P l a i n O b j e c t ( r e d u c e r ) )   { 
+ 
+         r o o t R e d u c e r   =   c o m b i n e R e d u c e r s ( r e d u c e r )   a s   u n k n o w n   a s   R e d u c e r < S ,   A ,   P > 
+ 
+     }   e l s e   { 
+ 
+         t h r o w   n e w   E r r o r ( 
+ 
+             ' ` r e d u c e r `   i s   a   r e q u i r e d   a r g u m e n t ,   a n d   m u s t   b e   a   f u n c t i o n   o r   a n   o b j e c t   o f   f u n c t i o n s   t h a t   c a n   b e   p a s s e d   t o   c o m b i n e R e d u c e r s ' , 
+ 
+         ) 
+ 
+     } 
+ 
+ 
+ 
+     i f   ( 
+ 
+         p r o c e s s . e n v . N O D E _ E N V   ! = =   ' p r o d u c t i o n '   & & 
+ 
+         m i d d l e w a r e   & & 
+ 
+         t y p e o f   m i d d l e w a r e   ! = =   ' f u n c t i o n ' 
+ 
+     )   { 
+ 
+         t h r o w   n e w   E r r o r ( ' ` m i d d l e w a r e `   f i e l d   m u s t   b e   a   c a l l b a c k ' ) 
+ 
+     } 
+ 
+ 
+ 
+     l e t   f i n a l M i d d l e w a r e :   T u p l e < M i d d l e w a r e s < S > > 
+ 
+     i f   ( t y p e o f   m i d d l e w a r e   = = =   ' f u n c t i o n ' )   { 
+ 
+         f i n a l M i d d l e w a r e   =   m i d d l e w a r e ( g e t D e f a u l t M i d d l e w a r e ) 
+ 
+ 
+ 
+         i f   ( 
+ 
+             p r o c e s s . e n v . N O D E _ E N V   ! = =   ' p r o d u c t i o n '   & & 
+ 
+             ! A r r a y . i s A r r a y ( f i n a l M i d d l e w a r e ) 
+ 
+         )   { 
+ 
+             t h r o w   n e w   E r r o r ( 
+ 
+                 ' w h e n   u s i n g   a   m i d d l e w a r e   b u i l d e r   f u n c t i o n ,   a n   a r r a y   o f   m i d d l e w a r e   m u s t   b e   r e t u r n e d ' , 
+ 
+             ) 
+ 
+         } 
+ 
+     }   e l s e   { 
+ 
+         f i n a l M i d d l e w a r e   =   g e t D e f a u l t M i d d l e w a r e ( ) 
+ 
+     } 
+ 
+     i f   ( 
+ 
+         p r o c e s s . e n v . N O D E _ E N V   ! = =   ' p r o d u c t i o n '   & & 
+ 
+         f i n a l M i d d l e w a r e . s o m e ( ( i t e m :   a n y )   = >   t y p e o f   i t e m   ! = =   ' f u n c t i o n ' ) 
+ 
+     )   { 
+ 
+         t h r o w   n e w   E r r o r ( 
+ 
+             ' e a c h   m i d d l e w a r e   p r o v i d e d   t o   c o n f i g u r e S t o r e   m u s t   b e   a   f u n c t i o n ' , 
+ 
+         ) 
+ 
+     } 
+ 
+ 
+ 
+     i f   ( p r o c e s s . e n v . N O D E _ E N V   ! = =   ' p r o d u c t i o n '   & &   d u p l i c a t e M i d d l e w a r e C h e c k )   { 
+ 
+         l e t   m i d d l e w a r e R e f e r e n c e s   =   n e w   S e t < M i d d l e w a r e < a n y ,   S > > ( ) 
+ 
+         f i n a l M i d d l e w a r e . f o r E a c h ( ( m i d d l e w a r e )   = >   { 
+ 
+             i f   ( m i d d l e w a r e R e f e r e n c e s . h a s ( m i d d l e w a r e ) )   { 
+ 
+                 t h r o w   n e w   E r r o r ( 
+ 
+                     ' D u p l i c a t e   m i d d l e w a r e   r e f e r e n c e s   f o u n d   w h e n   c r e a t i n g   t h e   s t o r e .   E n s u r e   t h a t   e a c h   m i d d l e w a r e   i s   o n l y   i n c l u d e d   o n c e . ' , 
+ 
+                 ) 
+ 
+             } 
+ 
+             m i d d l e w a r e R e f e r e n c e s . a d d ( m i d d l e w a r e ) 
+ 
+         } ) 
+ 
+     } 
+ 
+ 
+ 
+     l e t   f i n a l C o m p o s e   =   c o m p o s e 
+ 
+ 
+ 
+     i f   ( d e v T o o l s )   { 
+ 
+         f i n a l C o m p o s e   =   c o m p o s e W i t h D e v T o o l s ( { 
+ 
+             / /   E n a b l e   c a p t u r e   o f   s t a c k   t r a c e s   f o r   d i s p a t c h e d   R e d u x   a c t i o n s 
+ 
+             t r a c e :   p r o c e s s . e n v . N O D E _ E N V   ! = =   ' p r o d u c t i o n ' , 
+ 
+             . . . ( t y p e o f   d e v T o o l s   = = =   ' o b j e c t '   & &   d e v T o o l s ) , 
+ 
+         } ) 
+ 
+     } 
+ 
+ 
+ 
+     c o n s t   m i d d l e w a r e E n h a n c e r   =   a p p l y M i d d l e w a r e ( . . . f i n a l M i d d l e w a r e ) 
+ 
+ 
+ 
+     c o n s t   g e t D e f a u l t E n h a n c e r s   =   b u i l d G e t D e f a u l t E n h a n c e r s < M > ( m i d d l e w a r e E n h a n c e r ) 
+ 
+ 
+ 
+     i f   ( 
+ 
+         p r o c e s s . e n v . N O D E _ E N V   ! = =   ' p r o d u c t i o n '   & & 
+ 
+         e n h a n c e r s   & & 
+ 
+         t y p e o f   e n h a n c e r s   ! = =   ' f u n c t i o n ' 
+ 
+     )   { 
+ 
+         t h r o w   n e w   E r r o r ( ' ` e n h a n c e r s `   f i e l d   m u s t   b e   a   c a l l b a c k ' ) 
+ 
+     } 
+ 
+ 
+ 
+     l e t   s t o r e E n h a n c e r s   = 
+ 
+         t y p e o f   e n h a n c e r s   = = =   ' f u n c t i o n ' 
+ 
+             ?   e n h a n c e r s ( g e t D e f a u l t E n h a n c e r s ) 
+ 
+             :   g e t D e f a u l t E n h a n c e r s ( ) 
+ 
+ 
+ 
+     i f   ( p r o c e s s . e n v . N O D E _ E N V   ! = =   ' p r o d u c t i o n '   & &   ! A r r a y . i s A r r a y ( s t o r e E n h a n c e r s ) )   { 
+ 
+         t h r o w   n e w   E r r o r ( ' ` e n h a n c e r s `   c a l l b a c k   m u s t   r e t u r n   a n   a r r a y ' ) 
+ 
+     } 
+ 
+     i f   ( 
+ 
+         p r o c e s s . e n v . N O D E _ E N V   ! = =   ' p r o d u c t i o n '   & & 
+ 
+         s t o r e E n h a n c e r s . s o m e ( ( i t e m :   a n y )   = >   t y p e o f   i t e m   ! = =   ' f u n c t i o n ' ) 
+ 
+     )   { 
+ 
+         t h r o w   n e w   E r r o r ( 
+ 
+             ' e a c h   e n h a n c e r   p r o v i d e d   t o   c o n f i g u r e S t o r e   m u s t   b e   a   f u n c t i o n ' , 
+ 
+         ) 
+ 
+     } 
+ 
+     i f   ( 
+ 
+         p r o c e s s . e n v . N O D E _ E N V   ! = =   ' p r o d u c t i o n '   & & 
+ 
+         f i n a l M i d d l e w a r e . l e n g t h   & & 
+ 
+         ! s t o r e E n h a n c e r s . i n c l u d e s ( m i d d l e w a r e E n h a n c e r ) 
+ 
+     )   { 
+ 
+         c o n s o l e . e r r o r ( 
+ 
+             ' m i d d l e w a r e s   w e r e   p r o v i d e d ,   b u t   m i d d l e w a r e   e n h a n c e r   w a s   n o t   i n c l u d e d   i n   f i n a l   e n h a n c e r s   -   m a k e   s u r e   t o   c a l l   ` g e t D e f a u l t E n h a n c e r s ` ' , 
+ 
+         ) 
+ 
+     } 
+ 
+ 
+ 
+     c o n s t   c o m p o s e d E n h a n c e r :   S t o r e E n h a n c e r < a n y >   =   f i n a l C o m p o s e ( . . . s t o r e E n h a n c e r s ) 
+ 
+ 
+ 
+     r e t u r n   c r e a t e S t o r e ( r o o t R e d u c e r ,   p r e l o a d e d S t a t e   a s   P ,   c o m p o s e d E n h a n c e r ) 
+ 
+ } 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ n e x t \ d i s t \ b u i l d \ o u t p u t \ s t o r e . d . t s 
+ 
+ 
+ e x p o r t   t y p e   O u t p u t S t a t e   =   { 
+ 
+         b o o t s t r a p :   t r u e ; 
+ 
+         a p p U r l :   s t r i n g   |   n u l l ; 
+ 
+         b i n d A d d r :   s t r i n g   |   n u l l ; 
+ 
+         l o g g i n g :   b o o l e a n ; 
+ 
+ }   |   ( { 
+ 
+         b o o t s t r a p :   f a l s e ; 
+ 
+         a p p U r l :   s t r i n g   |   n u l l ; 
+ 
+         b i n d A d d r :   s t r i n g   |   n u l l ; 
+ 
+         l o g g i n g :   b o o l e a n ; 
+ 
+ }   &   ( { 
+ 
+         l o a d i n g :   t r u e ; 
+ 
+         t r i g g e r :   s t r i n g   |   u n d e f i n e d ; 
+ 
+         u r l :   s t r i n g   |   u n d e f i n e d ; 
+ 
+ }   |   { 
+ 
+         l o a d i n g :   f a l s e ; 
+ 
+         t y p e C h e c k i n g :   b o o l e a n ; 
+ 
+         t o t a l M o d u l e s C o u n t :   n u m b e r ; 
+ 
+         e r r o r s :   s t r i n g [ ]   |   n u l l ; 
+ 
+         w a r n i n g s :   s t r i n g [ ]   |   n u l l ; 
+ 
+         h a s E d g e S e r v e r :   b o o l e a n ; 
+ 
+ } ) ) ; 
+ 
+ e x p o r t   d e c l a r e   f u n c t i o n   f o r m a t T r i g g e r ( t r i g g e r :   s t r i n g ) :   s t r i n g ; 
+ 
+ e x p o r t   d e c l a r e   c o n s t   s t o r e :   i m p o r t ( " u n i s t o r e " ) . S t o r e < O u t p u t S t a t e > ; 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ n e x t \ d i s t \ c l i e n t \ c o m p o n e n t s \ r o u t e r - r e d u c e r \ r e d u c e r s \ r e s t o r e - r e d u c e r . d . t s 
+ 
+ 
+ i m p o r t   t y p e   {   R e a d o n l y R e d u c e r S t a t e ,   R e d u c e r S t a t e ,   R e s t o r e A c t i o n   }   f r o m   ' . . / r o u t e r - r e d u c e r - t y p e s ' ; 
+ 
+ e x p o r t   d e c l a r e   f u n c t i o n   r e s t o r e R e d u c e r ( s t a t e :   R e a d o n l y R e d u c e r S t a t e ,   a c t i o n :   R e s t o r e A c t i o n ) :   R e d u c e r S t a t e ; 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ n e x t \ d i s t \ s e r v e r \ a s y n c - s t o r a g e \ r e q u e s t - s t o r e . d . t s 
+ 
+ 
+ i m p o r t   t y p e   {   B a s e N e x t R e q u e s t ,   B a s e N e x t R e s p o n s e   }   f r o m   ' . . / b a s e - h t t p ' ; 
+ 
+ i m p o r t   t y p e   {   R e q u e s t S t o r e   }   f r o m   ' . . / a p p - r e n d e r / w o r k - u n i t - a s y n c - s t o r a g e . e x t e r n a l ' ; 
+ 
+ i m p o r t   t y p e   {   R e n d e r O p t s   }   f r o m   ' . . / a p p - r e n d e r / t y p e s ' ; 
+ 
+ i m p o r t   t y p e   {   N e x t R e q u e s t   }   f r o m   ' . . / w e b / s p e c - e x t e n s i o n / r e q u e s t ' ; 
+ 
+ i m p o r t   t y p e   {   _ _ A p i P r e v i e w P r o p s   }   f r o m   ' . . / a p i - u t i l s ' ; 
+ 
+ i m p o r t   t y p e   {   S e r v e r C o m p o n e n t s H m r C a c h e   }   f r o m   ' . . / r e s p o n s e - c a c h e ' ; 
+ 
+ i m p o r t   t y p e   {   R e n d e r R e s u m e D a t a C a c h e   }   f r o m   ' . . / r e s u m e - d a t a - c a c h e / r e s u m e - d a t a - c a c h e ' ; 
+ 
+ i m p o r t   t y p e   {   P a r a m s   }   f r o m   ' . . / r e q u e s t / p a r a m s ' ; 
+ 
+ i m p o r t   t y p e   {   I m p l i c i t T a g s   }   f r o m   ' . . / l i b / i m p l i c i t - t a g s ' ; 
+ 
+ i m p o r t   t y p e   {   O p a q u e F a l l b a c k R o u t e P a r a m s   }   f r o m   ' . . / r e q u e s t / f a l l b a c k - p a r a m s ' ; 
+ 
+ e x p o r t   t y p e   W r a p p e r R e n d e r O p t s   =   P a r t i a l < P i c k < R e n d e r O p t s ,   ' o n U p d a t e C o o k i e s ' > >   &   { 
+ 
+         p r e v i e w P r o p s ? :   _ _ A p i P r e v i e w P r o p s ; 
+ 
+ } ; 
+ 
+ t y p e   R e q u e s t C o n t e x t   =   R e q u e s t R e s p o n s e P a i r   &   { 
+ 
+         / * * 
+ 
+           *   T h e   U R L   o f   t h e   r e q u e s t .   T h i s   o n l y   s p e c i f i e s   t h e   p a t h n a m e   a n d   t h e   s e a r c h 
+ 
+           *   p a r t   o f   t h e   U R L .   T h i s   i s   o n l y   u n d e f i n e d   w h e n   g e n e r a t i n g   s t a t i c   p a t h s   ( i e , 
+ 
+           *   t h e r e   i s   n o   r e q u e s t   i n   p r o g r e s s ,   n o r   d o   w e   k n o w   o n e ) . 
+ 
+           * / 
+ 
+         u r l :   { 
+ 
+                 / * * 
+ 
+                   *   T h e   p a t h n a m e   o f   t h e   r e q u e s t e d   U R L . 
+ 
+                   * / 
+ 
+                 p a t h n a m e :   s t r i n g ; 
+ 
+                 / * * 
+ 
+                   *   T h e   s e a r c h   p a r t   o f   t h e   r e q u e s t e d   U R L .   I f   t h e   r e q u e s t   d i d   n o t   p r o v i d e   a 
+ 
+                   *   s e a r c h   p a r t ,   t h i s   w i l l   b e   a n   e m p t y   s t r i n g . 
+ 
+                   * / 
+ 
+                 s e a r c h ? :   s t r i n g ; 
+ 
+         } ; 
+ 
+         p h a s e :   R e q u e s t S t o r e [ ' p h a s e ' ] ; 
+ 
+         r e n d e r O p t s ? :   W r a p p e r R e n d e r O p t s ; 
+ 
+         i s H m r R e f r e s h ? :   b o o l e a n ; 
+ 
+         s e r v e r C o m p o n e n t s H m r C a c h e ? :   S e r v e r C o m p o n e n t s H m r C a c h e ; 
+ 
+         i m p l i c i t T a g s :   I m p l i c i t T a g s ; 
+ 
+ } ; 
+ 
+ t y p e   R e q u e s t R e s p o n s e P a i r   =   { 
+ 
+         r e q :   B a s e N e x t R e q u e s t ; 
+ 
+         r e s :   B a s e N e x t R e s p o n s e ; 
+ 
+ }   |   { 
+ 
+         r e q :   N e x t R e q u e s t ; 
+ 
+         r e s :   u n d e f i n e d ; 
+ 
+ } ; 
+ 
+ e x p o r t   d e c l a r e   f u n c t i o n   c r e a t e R e q u e s t S t o r e F o r R e n d e r ( r e q :   R e q u e s t C o n t e x t [ ' r e q ' ] ,   r e s :   R e q u e s t C o n t e x t [ ' r e s ' ] ,   u r l :   R e q u e s t C o n t e x t [ ' u r l ' ] ,   r o o t P a r a m s :   P a r a m s ,   i m p l i c i t T a g s :   R e q u e s t C o n t e x t [ ' i m p l i c i t T a g s ' ] ,   o n U p d a t e C o o k i e s :   R e n d e r O p t s [ ' o n U p d a t e C o o k i e s ' ] ,   p r e v i e w P r o p s :   W r a p p e r R e n d e r O p t s [ ' p r e v i e w P r o p s ' ] ,   i s H m r R e f r e s h :   R e q u e s t C o n t e x t [ ' i s H m r R e f r e s h ' ] ,   s e r v e r C o m p o n e n t s H m r C a c h e :   R e q u e s t C o n t e x t [ ' s e r v e r C o m p o n e n t s H m r C a c h e ' ] ,   r e n d e r R e s u m e D a t a C a c h e :   R e n d e r R e s u m e D a t a C a c h e   |   n u l l ,   f a l l b a c k P a r a m s :   O p a q u e F a l l b a c k R o u t e P a r a m s   |   n u l l ) :   R e q u e s t S t o r e ; 
+ 
+ e x p o r t   d e c l a r e   f u n c t i o n   c r e a t e R e q u e s t S t o r e F o r A P I ( r e q :   R e q u e s t C o n t e x t [ ' r e q ' ] ,   u r l :   R e q u e s t C o n t e x t [ ' u r l ' ] ,   i m p l i c i t T a g s :   R e q u e s t C o n t e x t [ ' i m p l i c i t T a g s ' ] ,   o n U p d a t e C o o k i e s :   R e n d e r O p t s [ ' o n U p d a t e C o o k i e s ' ] ,   p r e v i e w P r o p s :   W r a p p e r R e n d e r O p t s [ ' p r e v i e w P r o p s ' ] ) :   R e q u e s t S t o r e ; 
+ 
+ e x p o r t   d e c l a r e   f u n c t i o n   s y n c h r o n i z e M u t a b l e C o o k i e s ( s t o r e :   R e q u e s t S t o r e ) :   v o i d ; 
+ 
+ e x p o r t   { } ; 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ n e x t \ d i s t \ s e r v e r \ a s y n c - s t o r a g e \ w i t h - s t o r e . d . t s 
+ 
+ 
+ i m p o r t   t y p e   {   A s y n c L o c a l S t o r a g e   }   f r o m   ' a s y n c _ h o o k s ' ; 
+ 
+ / * * 
+ 
+   *   I m p l e m e n t a t i o n s   p r o v i d e   a   w r a p p i n g   f u n c t i o n   t h a t   w i l l   p r o v i d e   t h e   s t o r a g e   t o 
+ 
+   *   a s y n c   c a l l s   d e r i v e d   f r o m   t h e   p r o v i d e d   c a l l b a c k   f u n c t i o n . 
+ 
+   * 
+ 
+   *   @ p a r a m   s t o r a g e   u n d e r l y i n g   s t o r a g e   o b j e c t 
+ 
+   *   @ p a r a m   c o n t e x t   c o n t e x t   u s e d   t o   c r e a t e   t h e   s t o r a g e   o b j e c t 
+ 
+   *   @ p a r a m   c a l l b a c k   f u n c t i o n   t o   c a l l   w i t h i n   t h e   s c o p e   o f   t h e   s t o r a g e 
+ 
+   *   @ r e t u r n s   t h e   r e s u l t   o f   t h e   c a l l b a c k 
+ 
+   * / 
+ 
+ e x p o r t   t y p e   W i t h S t o r e < S t o r e   e x t e n d s   { } ,   C o n t e x t   e x t e n d s   { } >   =   < R e s u l t > ( s t o r a g e :   A s y n c L o c a l S t o r a g e < S t o r e > ,   c o n t e x t :   C o n t e x t ,   c a l l b a c k :   ( s t o r e :   S t o r e )   = >   R e s u l t )   = >   R e s u l t ; 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ n e x t \ d i s t \ s e r v e r \ a s y n c - s t o r a g e \ w o r k - s t o r e . d . t s 
+ 
+ 
+ i m p o r t   t y p e   {   W o r k S t o r e   }   f r o m   ' . . / a p p - r e n d e r / w o r k - a s y n c - s t o r a g e . e x t e r n a l ' ; 
+ 
+ i m p o r t   t y p e   {   I n c r e m e n t a l C a c h e   }   f r o m   ' . . / l i b / i n c r e m e n t a l - c a c h e ' ; 
+ 
+ i m p o r t   t y p e   {   R e n d e r O p t s   }   f r o m   ' . . / a p p - r e n d e r / t y p e s ' ; 
+ 
+ i m p o r t   t y p e   {   F e t c h M e t r i c   }   f r o m   ' . . / b a s e - h t t p ' ; 
+ 
+ i m p o r t   t y p e   {   R e q u e s t L i f e c y c l e O p t s   }   f r o m   ' . . / b a s e - s e r v e r ' ; 
+ 
+ i m p o r t   t y p e   {   A p p S e g m e n t C o n f i g   }   f r o m   ' . . / . . / b u i l d / s e g m e n t - c o n f i g / a p p / a p p - s e g m e n t - c o n f i g ' ; 
+ 
+ i m p o r t   t y p e   {   C a c h e L i f e   }   f r o m   ' . . / u s e - c a c h e / c a c h e - l i f e ' ; 
+ 
+ e x p o r t   t y p e   W o r k S t o r e C o n t e x t   =   { 
+ 
+         / * * 
+ 
+           *   T h e   p a g e   t h a t   i s   b e i n g   r e n d e r e d .   T h i s   r e l a t e s   t o   t h e   p a t h   t o   t h e   p a g e   f i l e . 
+ 
+           * / 
+ 
+         p a g e :   s t r i n g ; 
+ 
+         i s P r e f e t c h R e q u e s t ? :   b o o l e a n ; 
+ 
+         n o n c e ? :   s t r i n g ; 
+ 
+         r e n d e r O p t s :   { 
+ 
+                 c a c h e L i f e P r o f i l e s ? :   { 
+ 
+                         [ p r o f i l e :   s t r i n g ] :   C a c h e L i f e ; 
+ 
+                 } ; 
+ 
+                 i n c r e m e n t a l C a c h e ? :   I n c r e m e n t a l C a c h e ; 
+ 
+                 i s O n D e m a n d R e v a l i d a t e ? :   b o o l e a n ; 
+ 
+                 c a c h e C o m p o n e n t s :   b o o l e a n ; 
+ 
+                 f e t c h C a c h e ? :   A p p S e g m e n t C o n f i g [ ' f e t c h C a c h e ' ] ; 
+ 
+                 i s P o s s i b l e S e r v e r A c t i o n ? :   b o o l e a n ; 
+ 
+                 p e n d i n g W a i t U n t i l ? :   P r o m i s e < a n y > ; 
+ 
+                 e x p e r i m e n t a l :   P i c k < R e n d e r O p t s [ ' e x p e r i m e n t a l ' ] ,   ' i s R o u t e P P R E n a b l e d '   |   ' a u t h I n t e r r u p t s ' > ; 
+ 
+                 / * * 
+ 
+                   *   F e t c h   m e t r i c s   a t t a c h e d   i n   p a t c h - f e t c h . t s 
+ 
+                   * * / 
+ 
+                 f e t c h M e t r i c s ? :   F e t c h M e t r i c [ ] ; 
+ 
+         }   &   P i c k < R e n d e r O p t s ,   ' a s s e t P r e f i x '   |   ' s u p p o r t s D y n a m i c R e s p o n s e '   |   ' s h o u l d W a i t O n A l l R e a d y '   |   ' i s B u i l d T i m e P r e r e n d e r i n g '   |   ' i s D r a f t M o d e '   |   ' i s D e b u g D y n a m i c A c c e s s e s ' >   &   R e q u e s t L i f e c y c l e O p t s   &   P a r t i a l < P i c k < R e n d e r O p t s ,   ' r e a c t L o a d a b l e M a n i f e s t ' > > ; 
+ 
+         / * * 
+ 
+           *   T h e   d e p l o y m e n t   I D   o f   t h e   c u r r e n t   b u i l d . 
+ 
+           * / 
+ 
+         d e p l o y m e n t I d :   s t r i n g ; 
+ 
+         / * * 
+ 
+           *   T h e   b u i l d   I D   o f   t h e   c u r r e n t   b u i l d . 
+ 
+           * / 
+ 
+         b u i l d I d :   s t r i n g ; 
+ 
+         p r e v i o u s l y R e v a l i d a t e d T a g s :   s t r i n g [ ] ; 
+ 
+ } ; 
+ 
+ e x p o r t   d e c l a r e   f u n c t i o n   c r e a t e W o r k S t o r e ( {   p a g e ,   r e n d e r O p t s ,   i s P r e f e t c h R e q u e s t ,   b u i l d I d ,   d e p l o y m e n t I d ,   p r e v i o u s l y R e v a l i d a t e d T a g s ,   n o n c e ,   } :   W o r k S t o r e C o n t e x t ) :   W o r k S t o r e ; 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ n e x t \ d i s t \ s e r v e r \ r e s u m e - d a t a - c a c h e \ c a c h e - s t o r e . d . t s 
+ 
+ 
+ i m p o r t   t y p e   {   C a c h e d F e t c h V a l u e   }   f r o m   ' . . / r e s p o n s e - c a c h e / t y p e s ' ; 
+ 
+ i m p o r t   t y p e   {   C o l l e c t e d C a c h e R e s u l t   }   f r o m   ' . . / u s e - c a c h e / u s e - c a c h e - w r a p p e r ' ; 
+ 
+ / * * 
+ 
+   *   A   g e n e r i c   c a c h e   s t o r e   t y p e   t h a t   p r o v i d e s   a   s u b s e t   o f   M a p   f u n c t i o n a l i t y 
+ 
+   * / 
+ 
+ t y p e   C a c h e S t o r e < T >   =   P i c k < M a p < s t r i n g ,   T > ,   ' e n t r i e s '   |   ' k e y s '   |   ' s i z e '   |   ' g e t '   |   ' s e t '   |   t y p e o f   S y m b o l . i t e r a t o r > ; 
+ 
+ / * * 
+ 
+   *   A   c a c h e   s t o r e   s p e c i f i c a l l y   f o r   f e t c h   c a c h e   v a l u e s 
+ 
+   * / 
+ 
+ e x p o r t   t y p e   F e t c h C a c h e S t o r e   =   C a c h e S t o r e < C a c h e d F e t c h V a l u e > ; 
+ 
+ / * * 
+ 
+   *   A   c a c h e   s t o r e   f o r   e n c r y p t e d   b o u n d   a r g s   o f   i n l i n e   s e r v e r   f u n c t i o n s . 
+ 
+   * / 
+ 
+ e x p o r t   t y p e   E n c r y p t e d B o u n d A r g s C a c h e S t o r e   =   C a c h e S t o r e < s t r i n g > ; 
+ 
+ / * * 
+ 
+   *   A n   i n - m e m o r y - o n l y   c a c h e   s t o r e   f o r   d e c r y p t e d   b o u n d   a r g s   o f   i n l i n e   s e r v e r 
+ 
+   *   f u n c t i o n s . 
+ 
+   * / 
+ 
+ e x p o r t   t y p e   D e c r y p t e d B o u n d A r g s C a c h e S t o r e   =   C a c h e S t o r e < s t r i n g > ; 
+ 
+ / * * 
+ 
+   *   S e r i a l i z e d   f o r m a t   f o r   " u s e   c a c h e "   e n t r i e s 
+ 
+   * / 
+ 
+ e x p o r t   i n t e r f a c e   U s e C a c h e C a c h e S t o r e S e r i a l i z e d   { 
+ 
+         e n t r y :   { 
+ 
+                 v a l u e :   s t r i n g ; 
+ 
+                 t a g s :   s t r i n g [ ] ; 
+ 
+                 s t a l e :   n u m b e r ; 
+ 
+                 t i m e s t a m p :   n u m b e r ; 
+ 
+                 e x p i r e :   n u m b e r ; 
+ 
+                 r e v a l i d a t e :   n u m b e r ; 
+ 
+         } ; 
+ 
+         h a s E x p l i c i t R e v a l i d a t e :   b o o l e a n   |   u n d e f i n e d ; 
+ 
+         h a s E x p l i c i t E x p i r e :   b o o l e a n   |   u n d e f i n e d ; 
+ 
+         r e a d R o o t P a r a m N a m e s :   s t r i n g [ ]   |   u n d e f i n e d ; 
+ 
+ } 
+ 
+ / * * 
+ 
+   *   A   c a c h e   s t o r e   s p e c i f i c a l l y   f o r   " u s e   c a c h e "   v a l u e s   t h a t   s t o r e s   p r o m i s e s   o f 
+ 
+   *   c o l l e c t e d   c a c h e   r e s u l t s   ( e n t r y   +   m e t a d a t a ) . 
+ 
+   * / 
+ 
+ e x p o r t   t y p e   U s e C a c h e C a c h e S t o r e   =   C a c h e S t o r e < P r o m i s e < C o l l e c t e d C a c h e R e s u l t > > ; 
+ 
+ / * * 
+ 
+   *   P a r s e s   s e r i a l i z e d   c a c h e   e n t r i e s   i n t o   a   U s e C a c h e C a c h e S t o r e 
+ 
+   *   @ p a r a m   e n t r i e s   -   T h e   s e r i a l i z e d   e n t r i e s   t o   p a r s e 
+ 
+   *   @ r e t u r n s   A   n e w   U s e C a c h e C a c h e S t o r e   c o n t a i n i n g   t h e   p a r s e d   e n t r i e s 
+ 
+   * / 
+ 
+ e x p o r t   d e c l a r e   f u n c t i o n   p a r s e U s e C a c h e C a c h e S t o r e ( e n t r i e s :   I t e r a b l e < [ s t r i n g ,   U s e C a c h e C a c h e S t o r e S e r i a l i z e d ] > ) :   U s e C a c h e C a c h e S t o r e ; 
+ 
+ / * * 
+ 
+   *   S e r i a l i z e s   U s e C a c h e C a c h e S t o r e   e n t r i e s   i n t o   a n   a r r a y   o f   k e y - v a l u e   p a i r s 
+ 
+   *   @ p a r a m   e n t r i e s   -   T h e   s t o r e   e n t r i e s   t o   s t r i n g i f y 
+ 
+   *   @ r e t u r n s   A   p r o m i s e   t h a t   r e s o l v e s   t o   a n   a r r a y   o f   k e y - v a l u e   p a i r s   w i t h   s e r i a l i z e d   v a l u e s 
+ 
+   * / 
+ 
+ e x p o r t   d e c l a r e   f u n c t i o n   s e r i a l i z e U s e C a c h e C a c h e S t o r e ( e n t r i e s :   I t e r a b l e I t e r a t o r < [ s t r i n g ,   P r o m i s e < C o l l e c t e d C a c h e R e s u l t > ] > ,   i s C a c h e C o m p o n e n t s E n a b l e d :   b o o l e a n ) :   P r o m i s e < A r r a y < [ s t r i n g ,   U s e C a c h e C a c h e S t o r e S e r i a l i z e d ]   |   n u l l > > ; 
+ 
+ e x p o r t   { } ; 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ n e x t \ d i s t \ s e r v e r \ w e b \ s p e c - e x t e n s i o n \ u n s t a b l e - n o - s t o r e . d . t s 
+ 
+ 
+ / * * 
+ 
+   *   T h i s   f u n c t i o n   c a n   b e   u s e d   t o   d e c l a r a t i v e l y   o p t   o u t   o f   s t a t i c   r e n d e r i n g   a n d   i n d i c a t e   a   p a r t i c u l a r   c o m p o n e n t   s h o u l d   n o t   b e   c a c h e d . 
+ 
+   * 
+ 
+   *   I t   m a r k s   t h e   c u r r e n t   s c o p e   a s   d y n a m i c . 
+ 
+   * 
+ 
+   *   -   I n   [ n o n - P P R ] ( h t t p s : / / n e x t j s . o r g / d o c s / a p p / a p i - r e f e r e n c e / n e x t - c o n f i g - j s / p a r t i a l - p r e r e n d e r i n g )   c a s e s   t h i s   w i l l   m a k e   a   s t a t i c   r e n d e r 
+ 
+   *   h a l t   a n d   m a r k   t h e   p a g e   a s   d y n a m i c . 
+ 
+   *   -   I n   P P R   c a s e s   t h i s   w i l l   p o s t p o n e   t h e   r e n d e r   a t   t h i s   l o c a t i o n . 
+ 
+   * 
+ 
+   *   I f   w e   a r e   i n s i d e   a   c a c h e   s c o p e   t h e n   t h i s   f u n c t i o n   d o e s   n o t h i n g . 
+ 
+   * 
+ 
+   *   @ n o t e   I t   e x p e c t s   t o   b e   c a l l e d   w i t h i n   A p p   R o u t e r   a n d   w i l l   e r r o r   o t h e r w i s e . 
+ 
+   * 
+ 
+   *   R e a d   m o r e :   [ N e x t . j s   D o c s :   ` u n s t a b l e _ n o S t o r e ` ] ( h t t p s : / / n e x t j s . o r g / d o c s / a p p / a p i - r e f e r e n c e / f u n c t i o n s / u n s t a b l e _ n o S t o r e ) 
+ 
+   * / 
+ 
+ e x p o r t   d e c l a r e   f u n c t i o n   u n s t a b l e _ n o S t o r e ( ) :   v o i d ; 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ r e a c t - r e d u x \ s r c \ h o o k s \ u s e S t o r e . t s 
+ 
+ 
+ i m p o r t   t y p e   {   C o n t e x t   }   f r o m   ' r e a c t ' 
+ 
+ i m p o r t   t y p e   {   A c t i o n ,   S t o r e   }   f r o m   ' r e d u x ' 
+ 
+ i m p o r t   t y p e   {   R e a c t R e d u x C o n t e x t V a l u e   }   f r o m   ' . . / c o m p o n e n t s / C o n t e x t ' 
+ 
+ i m p o r t   {   R e a c t R e d u x C o n t e x t   }   f r o m   ' . . / c o m p o n e n t s / C o n t e x t ' 
+ 
+ i m p o r t   { 
+ 
+     c r e a t e R e d u x C o n t e x t H o o k , 
+ 
+     u s e R e d u x C o n t e x t   a s   u s e D e f a u l t R e d u x C o n t e x t , 
+ 
+ }   f r o m   ' . / u s e R e d u x C o n t e x t ' 
+ 
+ 
+ 
+ / * * 
+ 
+   *   R e p r e s e n t s   a   t y p e   t h a t   e x t r a c t s   t h e   a c t i o n   t y p e   f r o m   a   g i v e n   R e d u x   s t o r e . 
+ 
+   * 
+ 
+   *   @ t e m p l a t e   S t o r e T y p e   -   T h e   s p e c i f i c   t y p e   o f   t h e   R e d u x   s t o r e . 
+ 
+   * 
+ 
+   *   @ s i n c e   9 . 1 . 0 
+ 
+   *   @ i n t e r n a l 
+ 
+   * / 
+ 
+ e x p o r t   t y p e   E x t r a c t S t o r e A c t i o n T y p e < S t o r e T y p e   e x t e n d s   S t o r e >   = 
+ 
+     S t o r e T y p e   e x t e n d s   S t o r e < a n y ,   i n f e r   A c t i o n T y p e >   ?   A c t i o n T y p e   :   n e v e r 
+ 
+ 
+ 
+ / * * 
+ 
+   *   R e p r e s e n t s   a   c u s t o m   h o o k   t h a t   p r o v i d e s   a c c e s s   t o   t h e   R e d u x   s t o r e . 
+ 
+   * 
+ 
+   *   @ t e m p l a t e   S t o r e T y p e   -   T h e   s p e c i f i c   t y p e   o f   t h e   R e d u x   s t o r e   t h a t   g e t s   r e t u r n e d . 
+ 
+   * 
+ 
+   *   @ s i n c e   9 . 1 . 0 
+ 
+   *   @ p u b l i c 
+ 
+   * / 
+ 
+ e x p o r t   i n t e r f a c e   U s e S t o r e < S t o r e T y p e   e x t e n d s   S t o r e >   { 
+ 
+     / * * 
+ 
+       *   R e t u r n s   t h e   R e d u x   s t o r e   i n s t a n c e . 
+ 
+       * 
+ 
+       *   @ r e t u r n s   T h e   R e d u x   s t o r e   i n s t a n c e . 
+ 
+       * / 
+ 
+     ( ) :   S t o r e T y p e 
+ 
+ 
+ 
+     / * * 
+ 
+       *   R e t u r n s   t h e   R e d u x   s t o r e   i n s t a n c e   w i t h   s p e c i f i c   s t a t e   a n d   a c t i o n   t y p e s . 
+ 
+       * 
+ 
+       *   @ r e t u r n s   T h e   R e d u x   s t o r e   w i t h   t h e   s p e c i f i e d   s t a t e   a n d   a c t i o n   t y p e s . 
+ 
+       * 
+ 
+       *   @ t e m p l a t e   S t a t e T y p e   -   T h e   s p e c i f i c   t y p e   o f   t h e   s t a t e   u s e d   i n   t h e   s t o r e . 
+ 
+       *   @ t e m p l a t e   A c t i o n T y p e   -   T h e   s p e c i f i c   t y p e   o f   t h e   a c t i o n s   u s e d   i n   t h e   s t o r e . 
+ 
+       * / 
+ 
+     < 
+ 
+         S t a t e T y p e   e x t e n d s   R e t u r n T y p e < S t o r e T y p e [ ' g e t S t a t e ' ] >   =   R e t u r n T y p e < 
+ 
+             S t o r e T y p e [ ' g e t S t a t e ' ] 
+ 
+         > , 
+ 
+         A c t i o n T y p e   e x t e n d s   A c t i o n   =   E x t r a c t S t o r e A c t i o n T y p e < S t o r e > , 
+ 
+     > ( ) :   S t o r e < S t a t e T y p e ,   A c t i o n T y p e > 
+ 
+ 
+ 
+     / * * 
+ 
+       *   C r e a t e s   a   " p r e - t y p e d "   v e r s i o n   o f   { @ l i n k c o d e   u s e S t o r e   u s e S t o r e } 
+ 
+       *   w h e r e   t h e   t y p e   o f   t h e   R e d u x   ` s t o r e `   i s   p r e d e f i n e d . 
+ 
+       * 
+ 
+       *   T h i s   a l l o w s   y o u   t o   s e t   t h e   ` s t o r e `   t y p e   o n c e ,   e l i m i n a t i n g   t h e   n e e d   t o 
+ 
+       *   s p e c i f y   i t   w i t h   e v e r y   { @ l i n k c o d e   u s e S t o r e   u s e S t o r e }   c a l l . 
+ 
+       * 
+ 
+       *   @ r e t u r n s   A   p r e - t y p e d   ` u s e S t o r e `   w i t h   t h e   s t o r e   t y p e   a l r e a d y   d e f i n e d . 
+ 
+       * 
+ 
+       *   @ e x a m p l e 
+ 
+       *   ` ` ` t s 
+ 
+       *   e x p o r t   c o n s t   u s e A p p S t o r e   =   u s e S t o r e . w i t h T y p e s < A p p S t o r e > ( ) 
+ 
+       *   ` ` ` 
+ 
+       * 
+ 
+       *   @ t e m p l a t e   O v e r r i d e S t o r e T y p e   -   T h e   s p e c i f i c   t y p e   o f   t h e   R e d u x   s t o r e   t h a t   g e t s   r e t u r n e d . 
+ 
+       * 
+ 
+       *   @ s i n c e   9 . 1 . 0 
+ 
+       * / 
+ 
+     w i t h T y p e s :   < 
+ 
+         O v e r r i d e S t o r e T y p e   e x t e n d s   S t o r e T y p e , 
+ 
+     > ( )   = >   U s e S t o r e < O v e r r i d e S t o r e T y p e > 
+ 
+ } 
+ 
+ 
+ 
+ / * * 
+ 
+   *   H o o k   f a c t o r y ,   w h i c h   c r e a t e s   a   ` u s e S t o r e `   h o o k   b o u n d   t o   a   g i v e n   c o n t e x t . 
+ 
+   * 
+ 
+   *   @ p a r a m   { R e a c t . C o n t e x t }   [ c o n t e x t = R e a c t R e d u x C o n t e x t ]   C o n t e x t   p a s s e d   t o   y o u r   ` < P r o v i d e r > ` . 
+ 
+   *   @ r e t u r n s   { F u n c t i o n }   A   ` u s e S t o r e `   h o o k   b o u n d   t o   t h e   s p e c i f i e d   c o n t e x t . 
+ 
+   * / 
+ 
+ e x p o r t   f u n c t i o n   c r e a t e S t o r e H o o k < 
+ 
+     S t a t e T y p e   =   u n k n o w n , 
+ 
+     A c t i o n T y p e   e x t e n d s   A c t i o n   =   A c t i o n , 
+ 
+ > ( 
+ 
+     / /   @ t s - i g n o r e 
+ 
+     c o n t e x t ? :   C o n t e x t < R e a c t R e d u x C o n t e x t V a l u e < 
+ 
+         S t a t e T y p e , 
+ 
+         A c t i o n T y p e 
+ 
+     >   |   n u l l >   =   R e a c t R e d u x C o n t e x t , 
+ 
+ )   { 
+ 
+     c o n s t   u s e R e d u x C o n t e x t   = 
+ 
+         c o n t e x t   = = =   R e a c t R e d u x C o n t e x t 
+ 
+             ?   u s e D e f a u l t R e d u x C o n t e x t 
+ 
+             :   / /   @ t s - i g n o r e 
+ 
+                 c r e a t e R e d u x C o n t e x t H o o k ( c o n t e x t ) 
+ 
+     c o n s t   u s e S t o r e   =   ( )   = >   { 
+ 
+         c o n s t   {   s t o r e   }   =   u s e R e d u x C o n t e x t ( ) 
+ 
+         r e t u r n   s t o r e 
+ 
+     } 
+ 
+ 
+ 
+     O b j e c t . a s s i g n ( u s e S t o r e ,   { 
+ 
+         w i t h T y p e s :   ( )   = >   u s e S t o r e , 
+ 
+     } ) 
+ 
+ 
+ 
+     r e t u r n   u s e S t o r e   a s   U s e S t o r e < S t o r e < S t a t e T y p e ,   A c t i o n T y p e > > 
+ 
+ } 
+ 
+ 
+ 
+ / * * 
+ 
+   *   A   h o o k   t o   a c c e s s   t h e   r e d u x   s t o r e . 
+ 
+   * 
+ 
+   *   @ r e t u r n s   { a n y }   t h e   r e d u x   s t o r e 
+ 
+   * 
+ 
+   *   @ e x a m p l e 
+ 
+   * 
+ 
+   *   i m p o r t   R e a c t   f r o m   ' r e a c t ' 
+ 
+   *   i m p o r t   {   u s e S t o r e   }   f r o m   ' r e a c t - r e d u x ' 
+ 
+   * 
+ 
+   *   e x p o r t   c o n s t   E x a m p l e C o m p o n e n t   =   ( )   = >   { 
+ 
+   *       c o n s t   s t o r e   =   u s e S t o r e ( ) 
+ 
+   *       r e t u r n   < d i v > { s t o r e . g e t S t a t e ( ) } < / d i v > 
+ 
+   *   } 
+ 
+   * / 
+ 
+ e x p o r t   c o n s t   u s e S t o r e   =   / * # _ _ P U R E _ _ * /   c r e a t e S t o r e H o o k ( ) 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ r e a c t - r e d u x \ s r c \ u t i l s \ u s e S y n c E x t e r n a l S t o r e . t s 
+ 
+ 
+ i m p o r t   t y p e   {   u s e S y n c E x t e r n a l S t o r e   }   f r o m   ' u s e - s y n c - e x t e r n a l - s t o r e ' 
+ 
+ i m p o r t   t y p e   {   u s e S y n c E x t e r n a l S t o r e W i t h S e l e c t o r   }   f r o m   ' u s e - s y n c - e x t e r n a l - s t o r e / w i t h - s e l e c t o r ' 
+ 
+ 
+ 
+ e x p o r t   c o n s t   n o t I n i t i a l i z e d   =   ( )   = >   { 
+ 
+     t h r o w   n e w   E r r o r ( ' u S E S   n o t   i n i t i a l i z e d ! ' ) 
+ 
+ } 
+ 
+ 
+ 
+ e x p o r t   t y p e   u S E S   =   t y p e o f   u s e S y n c E x t e r n a l S t o r e 
+ 
+ e x p o r t   t y p e   u S E S W S   =   t y p e o f   u s e S y n c E x t e r n a l S t o r e W i t h S e l e c t o r 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ r e c h a r t s \ t y p e s \ s t a t e \ R e c h a r t s S t o r e P r o v i d e r . d . t s 
+ 
+ 
+ i m p o r t   *   a s   R e a c t   f r o m   ' r e a c t ' ; 
+ 
+ i m p o r t   {   R e a c t N o d e   }   f r o m   ' r e a c t ' ; 
+ 
+ i m p o r t   {   R e c h a r t s R o o t S t a t e   }   f r o m   ' . / s t o r e ' ; 
+ 
+ t y p e   R e c h a r t s S t o r e P r o v i d e r P r o p s   =   { 
+ 
+         c h i l d r e n :   R e a c t N o d e ; 
+ 
+         p r e l o a d e d S t a t e ? :   P a r t i a l < R e c h a r t s R o o t S t a t e > ; 
+ 
+         r e d u x S t o r e N a m e ? :   s t r i n g ; 
+ 
+ } ; 
+ 
+ e x p o r t   d e c l a r e   f u n c t i o n   R e c h a r t s S t o r e P r o v i d e r ( {   p r e l o a d e d S t a t e ,   c h i l d r e n ,   r e d u x S t o r e N a m e   } :   R e c h a r t s S t o r e P r o v i d e r P r o p s ) :   s t r i n g   |   n u m b e r   |   b o o l e a n   |   R e a c t . J S X . E l e m e n t   |   I t e r a b l e < R e a c t . R e a c t N o d e >   |   n u l l   |   u n d e f i n e d ; 
+ 
+ e x p o r t   { } ; 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ r e c h a r t s \ t y p e s \ s t a t e \ s t o r e . d . t s 
+ 
+ 
+ i m p o r t   {   A c t i o n ,   D i s p a t c h ,   S t o r e   }   f r o m   ' @ r e d u x j s / t o o l k i t ' ; 
+ 
+ i m p o r t   {   o p t i o n s R e d u c e r   }   f r o m   ' . / o p t i o n s S l i c e ' ; 
+ 
+ i m p o r t   {   t o o l t i p R e d u c e r   }   f r o m   ' . / t o o l t i p S l i c e ' ; 
+ 
+ i m p o r t   {   c h a r t D a t a R e d u c e r   }   f r o m   ' . / c h a r t D a t a S l i c e ' ; 
+ 
+ i m p o r t   {   c h a r t L a y o u t R e d u c e r   }   f r o m   ' . / l a y o u t S l i c e ' ; 
+ 
+ i m p o r t   {   c a r t e s i a n A x i s R e d u c e r   }   f r o m   ' . / c a r t e s i a n A x i s S l i c e ' ; 
+ 
+ i m p o r t   {   g r a p h i c a l I t e m s R e d u c e r   }   f r o m   ' . / g r a p h i c a l I t e m s S l i c e ' ; 
+ 
+ i m p o r t   {   r e f e r e n c e E l e m e n t s R e d u c e r   }   f r o m   ' . / r e f e r e n c e E l e m e n t s S l i c e ' ; 
+ 
+ i m p o r t   {   b r u s h R e d u c e r   }   f r o m   ' . / b r u s h S l i c e ' ; 
+ 
+ i m p o r t   {   l e g e n d R e d u c e r   }   f r o m   ' . / l e g e n d S l i c e ' ; 
+ 
+ i m p o r t   {   r o o t P r o p s R e d u c e r   }   f r o m   ' . / r o o t P r o p s S l i c e ' ; 
+ 
+ i m p o r t   {   p o l a r A x i s R e d u c e r   }   f r o m   ' . / p o l a r A x i s S l i c e ' ; 
+ 
+ i m p o r t   {   p o l a r O p t i o n s R e d u c e r   }   f r o m   ' . / p o l a r O p t i o n s S l i c e ' ; 
+ 
+ i m p o r t   {   e r r o r B a r R e d u c e r   }   f r o m   ' . / e r r o r B a r S l i c e ' ; 
+ 
+ i m p o r t   {   z I n d e x R e d u c e r   }   f r o m   ' . / z I n d e x S l i c e ' ; 
+ 
+ i m p o r t   {   e v e n t S e t t i n g s R e d u c e r   }   f r o m   ' . / e v e n t S e t t i n g s S l i c e ' ; 
+ 
+ i m p o r t   {   r e n d e r e d T i c k s R e d u c e r   }   f r o m   ' . / r e n d e r e d T i c k s S l i c e ' ; 
+ 
+ e x p o r t   t y p e   R e c h a r t s R o o t S t a t e   =   { 
+ 
+         b r u s h :   R e t u r n T y p e < t y p e o f   b r u s h R e d u c e r > ; 
+ 
+         c a r t e s i a n A x i s :   R e t u r n T y p e < t y p e o f   c a r t e s i a n A x i s R e d u c e r > ; 
+ 
+         c h a r t D a t a :   R e t u r n T y p e < t y p e o f   c h a r t D a t a R e d u c e r > ; 
+ 
+         e r r o r B a r s :   R e t u r n T y p e < t y p e o f   e r r o r B a r R e d u c e r > ; 
+ 
+         e v e n t S e t t i n g s :   R e t u r n T y p e < t y p e o f   e v e n t S e t t i n g s R e d u c e r > ; 
+ 
+         g r a p h i c a l I t e m s :   R e t u r n T y p e < t y p e o f   g r a p h i c a l I t e m s R e d u c e r > ; 
+ 
+         l a y o u t :   R e t u r n T y p e < t y p e o f   c h a r t L a y o u t R e d u c e r > ; 
+ 
+         l e g e n d :   R e t u r n T y p e < t y p e o f   l e g e n d R e d u c e r > ; 
+ 
+         o p t i o n s :   R e t u r n T y p e < t y p e o f   o p t i o n s R e d u c e r > ; 
+ 
+         p o l a r A x i s :   R e t u r n T y p e < t y p e o f   p o l a r A x i s R e d u c e r > ; 
+ 
+         p o l a r O p t i o n s :   R e t u r n T y p e < t y p e o f   p o l a r O p t i o n s R e d u c e r > ; 
+ 
+         r e f e r e n c e E l e m e n t s :   R e t u r n T y p e < t y p e o f   r e f e r e n c e E l e m e n t s R e d u c e r > ; 
+ 
+         r e n d e r e d T i c k s :   R e t u r n T y p e < t y p e o f   r e n d e r e d T i c k s R e d u c e r > ; 
+ 
+         r o o t P r o p s :   R e t u r n T y p e < t y p e o f   r o o t P r o p s R e d u c e r > ; 
+ 
+         t o o l t i p :   R e t u r n T y p e < t y p e o f   t o o l t i p R e d u c e r > ; 
+ 
+         z I n d e x :   R e t u r n T y p e < t y p e o f   z I n d e x R e d u c e r > ; 
+ 
+ } ; 
+ 
+ e x p o r t   d e c l a r e   c o n s t   c r e a t e R e c h a r t s S t o r e :   ( p r e l o a d e d S t a t e ? :   P a r t i a l < R e c h a r t s R o o t S t a t e > ,   c h a r t N a m e ? :   s t r i n g )   = >   S t o r e < R e c h a r t s R o o t S t a t e > ; 
+ 
+ e x p o r t   t y p e   A p p D i s p a t c h   =   D i s p a t c h < A c t i o n > ; 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ r e d u x \ s r c \ t y p e s \ s t o r e . t s 
+ 
+ 
+ i m p o r t   {   A c t i o n ,   U n k n o w n A c t i o n   }   f r o m   ' . / a c t i o n s ' 
+ 
+ i m p o r t   {   R e d u c e r   }   f r o m   ' . / r e d u c e r s ' 
+ 
+ / /   e s l i n t - d i s a b l e - n e x t - l i n e   @ t y p e s c r i p t - e s l i n t / n o - u n u s e d - v a r s 
+ 
+ i m p o r t   _ $ $ o b s e r v a b l e   f r o m   ' . . / u t i l s / s y m b o l - o b s e r v a b l e ' 
+ 
+ 
+ 
+ / * * 
+ 
+   *   A   * d i s p a t c h i n g   f u n c t i o n *   ( o r   s i m p l y   * d i s p a t c h   f u n c t i o n * )   i s   a   f u n c t i o n   t h a t 
+ 
+   *   a c c e p t s   a n   a c t i o n   o r   a n   a s y n c   a c t i o n ;   i t   t h e n   m a y   o r   m a y   n o t   d i s p a t c h   o n e 
+ 
+   *   o r   m o r e   a c t i o n s   t o   t h e   s t o r e . 
+ 
+   * 
+ 
+   *   W e   m u s t   d i s t i n g u i s h   b e t w e e n   d i s p a t c h i n g   f u n c t i o n s   i n   g e n e r a l   a n d   t h e   b a s e 
+ 
+   *   ` d i s p a t c h `   f u n c t i o n   p r o v i d e d   b y   t h e   s t o r e   i n s t a n c e   w i t h o u t   a n y   m i d d l e w a r e . 
+ 
+   * 
+ 
+   *   T h e   b a s e   d i s p a t c h   f u n c t i o n   * a l w a y s *   s y n c h r o n o u s l y   s e n d s   a n   a c t i o n   t o   t h e 
+ 
+   *   s t o r e ' s   r e d u c e r ,   a l o n g   w i t h   t h e   p r e v i o u s   s t a t e   r e t u r n e d   b y   t h e   s t o r e ,   t o 
+ 
+   *   c a l c u l a t e   a   n e w   s t a t e .   I t   e x p e c t s   a c t i o n s   t o   b e   p l a i n   o b j e c t s   r e a d y   t o   b e 
+ 
+   *   c o n s u m e d   b y   t h e   r e d u c e r . 
+ 
+   * 
+ 
+   *   M i d d l e w a r e   w r a p s   t h e   b a s e   d i s p a t c h   f u n c t i o n .   I t   a l l o w s   t h e   d i s p a t c h 
+ 
+   *   f u n c t i o n   t o   h a n d l e   a s y n c   a c t i o n s   i n   a d d i t i o n   t o   a c t i o n s .   M i d d l e w a r e   m a y 
+ 
+   *   t r a n s f o r m ,   d e l a y ,   i g n o r e ,   o r   o t h e r w i s e   i n t e r p r e t   a c t i o n s   o r   a s y n c   a c t i o n s 
+ 
+   *   b e f o r e   p a s s i n g   t h e m   t o   t h e   n e x t   m i d d l e w a r e . 
+ 
+   * 
+ 
+   *   @ t e m p l a t e   A   T h e   t y p e   o f   t h i n g s   ( a c t i o n s   o r   o t h e r w i s e )   w h i c h   m a y   b e 
+ 
+   *       d i s p a t c h e d . 
+ 
+   * / 
+ 
+ e x p o r t   i n t e r f a c e   D i s p a t c h < A   e x t e n d s   A c t i o n   =   U n k n o w n A c t i o n >   { 
+ 
+     < T   e x t e n d s   A > ( a c t i o n :   T ,   . . . e x t r a A r g s :   a n y [ ] ) :   T 
+ 
+ } 
+ 
+ 
+ 
+ / * * 
+ 
+   *   F u n c t i o n   t o   r e m o v e   l i s t e n e r   a d d e d   b y   ` S t o r e . s u b s c r i b e ( ) ` . 
+ 
+   * / 
+ 
+ e x p o r t   i n t e r f a c e   U n s u b s c r i b e   { 
+ 
+     ( ) :   v o i d 
+ 
+ } 
+ 
+ 
+ 
+ e x p o r t   t y p e   L i s t e n e r C a l l b a c k   =   ( )   = >   v o i d 
+ 
+ 
+ 
+ d e c l a r e   g l o b a l   { 
+ 
+     i n t e r f a c e   S y m b o l C o n s t r u c t o r   { 
+ 
+         r e a d o n l y   o b s e r v a b l e :   s y m b o l 
+ 
+     } 
+ 
+ } 
+ 
+ 
+ 
+ / * * 
+ 
+   *   A   m i n i m a l   o b s e r v a b l e   o f   s t a t e   c h a n g e s . 
+ 
+   *   F o r   m o r e   i n f o r m a t i o n ,   s e e   t h e   o b s e r v a b l e   p r o p o s a l : 
+ 
+   *   h t t p s : / / g i t h u b . c o m / t c 3 9 / p r o p o s a l - o b s e r v a b l e 
+ 
+   * / 
+ 
+ e x p o r t   t y p e   O b s e r v a b l e < T >   =   { 
+ 
+     / * * 
+ 
+       *   T h e   m i n i m a l   o b s e r v a b l e   s u b s c r i p t i o n   m e t h o d . 
+ 
+       *   @ p a r a m   { O b j e c t }   o b s e r v e r   A n y   o b j e c t   t h a t   c a n   b e   u s e d   a s   a n   o b s e r v e r . 
+ 
+       *   T h e   o b s e r v e r   o b j e c t   s h o u l d   h a v e   a   ` n e x t `   m e t h o d . 
+ 
+       *   @ r e t u r n s   { s u b s c r i p t i o n }   A n   o b j e c t   w i t h   a n   ` u n s u b s c r i b e `   m e t h o d   t h a t   c a n 
+ 
+       *   b e   u s e d   t o   u n s u b s c r i b e   t h e   o b s e r v a b l e   f r o m   t h e   s t o r e ,   a n d   p r e v e n t   f u r t h e r 
+ 
+       *   e m i s s i o n   o f   v a l u e s   f r o m   t h e   o b s e r v a b l e . 
+ 
+       * / 
+ 
+     s u b s c r i b e :   ( o b s e r v e r :   O b s e r v e r < T > )   = >   {   u n s u b s c r i b e :   U n s u b s c r i b e   } 
+ 
+     [ S y m b o l . o b s e r v a b l e ] ( ) :   O b s e r v a b l e < T > 
+ 
+ } 
+ 
+ 
+ 
+ / * * 
+ 
+   *   A n   O b s e r v e r   i s   u s e d   t o   r e c e i v e   d a t a   f r o m   a n   O b s e r v a b l e ,   a n d   i s   s u p p l i e d   a s 
+ 
+   *   a n   a r g u m e n t   t o   s u b s c r i b e . 
+ 
+   * / 
+ 
+ e x p o r t   t y p e   O b s e r v e r < T >   =   { 
+ 
+     n e x t ? ( v a l u e :   T ) :   v o i d 
+ 
+ } 
+ 
+ 
+ 
+ / * * 
+ 
+   *   A   s t o r e   i s   a n   o b j e c t   t h a t   h o l d s   t h e   a p p l i c a t i o n ' s   s t a t e   t r e e . 
+ 
+   *   T h e r e   s h o u l d   o n l y   b e   a   s i n g l e   s t o r e   i n   a   R e d u x   a p p ,   a s   t h e   c o m p o s i t i o n 
+ 
+   *   h a p p e n s   o n   t h e   r e d u c e r   l e v e l . 
+ 
+   * 
+ 
+   *   @ t e m p l a t e   S   T h e   t y p e   o f   s t a t e   h e l d   b y   t h i s   s t o r e . 
+ 
+   *   @ t e m p l a t e   A   t h e   t y p e   o f   a c t i o n s   w h i c h   m a y   b e   d i s p a t c h e d   b y   t h i s   s t o r e . 
+ 
+   *   @ t e m p l a t e   S t a t e E x t   a n y   e x t e n s i o n   t o   s t a t e   f r o m   s t o r e   e n h a n c e r s 
+ 
+   * / 
+ 
+ e x p o r t   i n t e r f a c e   S t o r e < 
+ 
+     S   =   a n y , 
+ 
+     A   e x t e n d s   A c t i o n   =   U n k n o w n A c t i o n , 
+ 
+     S t a t e E x t   e x t e n d s   u n k n o w n   =   u n k n o w n 
+ 
+ >   { 
+ 
+     / * * 
+ 
+       *   D i s p a t c h e s   a n   a c t i o n .   I t   i s   t h e   o n l y   w a y   t o   t r i g g e r   a   s t a t e   c h a n g e . 
+ 
+       * 
+ 
+       *   T h e   ` r e d u c e r `   f u n c t i o n ,   u s e d   t o   c r e a t e   t h e   s t o r e ,   w i l l   b e   c a l l e d   w i t h   t h e 
+ 
+       *   c u r r e n t   s t a t e   t r e e   a n d   t h e   g i v e n   ` a c t i o n ` .   I t s   r e t u r n   v a l u e   w i l l   b e 
+ 
+       *   c o n s i d e r e d   t h e   * * n e x t * *   s t a t e   o f   t h e   t r e e ,   a n d   t h e   c h a n g e   l i s t e n e r s   w i l l 
+ 
+       *   b e   n o t i f i e d . 
+ 
+       * 
+ 
+       *   T h e   b a s e   i m p l e m e n t a t i o n   o n l y   s u p p o r t s   p l a i n   o b j e c t   a c t i o n s .   I f   y o u   w a n t 
+ 
+       *   t o   d i s p a t c h   a   P r o m i s e ,   a n   O b s e r v a b l e ,   a   t h u n k ,   o r   s o m e t h i n g   e l s e ,   y o u 
+ 
+       *   n e e d   t o   w r a p   y o u r   s t o r e   c r e a t i n g   f u n c t i o n   i n t o   t h e   c o r r e s p o n d i n g 
+ 
+       *   m i d d l e w a r e .   F o r   e x a m p l e ,   s e e   t h e   d o c u m e n t a t i o n   f o r   t h e   ` r e d u x - t h u n k ` 
+ 
+       *   p a c k a g e .   E v e n   t h e   m i d d l e w a r e   w i l l   e v e n t u a l l y   d i s p a t c h   p l a i n   o b j e c t 
+ 
+       *   a c t i o n s   u s i n g   t h i s   m e t h o d . 
+ 
+       * 
+ 
+       *   @ p a r a m   a c t i o n   A   p l a i n   o b j e c t   r e p r e s e n t i n g   â ¬ Sw h a t   c h a n g e d â ¬  .   I t   i s   a   g o o d 
+ 
+       *       i d e a   t o   k e e p   a c t i o n s   s e r i a l i z a b l e   s o   y o u   c a n   r e c o r d   a n d   r e p l a y   u s e r 
+ 
+       *       s e s s i o n s ,   o r   u s e   t h e   t i m e   t r a v e l l i n g   ` r e d u x - d e v t o o l s ` .   A n   a c t i o n   m u s t 
+ 
+       *       h a v e   a   ` t y p e `   p r o p e r t y   w h i c h   m a y   n o t   b e   ` u n d e f i n e d ` .   I t   i s   a   g o o d   i d e a 
+ 
+       *       t o   u s e   s t r i n g   c o n s t a n t s   f o r   a c t i o n   t y p e s . 
+ 
+       * 
+ 
+       *   @ r e t u r n s   F o r   c o n v e n i e n c e ,   t h e   s a m e   a c t i o n   o b j e c t   y o u   d i s p a t c h e d . 
+ 
+       * 
+ 
+       *   N o t e   t h a t ,   i f   y o u   u s e   a   c u s t o m   m i d d l e w a r e ,   i t   m a y   w r a p   ` d i s p a t c h ( ) `   t o 
+ 
+       *   r e t u r n   s o m e t h i n g   e l s e   ( f o r   e x a m p l e ,   a   P r o m i s e   y o u   c a n   a w a i t ) . 
+ 
+       * / 
+ 
+     d i s p a t c h :   D i s p a t c h < A > 
+ 
+ 
+ 
+     / * * 
+ 
+       *   R e a d s   t h e   s t a t e   t r e e   m a n a g e d   b y   t h e   s t o r e . 
+ 
+       * 
+ 
+       *   @ r e t u r n s   T h e   c u r r e n t   s t a t e   t r e e   o f   y o u r   a p p l i c a t i o n . 
+ 
+       * / 
+ 
+     g e t S t a t e ( ) :   S   &   S t a t e E x t 
+ 
+ 
+ 
+     / * * 
+ 
+       *   A d d s   a   c h a n g e   l i s t e n e r .   I t   w i l l   b e   c a l l e d   a n y   t i m e   a n   a c t i o n   i s 
+ 
+       *   d i s p a t c h e d ,   a n d   s o m e   p a r t   o f   t h e   s t a t e   t r e e   m a y   p o t e n t i a l l y   h a v e   c h a n g e d . 
+ 
+       *   Y o u   m a y   t h e n   c a l l   ` g e t S t a t e ( ) `   t o   r e a d   t h e   c u r r e n t   s t a t e   t r e e   i n s i d e   t h e 
+ 
+       *   c a l l b a c k . 
+ 
+       * 
+ 
+       *   Y o u   m a y   c a l l   ` d i s p a t c h ( ) `   f r o m   a   c h a n g e   l i s t e n e r ,   w i t h   t h e   f o l l o w i n g 
+ 
+       *   c a v e a t s : 
+ 
+       * 
+ 
+       *   1 .   T h e   s u b s c r i p t i o n s   a r e   s n a p s h o t t e d   j u s t   b e f o r e   e v e r y   ` d i s p a t c h ( ) `   c a l l . 
+ 
+       *   I f   y o u   s u b s c r i b e   o r   u n s u b s c r i b e   w h i l e   t h e   l i s t e n e r s   a r e   b e i n g   i n v o k e d , 
+ 
+       *   t h i s   w i l l   n o t   h a v e   a n y   e f f e c t   o n   t h e   ` d i s p a t c h ( ) `   t h a t   i s   c u r r e n t l y   i n 
+ 
+       *   p r o g r e s s .   H o w e v e r ,   t h e   n e x t   ` d i s p a t c h ( ) `   c a l l ,   w h e t h e r   n e s t e d   o r   n o t , 
+ 
+       *   w i l l   u s e   a   m o r e   r e c e n t   s n a p s h o t   o f   t h e   s u b s c r i p t i o n   l i s t . 
+ 
+       * 
+ 
+       *   2 .   T h e   l i s t e n e r   s h o u l d   n o t   e x p e c t   t o   s e e   a l l   s t a t e s   c h a n g e s ,   a s   t h e   s t a t e 
+ 
+       *   m i g h t   h a v e   b e e n   u p d a t e d   m u l t i p l e   t i m e s   d u r i n g   a   n e s t e d   ` d i s p a t c h ( ) `   b e f o r e 
+ 
+       *   t h e   l i s t e n e r   i s   c a l l e d .   I t   i s ,   h o w e v e r ,   g u a r a n t e e d   t h a t   a l l   s u b s c r i b e r s 
+ 
+       *   r e g i s t e r e d   b e f o r e   t h e   ` d i s p a t c h ( ) `   s t a r t e d   w i l l   b e   c a l l e d   w i t h   t h e   l a t e s t 
+ 
+       *   s t a t e   b y   t h e   t i m e   i t   e x i t s . 
+ 
+       * 
+ 
+       *   @ p a r a m   l i s t e n e r   A   c a l l b a c k   t o   b e   i n v o k e d   o n   e v e r y   d i s p a t c h . 
+ 
+       *   @ r e t u r n s   A   f u n c t i o n   t o   r e m o v e   t h i s   c h a n g e   l i s t e n e r . 
+ 
+       * / 
+ 
+     s u b s c r i b e ( l i s t e n e r :   L i s t e n e r C a l l b a c k ) :   U n s u b s c r i b e 
+ 
+ 
+ 
+     / * * 
+ 
+       *   R e p l a c e s   t h e   r e d u c e r   c u r r e n t l y   u s e d   b y   t h e   s t o r e   t o   c a l c u l a t e   t h e   s t a t e . 
+ 
+       * 
+ 
+       *   Y o u   m i g h t   n e e d   t h i s   i f   y o u r   a p p   i m p l e m e n t s   c o d e   s p l i t t i n g   a n d   y o u   w a n t   t o 
+ 
+       *   l o a d   s o m e   o f   t h e   r e d u c e r s   d y n a m i c a l l y .   Y o u   m i g h t   a l s o   n e e d   t h i s   i f   y o u 
+ 
+       *   i m p l e m e n t   a   h o t   r e l o a d i n g   m e c h a n i s m   f o r   R e d u x . 
+ 
+       * 
+ 
+       *   @ p a r a m   n e x t R e d u c e r   T h e   r e d u c e r   f o r   t h e   s t o r e   t o   u s e   i n s t e a d . 
+ 
+       * / 
+ 
+     r e p l a c e R e d u c e r ( n e x t R e d u c e r :   R e d u c e r < S ,   A > ) :   v o i d 
+ 
+ 
+ 
+     / * * 
+ 
+       *   I n t e r o p e r a b i l i t y   p o i n t   f o r   o b s e r v a b l e / r e a c t i v e   l i b r a r i e s . 
+ 
+       *   @ r e t u r n s   { o b s e r v a b l e }   A   m i n i m a l   o b s e r v a b l e   o f   s t a t e   c h a n g e s . 
+ 
+       *   F o r   m o r e   i n f o r m a t i o n ,   s e e   t h e   o b s e r v a b l e   p r o p o s a l : 
+ 
+       *   h t t p s : / / g i t h u b . c o m / t c 3 9 / p r o p o s a l - o b s e r v a b l e 
+ 
+       * / 
+ 
+     [ S y m b o l . o b s e r v a b l e ] ( ) :   O b s e r v a b l e < S   &   S t a t e E x t > 
+ 
+ } 
+ 
+ 
+ 
+ e x p o r t   t y p e   U n k n o w n I f N o n S p e c i f i c < T >   =   { }   e x t e n d s   T   ?   u n k n o w n   :   T 
+ 
+ 
+ 
+ / * * 
+ 
+   *   A   s t o r e   c r e a t o r   i s   a   f u n c t i o n   t h a t   c r e a t e s   a   R e d u x   s t o r e .   L i k e   w i t h 
+ 
+   *   d i s p a t c h i n g   f u n c t i o n ,   w e   m u s t   d i s t i n g u i s h   t h e   b a s e   s t o r e   c r e a t o r , 
+ 
+   *   ` c r e a t e S t o r e ( r e d u c e r ,   p r e l o a d e d S t a t e ) `   e x p o r t e d   f r o m   t h e   R e d u x   p a c k a g e ,   f r o m 
+ 
+   *   s t o r e   c r e a t o r s   t h a t   a r e   r e t u r n e d   f r o m   t h e   s t o r e   e n h a n c e r s . 
+ 
+   * 
+ 
+   *   @ t e m p l a t e   S   T h e   t y p e   o f   s t a t e   t o   b e   h e l d   b y   t h e   s t o r e . 
+ 
+   *   @ t e m p l a t e   A   T h e   t y p e   o f   a c t i o n s   w h i c h   m a y   b e   d i s p a t c h e d . 
+ 
+   *   @ t e m p l a t e   P r e l o a d e d S t a t e   T h e   i n i t i a l   s t a t e   t h a t   i s   p a s s e d   i n t o   t h e   r e d u c e r . 
+ 
+   *   @ t e m p l a t e   E x t   S t o r e   e x t e n s i o n   t h a t   i s   m i x e d   i n   t o   t h e   S t o r e   t y p e . 
+ 
+   *   @ t e m p l a t e   S t a t e E x t   S t a t e   e x t e n s i o n   t h a t   i s   m i x e d   i n t o   t h e   s t a t e   t y p e . 
+ 
+   * / 
+ 
+ e x p o r t   i n t e r f a c e   S t o r e C r e a t o r   { 
+ 
+     < S ,   A   e x t e n d s   A c t i o n ,   E x t   e x t e n d s   { }   =   { } ,   S t a t e E x t   e x t e n d s   { }   =   { } > ( 
+ 
+         r e d u c e r :   R e d u c e r < S ,   A > , 
+ 
+         e n h a n c e r ? :   S t o r e E n h a n c e r < E x t ,   S t a t e E x t > 
+ 
+     ) :   S t o r e < S ,   A ,   U n k n o w n I f N o n S p e c i f i c < S t a t e E x t > >   &   E x t 
+ 
+     < 
+ 
+         S , 
+ 
+         A   e x t e n d s   A c t i o n , 
+ 
+         E x t   e x t e n d s   { }   =   { } , 
+ 
+         S t a t e E x t   e x t e n d s   { }   =   { } , 
+ 
+         P r e l o a d e d S t a t e   =   S 
+ 
+     > ( 
+ 
+         r e d u c e r :   R e d u c e r < S ,   A ,   P r e l o a d e d S t a t e > , 
+ 
+         p r e l o a d e d S t a t e ? :   P r e l o a d e d S t a t e   |   u n d e f i n e d , 
+ 
+         e n h a n c e r ? :   S t o r e E n h a n c e r < E x t > 
+ 
+     ) :   S t o r e < S ,   A ,   U n k n o w n I f N o n S p e c i f i c < S t a t e E x t > >   &   E x t 
+ 
+ } 
+ 
+ 
+ 
+ / * * 
+ 
+   *   A   s t o r e   e n h a n c e r   i s   a   h i g h e r - o r d e r   f u n c t i o n   t h a t   c o m p o s e s   a   s t o r e   c r e a t o r 
+ 
+   *   t o   r e t u r n   a   n e w ,   e n h a n c e d   s t o r e   c r e a t o r .   T h i s   i s   s i m i l a r   t o   m i d d l e w a r e   i n 
+ 
+   *   t h a t   i t   a l l o w s   y o u   t o   a l t e r   t h e   s t o r e   i n t e r f a c e   i n   a   c o m p o s a b l e   w a y . 
+ 
+   * 
+ 
+   *   S t o r e   e n h a n c e r s   a r e   m u c h   t h e   s a m e   c o n c e p t   a s   h i g h e r - o r d e r   c o m p o n e n t s   i n 
+ 
+   *   R e a c t ,   w h i c h   a r e   a l s o   o c c a s i o n a l l y   c a l l e d   â ¬ Sc o m p o n e n t   e n h a n c e r s â ¬  . 
+ 
+   * 
+ 
+   *   B e c a u s e   a   s t o r e   i s   n o t   a n   i n s t a n c e ,   b u t   r a t h e r   a   p l a i n - o b j e c t   c o l l e c t i o n   o f 
+ 
+   *   f u n c t i o n s ,   c o p i e s   c a n   b e   e a s i l y   c r e a t e d   a n d   m o d i f i e d   w i t h o u t   m u t a t i n g   t h e 
+ 
+   *   o r i g i n a l   s t o r e .   T h e r e   i s   a n   e x a m p l e   i n   ` c o m p o s e `   d o c u m e n t a t i o n 
+ 
+   *   d e m o n s t r a t i n g   t h a t . 
+ 
+   * 
+ 
+   *   M o s t   l i k e l y   y o u ' l l   n e v e r   w r i t e   a   s t o r e   e n h a n c e r ,   b u t   y o u   m a y   u s e   t h e   o n e 
+ 
+   *   p r o v i d e d   b y   t h e   d e v e l o p e r   t o o l s .   I t   i s   w h a t   m a k e s   t i m e   t r a v e l   p o s s i b l e 
+ 
+   *   w i t h o u t   t h e   a p p   b e i n g   a w a r e   i t   i s   h a p p e n i n g .   A m u s i n g l y ,   t h e   R e d u x 
+ 
+   *   m i d d l e w a r e   i m p l e m e n t a t i o n   i s   i t s e l f   a   s t o r e   e n h a n c e r . 
+ 
+   * 
+ 
+   *   @ t e m p l a t e   E x t   S t o r e   e x t e n s i o n   t h a t   i s   m i x e d   i n t o   t h e   S t o r e   t y p e . 
+ 
+   *   @ t e m p l a t e   S t a t e E x t   S t a t e   e x t e n s i o n   t h a t   i s   m i x e d   i n t o   t h e   s t a t e   t y p e . 
+ 
+   * / 
+ 
+ e x p o r t   t y p e   S t o r e E n h a n c e r < E x t   e x t e n d s   { }   =   { } ,   S t a t e E x t   e x t e n d s   { }   =   { } >   =   < 
+ 
+     N e x t E x t   e x t e n d s   { } , 
+ 
+     N e x t S t a t e E x t   e x t e n d s   { } 
+ 
+ > ( 
+ 
+     n e x t :   S t o r e E n h a n c e r S t o r e C r e a t o r < N e x t E x t ,   N e x t S t a t e E x t > 
+ 
+ )   = >   S t o r e E n h a n c e r S t o r e C r e a t o r < N e x t E x t   &   E x t ,   N e x t S t a t e E x t   &   S t a t e E x t > 
+ 
+ e x p o r t   t y p e   S t o r e E n h a n c e r S t o r e C r e a t o r < 
+ 
+     E x t   e x t e n d s   { }   =   { } , 
+ 
+     S t a t e E x t   e x t e n d s   { }   =   { } 
+ 
+ >   =   < S ,   A   e x t e n d s   A c t i o n ,   P r e l o a d e d S t a t e > ( 
+ 
+     r e d u c e r :   R e d u c e r < S ,   A ,   P r e l o a d e d S t a t e > , 
+ 
+     p r e l o a d e d S t a t e ? :   P r e l o a d e d S t a t e   |   u n d e f i n e d 
+ 
+ )   = >   S t o r e < S ,   A ,   S t a t e E x t >   &   E x t 
+ 
+ 
+ F I L E :   D : \ a l l   i n   o n e   f b o s   f i l e s \ F B O S V 0 1 \ F B O S _ V 0 1 \ f b o s - v 1 \ n o d e _ m o d u l e s \ r e d u x \ s r c \ c r e a t e S t o r e . t s 
+ 
+ 
+ i m p o r t   $ $ o b s e r v a b l e   f r o m   ' . / u t i l s / s y m b o l - o b s e r v a b l e ' 
+ 
+ 
+ 
+ i m p o r t   { 
+ 
+     S t o r e , 
+ 
+     S t o r e E n h a n c e r , 
+ 
+     D i s p a t c h , 
+ 
+     O b s e r v e r , 
+ 
+     L i s t e n e r C a l l b a c k , 
+ 
+     U n k n o w n I f N o n S p e c i f i c 
+ 
+ }   f r o m   ' . / t y p e s / s t o r e ' 
+ 
+ i m p o r t   {   A c t i o n   }   f r o m   ' . / t y p e s / a c t i o n s ' 
+ 
+ i m p o r t   {   R e d u c e r   }   f r o m   ' . / t y p e s / r e d u c e r s ' 
+ 
+ i m p o r t   A c t i o n T y p e s   f r o m   ' . / u t i l s / a c t i o n T y p e s ' 
+ 
+ i m p o r t   i s P l a i n O b j e c t   f r o m   ' . / u t i l s / i s P l a i n O b j e c t ' 
+ 
+ i m p o r t   {   k i n d O f   }   f r o m   ' . / u t i l s / k i n d O f ' 
+ 
+ 
+ 
+ / * * 
+ 
+   *   @ d e p r e c a t e d 
+ 
+   * 
+ 
+   *   * * W e   r e c o m m e n d   u s i n g   t h e   ` c o n f i g u r e S t o r e `   m e t h o d 
+ 
+   *   o f   t h e   ` @ r e d u x j s / t o o l k i t `   p a c k a g e * * ,   w h i c h   r e p l a c e s   ` c r e a t e S t o r e ` . 
+ 
+   * 
+ 
+   *   R e d u x   T o o l k i t   i s   o u r   r e c o m m e n d e d   a p p r o a c h   f o r   w r i t i n g   R e d u x   l o g i c   t o d a y , 
+ 
+   *   i n c l u d i n g   s t o r e   s e t u p ,   r e d u c e r s ,   d a t a   f e t c h i n g ,   a n d   m o r e . 
+ 
+   * 
+ 
+   *   * * F o r   m o r e   d e t a i l s ,   p l e a s e   r e a d   t h i s   R e d u x   d o c s   p a g e : * * 
+ 
+   *   * * h t t p s : / / r e d u x . j s . o r g / i n t r o d u c t i o n / w h y - r t k - i s - r e d u x - t o d a y * * 
+ 
+   * 
+ 
+   *   ` c o n f i g u r e S t o r e `   f r o m   R e d u x   T o o l k i t   i s   a n   i m p r o v e d   v e r s i o n   o f   ` c r e a t e S t o r e `   t h a t 
+ 
+   *   s i m p l i f i e s   s e t u p   a n d   h e l p s   a v o i d   c o m m o n   b u g s . 
+ 
+   * 
+ 
+   *   Y o u   s h o u l d   n o t   b e   u s i n g   t h e   ` r e d u x `   c o r e   p a c k a g e   b y   i t s e l f   t o d a y ,   e x c e p t   f o r   l e a r n i n g   p u r p o s e s . 
+ 
+   *   T h e   ` c r e a t e S t o r e `   m e t h o d   f r o m   t h e   c o r e   ` r e d u x `   p a c k a g e   w i l l   n o t   b e   r e m o v e d ,   b u t   w e   e n c o u r a g e 
+ 
+   *   a l l   u s e r s   t o   m i g r a t e   t o   u s i n g   R e d u x   T o o l k i t   f o r   a l l   R e d u x   c o d e . 
+ 
+   * 
+ 
+   *   I f   y o u   w a n t   t o   u s e   ` c r e a t e S t o r e `   w i t h o u t   t h i s   v i s u a l   d e p r e c a t i o n   w a r n i n g ,   u s e 
+ 
+   *   t h e   ` l e g a c y _ c r e a t e S t o r e `   i m p o r t   i n s t e a d : 
+ 
+   * 
+ 
+   *   ` i m p o r t   {   l e g a c y _ c r e a t e S t o r e   a s   c r e a t e S t o r e }   f r o m   ' r e d u x ' ` 
+ 
+   * 
+ 
+   * / 
+ 
+ e x p o r t   f u n c t i o n   c r e a t e S t o r e < 
+ 
+     S , 
+ 
+     A   e x t e n d s   A c t i o n , 
+ 
+     E x t   e x t e n d s   { }   =   { } , 
+ 
+     S t a t e E x t   e x t e n d s   { }   =   { } 
+ 
+ > ( 
+ 
+     r e d u c e r :   R e d u c e r < S ,   A > , 
+ 
+     e n h a n c e r ? :   S t o r e E n h a n c e r < E x t ,   S t a t e E x t > 
+ 
+ ) :   S t o r e < S ,   A ,   U n k n o w n I f N o n S p e c i f i c < S t a t e E x t > >   &   E x t 
+ 
+ / * * 
+ 
+   *   @ d e p r e c a t e d 
+ 
+   * 
+ 
+   *   * * W e   r e c o m m e n d   u s i n g   t h e   ` c o n f i g u r e S t o r e `   m e t h o d 
+ 
+   *   o f   t h e   ` @ r e d u x j s / t o o l k i t `   p a c k a g e * * ,   w h i c h   r e p l a c e s   ` c r e a t e S t o r e ` . 
+ 
+   * 
+ 
+   *   R e d u x   T o o l k i t   i s   o u r   r e c o m m e n d e d   a p p r o a c h   f o r   w r i t i n g   R e d u x   l o g i c   t o d a y , 
+ 
+   *   i n c l u d i n g   s t o r e   s e t u p ,   r e d u c e r s ,   d a t a   f e t c h i n g ,   a n d   m o r e . 
+ 
+   * 
+ 
+   *   * * F o r   m o r e   d e t a i l s ,   p l e a s e   r e a d   t h i s   R e d u x   d o c s   p a g e : * * 
+ 
+   *   * * h t t p s : / / r e d u x . j s . o r g / i n t r o d u c t i o n / w h y - r t k - i s - r e d u x - t o d a y * * 
+ 
+   * 
+ 
+   *   ` c o n f i g u r e S t o r e `   f r o m   R e d u x   T o o l k i t   i s   a n   i m p r o v e d   v e r s i o n   o f   ` c r e a t e S t o r e `   t h a t 
+ 
+   *   s i m p l i f i e s   s e t u p   a n d   h e l p s   a v o i d   c o m m o n   b u g s . 
+ 
+   * 
+ 
+   *   Y o u   s h o u l d   n o t   b e   u s i n g   t h e   ` r e d u x `   c o r e   p a c k a g e   b y   i t s e l f   t o d a y ,   e x c e p t   f o r   l e a r n i n g   p u r p o s e s . 
+ 
+   *   T h e   ` c r e a t e S t o r e `   m e t h o d   f r o m   t h e   c o r e   ` r e d u x `   p a c k a g e   w i l l   n o t   b e   r e m o v e d ,   b u t   w e   e n c o u r a g e 
+ 
+   *   a l l   u s e r s   t o   m i g r a t e   t o   u s i n g   R e d u x   T o o l k i t   f o r   a l l   R e d u x   c o d e . 
+ 
+   * 
+ 
+   *   I f   y o u   w a n t   t o   u s e   ` c r e a t e S t o r e `   w i t h o u t   t h i s   v i s u a l   d e p r e c a t i o n   w a r n i n g ,   u s e 
+ 
+   *   t h e   ` l e g a c y _ c r e a t e S t o r e `   i m p o r t   i n s t e a d : 
+ 
+   * 
+ 
+   *   ` i m p o r t   {   l e g a c y _ c r e a t e S t o r e   a s   c r e a t e S t o r e }   f r o m   ' r e d u x ' ` 
+ 
+   * 
+ 
+   * / 
+ 
+ e x p o r t   f u n c t i o n   c r e a t e S t o r e < 
+ 
+     S , 
+ 
+     A   e x t e n d s   A c t i o n , 
+ 
+     E x t   e x t e n d s   { }   =   { } , 
+ 
+     S t a t e E x t   e x t e n d s   { }   =   { } , 
+ 
+     P r e l o a d e d S t a t e   =   S 
+ 
+ > ( 
+ 
+     r e d u c e r :   R e d u c e r < S ,   A ,   P r e l o a d e d S t a t e > , 
+ 
+     p r e l o a d e d S t a t e ? :   P r e l o a d e d S t a t e   |   u n d e f i n e d , 
+ 
+     e n h a n c e r ? :   S t o r e E n h a n c e r < E x t ,   S t a t e E x t > 
+ 
+ ) :   S t o r e < S ,   A ,   U n k n o w n I f N o n S p e c i f i c < S t a t e E x t > >   &   E x t 
+ 
+ e x p o r t   f u n c t i o n   c r e a t e S t o r e < 
+ 
+     S , 
+ 
+     A   e x t e n d s   A c t i o n , 
+ 
+     E x t   e x t e n d s   { }   =   { } , 
+ 
+     S t a t e E x t   e x t e n d s   { }   =   { } , 
+ 
+     P r e l o a d e d S t a t e   =   S 
+ 
+ > ( 
+ 
+     r e d u c e r :   R e d u c e r < S ,   A ,   P r e l o a d e d S t a t e > , 
+ 
+     p r e l o a d e d S t a t e ? :   P r e l o a d e d S t a t e   |   S t o r e E n h a n c e r < E x t ,   S t a t e E x t >   |   u n d e f i n e d , 
+ 
+     e n h a n c e r ? :   S t o r e E n h a n c e r < E x t ,   S t a t e E x t > 
+ 
+ ) :   S t o r e < S ,   A ,   U n k n o w n I f N o n S p e c i f i c < S t a t e E x t > >   &   E x t   { 
+ 
+     i f   ( t y p e o f   r e d u c e r   ! = =   ' f u n c t i o n ' )   { 
+ 
+         t h r o w   n e w   E r r o r ( 
+ 
+             ` E x p e c t e d   t h e   r o o t   r e d u c e r   t o   b e   a   f u n c t i o n .   I n s t e a d ,   r e c e i v e d :   ' $ { k i n d O f ( 
+ 
+                 r e d u c e r 
+ 
+             ) } ' ` 
+ 
+         ) 
+ 
+     } 
+ 
+ 
+ 
+     i f   ( 
+ 
+         ( t y p e o f   p r e l o a d e d S t a t e   = = =   ' f u n c t i o n '   & &   t y p e o f   e n h a n c e r   = = =   ' f u n c t i o n ' )   | | 
+ 
+         ( t y p e o f   e n h a n c e r   = = =   ' f u n c t i o n '   & &   t y p e o f   a r g u m e n t s [ 3 ]   = = =   ' f u n c t i o n ' ) 
+ 
+     )   { 
+ 
+         t h r o w   n e w   E r r o r ( 
+ 
+             ' I t   l o o k s   l i k e   y o u   a r e   p a s s i n g   s e v e r a l   s t o r e   e n h a n c e r s   t o   '   + 
+ 
+                 ' c r e a t e S t o r e ( ) .   T h i s   i s   n o t   s u p p o r t e d .   I n s t e a d ,   c o m p o s e   t h e m   '   + 
+ 
+                 ' t o g e t h e r   t o   a   s i n g l e   f u n c t i o n .   S e e   h t t p s : / / r e d u x . j s . o r g / t u t o r i a l s / f u n d a m e n t a l s / p a r t - 4 - s t o r e # c r e a t i n g - a - s t o r e - w i t h - e n h a n c e r s   f o r   a n   e x a m p l e . ' 
+ 
+         ) 
+ 
+     } 
+ 
+ 
+ 
+     i f   ( t y p e o f   p r e l o a d e d S t a t e   = = =   ' f u n c t i o n '   & &   t y p e o f   e n h a n c e r   = = =   ' u n d e f i n e d ' )   { 
+ 
+         e n h a n c e r   =   p r e l o a d e d S t a t e   a s   S t o r e E n h a n c e r < E x t ,   S t a t e E x t > 
+ 
+         p r e l o a d e d S t a t e   =   u n d e f i n e d 
+ 
+     } 
+ 
+ 
+ 
+     i f   ( t y p e o f   e n h a n c e r   ! = =   ' u n d e f i n e d ' )   { 
+ 
+         i f   ( t y p e o f   e n h a n c e r   ! = =   ' f u n c t i o n ' )   { 
+ 
+             t h r o w   n e w   E r r o r ( 
+ 
+                 ` E x p e c t e d   t h e   e n h a n c e r   t o   b e   a   f u n c t i o n .   I n s t e a d ,   r e c e i v e d :   ' $ { k i n d O f ( 
+ 
+                     e n h a n c e r 
+ 
+                 ) } ' ` 
+ 
+             ) 
+ 
+         } 
+ 
+ 
+ 
+         r e t u r n   e n h a n c e r ( c r e a t e S t o r e ) ( 
+ 
+             r e d u c e r , 
+ 
+             p r e l o a d e d S t a t e   a s   P r e l o a d e d S t a t e   |   u n d e f i n e d 
+ 
+         ) 
+ 
+     } 
+ 
+ 
+ 
+     l e t   c u r r e n t R e d u c e r   =   r e d u c e r 
+ 
+     l e t   c u r r e n t S t a t e :   S   |   P r e l o a d e d S t a t e   |   u n d e f i n e d   =   p r e l o a d e d S t a t e   a s 
+ 
+         |   P r e l o a d e d S t a t e 
+ 
+         |   u n d e f i n e d 
+ 
+     l e t   c u r r e n t L i s t e n e r s :   M a p < n u m b e r ,   L i s t e n e r C a l l b a c k >   |   n u l l   =   n e w   M a p ( ) 
+ 
+     l e t   n e x t L i s t e n e r s   =   c u r r e n t L i s t e n e r s 
+ 
+     l e t   l i s t e n e r I d C o u n t e r   =   0 
+ 
+     l e t   i s D i s p a t c h i n g   =   f a l s e 
+ 
+ 
+ 
+     / * * 
+ 
+       *   T h i s   m a k e s   a   s h a l l o w   c o p y   o f   c u r r e n t L i s t e n e r s   s o   w e   c a n   u s e 
+ 
+       *   n e x t L i s t e n e r s   a s   a   t e m p o r a r y   l i s t   w h i l e   d i s p a t c h i n g . 
+ 
+       * 
+ 
+       *   T h i s   p r e v e n t s   a n y   b u g s   a r o u n d   c o n s u m e r s   c a l l i n g 
+ 
+       *   s u b s c r i b e / u n s u b s c r i b e   i n   t h e   m i d d l e   o f   a   d i s p a t c h . 
+ 
+       * / 
+ 
+     f u n c t i o n   e n s u r e C a n M u t a t e N e x t L i s t e n e r s ( )   { 
+ 
+         i f   ( n e x t L i s t e n e r s   = = =   c u r r e n t L i s t e n e r s )   { 
+ 
+             n e x t L i s t e n e r s   =   n e w   M a p ( ) 
+ 
+             c u r r e n t L i s t e n e r s . f o r E a c h ( ( l i s t e n e r ,   k e y )   = >   { 
+ 
+                 n e x t L i s t e n e r s . s e t ( k e y ,   l i s t e n e r ) 
+ 
+             } ) 
+ 
+         } 
+ 
+     } 
+ 
+ 
+ 
+     / * * 
+ 
+       *   R e a d s   t h e   s t a t e   t r e e   m a n a g e d   b y   t h e   s t o r e . 
+ 
+       * 
+ 
+       *   @ r e t u r n s   T h e   c u r r e n t   s t a t e   t r e e   o f   y o u r   a p p l i c a t i o n . 
+ 
+       * / 
+ 
+     f u n c t i o n   g e t S t a t e ( ) :   S   { 
+ 
+         i f   ( i s D i s p a t c h i n g )   { 
+ 
+             t h r o w   n e w   E r r o r ( 
+ 
+                 ' Y o u   m a y   n o t   c a l l   s t o r e . g e t S t a t e ( )   w h i l e   t h e   r e d u c e r   i s   e x e c u t i n g .   '   + 
+ 
+                     ' T h e   r e d u c e r   h a s   a l r e a d y   r e c e i v e d   t h e   s t a t e   a s   a n   a r g u m e n t .   '   + 
+ 
+                     ' P a s s   i t   d o w n   f r o m   t h e   t o p   r e d u c e r   i n s t e a d   o f   r e a d i n g   i t   f r o m   t h e   s t o r e . ' 
+ 
+             ) 
+ 
+         } 
+ 
+ 
+ 
+         r e t u r n   c u r r e n t S t a t e   a s   S 
+ 
+     } 
+ 
+ 
+ 
+     / * * 
+ 
+       *   A d d s   a   c h a n g e   l i s t e n e r .   I t   w i l l   b e   c a l l e d   a n y   t i m e   a n   a c t i o n   i s   d i s p a t c h e d , 
+ 
+       *   a n d   s o m e   p a r t   o f   t h e   s t a t e   t r e e   m a y   p o t e n t i a l l y   h a v e   c h a n g e d .   Y o u   m a y   t h e n 
+ 
+       *   c a l l   ` g e t S t a t e ( ) `   t o   r e a d   t h e   c u r r e n t   s t a t e   t r e e   i n s i d e   t h e   c a l l b a c k . 
+ 
+       * 
+ 
+       *   Y o u   m a y   c a l l   ` d i s p a t c h ( ) `   f r o m   a   c h a n g e   l i s t e n e r ,   w i t h   t h e   f o l l o w i n g 
+ 
+       *   c a v e a t s : 
+ 
+       * 
+ 
+       *   1 .   T h e   s u b s c r i p t i o n s   a r e   s n a p s h o t t e d   j u s t   b e f o r e   e v e r y   ` d i s p a t c h ( ) `   c a l l . 
+ 
+       *   I f   y o u   s u b s c r i b e   o r   u n s u b s c r i b e   w h i l e   t h e   l i s t e n e r s   a r e   b e i n g   i n v o k e d ,   t h i s 
+ 
+       *   w i l l   n o t   h a v e   a n y   e f f e c t   o n   t h e   ` d i s p a t c h ( ) `   t h a t   i s   c u r r e n t l y   i n   p r o g r e s s . 
+ 
+       *   H o w e v e r ,   t h e   n e x t   ` d i s p a t c h ( ) `   c a l l ,   w h e t h e r   n e s t e d   o r   n o t ,   w i l l   u s e   a   m o r e 
+ 
+       *   r e c e n t   s n a p s h o t   o f   t h e   s u b s c r i p t i o n   l i s t . 
+ 
+       * 
+ 
+       *   2 .   T h e   l i s t e n e r   s h o u l d   n o t   e x p e c t   t o   s e e   a l l   s t a t e   c h a n g e s ,   a s   t h e   s t a t e 
+ 
+       *   m i g h t   h a v e   b e e n   u p d a t e d   m u l t i p l e   t i m e s   d u r i n g   a   n e s t e d   ` d i s p a t c h ( ) `   b e f o r e 
+ 
+       *   t h e   l i s t e n e r   i s   c a l l e d .   I t   i s ,   h o w e v e r ,   g u a r a n t e e d   t h a t   a l l   s u b s c r i b e r s 
+ 
+       *   r e g i s t e r e d   b e f o r e   t h e   ` d i s p a t c h ( ) `   s t a r t e d   w i l l   b e   c a l l e d   w i t h   t h e   l a t e s t 
+ 
+       *   s t a t e   b y   t h e   t i m e   i t   e x i t s . 
+ 
+       * 
+ 
+       *   @ p a r a m   l i s t e n e r   A   c a l l b a c k   t o   b e   i n v o k e d   o n   e v e r y   d i s p a t c h . 
+ 
+       *   @ r e t u r n s   A   f u n c t i o n   t o   r e m o v e   t h i s   c h a n g e   l i s t e n e r . 
+ 
+       * / 
+ 
+     f u n c t i o n   s u b s c r i b e ( l i s t e n e r :   ( )   = >   v o i d )   { 
+ 
+         i f   ( t y p e o f   l i s t e n e r   ! = =   ' f u n c t i o n ' )   { 
+ 
+             t h r o w   n e w   E r r o r ( 
+ 
+                 ` E x p e c t e d   t h e   l i s t e n e r   t o   b e   a   f u n c t i o n .   I n s t e a d ,   r e c e i v e d :   ' $ { k i n d O f ( 
+ 
+                     l i s t e n e r 
+ 
+                 ) } ' ` 
+ 
+             ) 
+ 
+         } 
+ 
+ 
+ 
+         i f   ( i s D i s p a t c h i n g )   { 
+ 
+             t h r o w   n e w   E r r o r ( 
+ 
+                 ' Y o u   m a y   n o t   c a l l   s t o r e . s u b s c r i b e ( )   w h i l e   t h e   r e d u c e r   i s   e x e c u t i n g .   '   + 
+ 
+                     ' I f   y o u   w o u l d   l i k e   t o   b e   n o t i f i e d   a f t e r   t h e   s t o r e   h a s   b e e n   u p d a t e d ,   s u b s c r i b e   f r o m   a   '   + 
+ 
+                     ' c o m p o n e n t   a n d   i n v o k e   s t o r e . g e t S t a t e ( )   i n   t h e   c a l l b a c k   t o   a c c e s s   t h e   l a t e s t   s t a t e .   '   + 
+ 
+                     ' S e e   h t t p s : / / r e d u x . j s . o r g / a p i / s t o r e # s u b s c r i b e l i s t e n e r   f o r   m o r e   d e t a i l s . ' 
+ 
+             ) 
+ 
+         } 
+ 
+ 
+ 
+         l e t   i s S u b s c r i b e d   =   t r u e 
+ 
+ 
+ 
+         e n s u r e C a n M u t a t e N e x t L i s t e n e r s ( ) 
+ 
+         c o n s t   l i s t e n e r I d   =   l i s t e n e r I d C o u n t e r + + 
+ 
+         n e x t L i s t e n e r s . s e t ( l i s t e n e r I d ,   l i s t e n e r ) 
+ 
+ 
+ 
+         r e t u r n   f u n c t i o n   u n s u b s c r i b e ( )   { 
+ 
+             i f   ( ! i s S u b s c r i b e d )   { 
+ 
+                 r e t u r n 
+ 
+             } 
+ 
+ 
+ 
+             i f   ( i s D i s p a t c h i n g )   { 
+ 
+                 t h r o w   n e w   E r r o r ( 
+ 
+                     ' Y o u   m a y   n o t   u n s u b s c r i b e   f r o m   a   s t o r e   l i s t e n e r   w h i l e   t h e   r e d u c e r   i s   e x e c u t i n g .   '   + 
+ 
+                         ' S e e   h t t p s : / / r e d u x . j s . o r g / a p i / s t o r e # s u b s c r i b e l i s t e n e r   f o r   m o r e   d e t a i l s . ' 
+ 
+                 ) 
+ 
+             } 
+ 
+ 
+ 
+             i s S u b s c r i b e d   =   f a l s e 
+ 
+ 
+ 
+             e n s u r e C a n M u t a t e N e x t L i s t e n e r s ( ) 
+ 
+             n e x t L i s t e n e r s . d e l e t e ( l i s t e n e r I d ) 
+ 
+             c u r r e n t L i s t e n e r s   =   n u l l 
+ 
+         } 
+ 
+     } 
+ 
+ 
+ 
+     / * * 
+ 
+       *   D i s p a t c h e s   a n   a c t i o n .   I t   i s   t h e   o n l y   w a y   t o   t r i g g e r   a   s t a t e   c h a n g e . 
+ 
+       * 
+ 
+       *   T h e   ` r e d u c e r `   f u n c t i o n ,   u s e d   t o   c r e a t e   t h e   s t o r e ,   w i l l   b e   c a l l e d   w i t h   t h e 
+ 
+       *   c u r r e n t   s t a t e   t r e e   a n d   t h e   g i v e n   ` a c t i o n ` .   I t s   r e t u r n   v a l u e   w i l l 
+ 
+       *   b e   c o n s i d e r e d   t h e   * * n e x t * *   s t a t e   o f   t h e   t r e e ,   a n d   t h e   c h a n g e   l i s t e n e r s 
+ 
+       *   w i l l   b e   n o t i f i e d . 
+ 
+       * 
+ 
+       *   T h e   b a s e   i m p l e m e n t a t i o n   o n l y   s u p p o r t s   p l a i n   o b j e c t   a c t i o n s .   I f   y o u   w a n t   t o 
+ 
+       *   d i s p a t c h   a   P r o m i s e ,   a n   O b s e r v a b l e ,   a   t h u n k ,   o r   s o m e t h i n g   e l s e ,   y o u   n e e d   t o 
+ 
+       *   w r a p   y o u r   s t o r e   c r e a t i n g   f u n c t i o n   i n t o   t h e   c o r r e s p o n d i n g   m i d d l e w a r e .   F o r 
+ 
+       *   e x a m p l e ,   s e e   t h e   d o c u m e n t a t i o n   f o r   t h e   ` r e d u x - t h u n k `   p a c k a g e .   E v e n   t h e 
+ 
+       *   m i d d l e w a r e   w i l l   e v e n t u a l l y   d i s p a t c h   p l a i n   o b j e c t   a c t i o n s   u s i n g   t h i s   m e t h o d . 
+ 
+       * 
+ 
+       *   @ p a r a m   a c t i o n   A   p l a i n   o b j e c t   r e p r e s e n t i n g   â ¬ Sw h a t   c h a n g e d â ¬  .   I t   i s 
+ 
+       *   a   g o o d   i d e a   t o   k e e p   a c t i o n s   s e r i a l i z a b l e   s o   y o u   c a n   r e c o r d   a n d   r e p l a y   u s e r 
+ 
+       *   s e s s i o n s ,   o r   u s e   t h e   t i m e   t r a v e l l i n g   ` r e d u x - d e v t o o l s ` .   A n   a c t i o n   m u s t   h a v e 
+ 
+       *   a   ` t y p e `   p r o p e r t y   w h i c h   m a y   n o t   b e   ` u n d e f i n e d ` .   I t   i s   a   g o o d   i d e a   t o   u s e 
+ 
+       *   s t r i n g   c o n s t a n t s   f o r   a c t i o n   t y p e s . 
+ 
+       * 
+ 
+       *   @ r e t u r n s   F o r   c o n v e n i e n c e ,   t h e   s a m e   a c t i o n   o b j e c t   y o u   d i s p a t c h e d . 
+ 
+       * 
+ 
+       *   N o t e   t h a t ,   i f   y o u   u s e   a   c u s t o m   m i d d l e w a r e ,   i t   m a y   w r a p   ` d i s p a t c h ( ) `   t o 
+ 
+       *   r e t u r n   s o m e t h i n g   e l s e   ( f o r   e x a m p l e ,   a   P r o m i s e   y o u   c a n   a w a i t ) . 
+ 
+       * / 
+ 
+     f u n c t i o n   d i s p a t c h ( a c t i o n :   A )   { 
+ 
+         i f   ( ! i s P l a i n O b j e c t ( a c t i o n ) )   { 
+ 
+             t h r o w   n e w   E r r o r ( 
+ 
+                 ` A c t i o n s   m u s t   b e   p l a i n   o b j e c t s .   I n s t e a d ,   t h e   a c t u a l   t y p e   w a s :   ' $ { k i n d O f ( 
+ 
+                     a c t i o n 
+ 
+                 ) } ' .   Y o u   m a y   n e e d   t o   a d d   m i d d l e w a r e   t o   y o u r   s t o r e   s e t u p   t o   h a n d l e   d i s p a t c h i n g   o t h e r   v a l u e s ,   s u c h   a s   ' r e d u x - t h u n k '   t o   h a n d l e   d i s p a t c h i n g   f u n c t i o n s .   S e e   h t t p s : / / r e d u x . j s . o r g / t u t o r i a l s / f u n d a m e n t a l s / p a r t - 4 - s t o r e # m i d d l e w a r e   a n d   h t t p s : / / r e d u x . j s . o r g / t u t o r i a l s / f u n d a m e n t a l s / p a r t - 6 - a s y n c - l o g i c # u s i n g - t h e - r e d u x - t h u n k - m i d d l e w a r e   f o r   e x a m p l e s . ` 
+ 
+             ) 
+ 
+         } 
+ 
+ 
+ 
+         i f   ( t y p e o f   a c t i o n . t y p e   = = =   ' u n d e f i n e d ' )   { 
+ 
+             t h r o w   n e w   E r r o r ( 
+ 
+                 ' A c t i o n s   m a y   n o t   h a v e   a n   u n d e f i n e d   " t y p e "   p r o p e r t y .   Y o u   m a y   h a v e   m i s s p e l l e d   a n   a c t i o n   t y p e   s t r i n g   c o n s t a n t . ' 
+ 
+             ) 
+ 
+         } 
+ 
+ 
+ 
+         i f   ( t y p e o f   a c t i o n . t y p e   ! = =   ' s t r i n g ' )   { 
+ 
+             t h r o w   n e w   E r r o r ( 
+ 
+                 ` A c t i o n   " t y p e "   p r o p e r t y   m u s t   b e   a   s t r i n g .   I n s t e a d ,   t h e   a c t u a l   t y p e   w a s :   ' $ { k i n d O f ( 
+ 
+                     a c t i o n . t y p e 
+ 
+                 ) } ' .   V a l u e   w a s :   ' $ { a c t i o n . t y p e } '   ( s t r i n g i f i e d ) ` 
+ 
+             ) 
+ 
+         } 
+ 
+ 
+ 
+         i f   ( i s D i s p a t c h i n g )   { 
+ 
+             t h r o w   n e w   E r r o r ( ' R e d u c e r s   m a y   n o t   d i s p a t c h   a c t i o n s . ' ) 
+ 
+         } 
+ 
+ 
+ 
+         t r y   { 
+ 
+             i s D i s p a t c h i n g   =   t r u e 
+ 
+             c u r r e n t S t a t e   =   c u r r e n t R e d u c e r ( c u r r e n t S t a t e ,   a c t i o n ) 
+ 
+         }   f i n a l l y   { 
+ 
+             i s D i s p a t c h i n g   =   f a l s e 
+ 
+         } 
+ 
+ 
+ 
+         c o n s t   l i s t e n e r s   =   ( c u r r e n t L i s t e n e r s   =   n e x t L i s t e n e r s ) 
+ 
+         l i s t e n e r s . f o r E a c h ( l i s t e n e r   = >   { 
+ 
+             l i s t e n e r ( ) 
+ 
+         } ) 
+ 
+         r e t u r n   a c t i o n 
+ 
+     } 
+ 
+ 
+ 
+     / * * 
+ 
+       *   R e p l a c e s   t h e   r e d u c e r   c u r r e n t l y   u s e d   b y   t h e   s t o r e   t o   c a l c u l a t e   t h e   s t a t e . 
+ 
+       * 
+ 
+       *   Y o u   m i g h t   n e e d   t h i s   i f   y o u r   a p p   i m p l e m e n t s   c o d e   s p l i t t i n g   a n d   y o u   w a n t   t o 
+ 
+       *   l o a d   s o m e   o f   t h e   r e d u c e r s   d y n a m i c a l l y .   Y o u   m i g h t   a l s o   n e e d   t h i s   i f   y o u 
+ 
+       *   i m p l e m e n t   a   h o t   r e l o a d i n g   m e c h a n i s m   f o r   R e d u x . 
+ 
+       * 
+ 
+       *   @ p a r a m   n e x t R e d u c e r   T h e   r e d u c e r   f o r   t h e   s t o r e   t o   u s e   i n s t e a d . 
+ 
+       * / 
+ 
+     f u n c t i o n   r e p l a c e R e d u c e r ( n e x t R e d u c e r :   R e d u c e r < S ,   A > ) :   v o i d   { 
+ 
+         i f   ( t y p e o f   n e x t R e d u c e r   ! = =   ' f u n c t i o n ' )   { 
+ 
+             t h r o w   n e w   E r r o r ( 
+ 
+                 ` E x p e c t e d   t h e   n e x t R e d u c e r   t o   b e   a   f u n c t i o n .   I n s t e a d ,   r e c e i v e d :   ' $ { k i n d O f ( 
+ 
+                     n e x t R e d u c e r 
+ 
+                 ) } ` 
+ 
+             ) 
+ 
+         } 
+ 
+ 
+ 
+         c u r r e n t R e d u c e r   =   n e x t R e d u c e r   a s   u n k n o w n   a s   R e d u c e r < S ,   A ,   P r e l o a d e d S t a t e > 
+ 
+ 
+ 
+         / /   T h i s   a c t i o n   h a s   a   s i m i l a r   e f f e c t   t o   A c t i o n T y p e s . I N I T . 
+ 
+         / /   A n y   r e d u c e r s   t h a t   e x i s t e d   i n   b o t h   t h e   n e w   a n d   o l d   r o o t R e d u c e r 
+ 
+         / /   w i l l   r e c e i v e   t h e   p r e v i o u s   s t a t e .   T h i s   e f f e c t i v e l y   p o p u l a t e s 
+ 
+         / /   t h e   n e w   s t a t e   t r e e   w i t h   a n y   r e l e v a n t   d a t a   f r o m   t h e   o l d   o n e . 
+ 
+         d i s p a t c h ( {   t y p e :   A c t i o n T y p e s . R E P L A C E   }   a s   A ) 
+ 
+     } 
+ 
+ 
+ 
+     / * * 
+ 
+       *   I n t e r o p e r a b i l i t y   p o i n t   f o r   o b s e r v a b l e / r e a c t i v e   l i b r a r i e s . 
+ 
+       *   @ r e t u r n s   A   m i n i m a l   o b s e r v a b l e   o f   s t a t e   c h a n g e s . 
+ 
+       *   F o r   m o r e   i n f o r m a t i o n ,   s e e   t h e   o b s e r v a b l e   p r o p o s a l : 
+ 
+       *   h t t p s : / / g i t h u b . c o m / t c 3 9 / p r o p o s a l - o b s e r v a b l e 
+ 
+       * / 
+ 
+     f u n c t i o n   o b s e r v a b l e ( )   { 
+ 
+         c o n s t   o u t e r S u b s c r i b e   =   s u b s c r i b e 
+ 
+         r e t u r n   { 
+ 
+             / * * 
+ 
+               *   T h e   m i n i m a l   o b s e r v a b l e   s u b s c r i p t i o n   m e t h o d . 
+ 
+               *   @ p a r a m   o b s e r v e r   A n y   o b j e c t   t h a t   c a n   b e   u s e d   a s   a n   o b s e r v e r . 
+ 
+               *   T h e   o b s e r v e r   o b j e c t   s h o u l d   h a v e   a   ` n e x t `   m e t h o d . 
+ 
+               *   @ r e t u r n s   A n   o b j e c t   w i t h   a n   ` u n s u b s c r i b e `   m e t h o d   t h a t   c a n 
+ 
+               *   b e   u s e d   t o   u n s u b s c r i b e   t h e   o b s e r v a b l e   f r o m   t h e   s t o r e ,   a n d   p r e v e n t   f u r t h e r 
+ 
+               *   e m i s s i o n   o f   v a l u e s   f r o m   t h e   o b s e r v a b l e . 
+ 
+               * / 
+ 
+             s u b s c r i b e ( o b s e r v e r :   u n k n o w n )   { 
+ 
+                 i f   ( t y p e o f   o b s e r v e r   ! = =   ' o b j e c t '   | |   o b s e r v e r   = = =   n u l l )   { 
+ 
+                     t h r o w   n e w   T y p e E r r o r ( 
+ 
+                         ` E x p e c t e d   t h e   o b s e r v e r   t o   b e   a n   o b j e c t .   I n s t e a d ,   r e c e i v e d :   ' $ { k i n d O f ( 
+ 
+                             o b s e r v e r 
+ 
+                         ) } ' ` 
+ 
+                     ) 
+ 
+                 } 
+ 
+ 
+ 
+                 f u n c t i o n   o b s e r v e S t a t e ( )   { 
+ 
+                     c o n s t   o b s e r v e r A s O b s e r v e r   =   o b s e r v e r   a s   O b s e r v e r < S > 
+ 
+                     i f   ( o b s e r v e r A s O b s e r v e r . n e x t )   { 
+ 
+                         o b s e r v e r A s O b s e r v e r . n e x t ( g e t S t a t e ( ) ) 
+ 
+                     } 
+ 
+                 } 
+ 
+ 
+ 
+                 o b s e r v e S t a t e ( ) 
+ 
+                 c o n s t   u n s u b s c r i b e   =   o u t e r S u b s c r i b e ( o b s e r v e S t a t e ) 
+ 
+                 r e t u r n   {   u n s u b s c r i b e   } 
+ 
+             } , 
+ 
+ 
+ 
+             [ $ $ o b s e r v a b l e ] ( )   { 
+ 
+                 r e t u r n   t h i s 
+ 
+             } 
+ 
+         } 
+ 
+     } 
+ 
+ 
+ 
+     / /   W h e n   a   s t o r e   i s   c r e a t e d ,   a n   " I N I T "   a c t i o n   i s   d i s p a t c h e d   s o   t h a t   e v e r y 
+ 
+     / /   r e d u c e r   r e t u r n s   t h e i r   i n i t i a l   s t a t e .   T h i s   e f f e c t i v e l y   p o p u l a t e s 
+ 
+     / /   t h e   i n i t i a l   s t a t e   t r e e . 
+ 
+     d i s p a t c h ( {   t y p e :   A c t i o n T y p e s . I N I T   }   a s   A ) 
+ 
+ 
+ 
+     c o n s t   s t o r e   =   { 
+ 
+         d i s p a t c h :   d i s p a t c h   a s   D i s p a t c h < A > , 
+ 
+         s u b s c r i b e , 
+ 
+         g e t S t a t e , 
+ 
+         r e p l a c e R e d u c e r , 
+ 
+         [ $ $ o b s e r v a b l e ] :   o b s e r v a b l e 
+ 
+     }   a s   u n k n o w n   a s   S t o r e < S ,   A ,   S t a t e E x t >   &   E x t 
+ 
+     r e t u r n   s t o r e 
+ 
+ } 
+ 
+ 
+ 
+ / * * 
+ 
+   *   C r e a t e s   a   R e d u x   s t o r e   t h a t   h o l d s   t h e   s t a t e   t r e e . 
+ 
+   * 
+ 
+   *   * * W e   r e c o m m e n d   u s i n g   ` c o n f i g u r e S t o r e `   f r o m   t h e 
+ 
+   *   ` @ r e d u x j s / t o o l k i t `   p a c k a g e * * ,   w h i c h   r e p l a c e s   ` c r e a t e S t o r e ` : 
+ 
+   *   * * h t t p s : / / r e d u x . j s . o r g / i n t r o d u c t i o n / w h y - r t k - i s - r e d u x - t o d a y * * 
+ 
+   * 
+ 
+   *   T h e   o n l y   w a y   t o   c h a n g e   t h e   d a t a   i n   t h e   s t o r e   i s   t o   c a l l   ` d i s p a t c h ( ) `   o n   i t . 
+ 
+   * 
+ 
+   *   T h e r e   s h o u l d   o n l y   b e   a   s i n g l e   s t o r e   i n   y o u r   a p p .   T o   s p e c i f y   h o w   d i f f e r e n t 
+ 
+   *   p a r t s   o f   t h e   s t a t e   t r e e   r e s p o n d   t o   a c t i o n s ,   y o u   m a y   c o m b i n e   s e v e r a l   r e d u c e r s 
+ 
+   *   i n t o   a   s i n g l e   r e d u c e r   f u n c t i o n   b y   u s i n g   ` c o m b i n e R e d u c e r s ` . 
+ 
+   * 
+ 
+   *   @ p a r a m   { F u n c t i o n }   r e d u c e r   A   f u n c t i o n   t h a t   r e t u r n s   t h e   n e x t   s t a t e   t r e e ,   g i v e n 
+ 
+   *   t h e   c u r r e n t   s t a t e   t r e e   a n d   t h e   a c t i o n   t o   h a n d l e . 
+ 
+   * 
+ 
+   *   @ p a r a m   { a n y }   [ p r e l o a d e d S t a t e ]   T h e   i n i t i a l   s t a t e .   Y o u   m a y   o p t i o n a l l y   s p e c i f y   i t 
+ 
+   *   t o   h y d r a t e   t h e   s t a t e   f r o m   t h e   s e r v e r   i n   u n i v e r s a l   a p p s ,   o r   t o   r e s t o r e   a 
+ 
+   *   p r e v i o u s l y   s e r i a l i z e d   u s e r   s e s s i o n . 
+ 
+   *   I f   y o u   u s e   ` c o m b i n e R e d u c e r s `   t o   p r o d u c e   t h e   r o o t   r e d u c e r   f u n c t i o n ,   t h i s   m u s t   b e 
+ 
+   *   a n   o b j e c t   w i t h   t h e   s a m e   s h a p e   a s   ` c o m b i n e R e d u c e r s `   k e y s . 
+ 
+   * 
+ 
+   *   @ p a r a m   { F u n c t i o n }   [ e n h a n c e r ]   T h e   s t o r e   e n h a n c e r .   Y o u   m a y   o p t i o n a l l y   s p e c i f y   i t 
+ 
+   *   t o   e n h a n c e   t h e   s t o r e   w i t h   t h i r d - p a r t y   c a p a b i l i t i e s   s u c h   a s   m i d d l e w a r e , 
+ 
+   *   t i m e   t r a v e l ,   p e r s i s t e n c e ,   e t c .   T h e   o n l y   s t o r e   e n h a n c e r   t h a t   s h i p s   w i t h   R e d u x 
+ 
+   *   i s   ` a p p l y M i d d l e w a r e ( ) ` . 
+ 
+   * 
+ 
+   *   @ r e t u r n s   { S t o r e }   A   R e d u x   s t o r e   t h a t   l e t s   y o u   r e a d   t h e   s t a t e ,   d i s p a t c h   a c t i o n s 
+ 
+   *   a n d   s u b s c r i b e   t o   c h a n g e s . 
+ 
+   * / 
+ 
+ e x p o r t   f u n c t i o n   l e g a c y _ c r e a t e S t o r e < 
+ 
+     S , 
+ 
+     A   e x t e n d s   A c t i o n , 
+ 
+     E x t   e x t e n d s   { }   =   { } , 
+ 
+     S t a t e E x t   e x t e n d s   { }   =   { } 
+ 
+ > ( 
+ 
+     r e d u c e r :   R e d u c e r < S ,   A > , 
+ 
+     e n h a n c e r ? :   S t o r e E n h a n c e r < E x t ,   S t a t e E x t > 
+ 
+ ) :   S t o r e < S ,   A ,   U n k n o w n I f N o n S p e c i f i c < S t a t e E x t > >   &   E x t 
+ 
+ / * * 
+ 
+   *   C r e a t e s   a   R e d u x   s t o r e   t h a t   h o l d s   t h e   s t a t e   t r e e . 
+ 
+   * 
+ 
+   *   * * W e   r e c o m m e n d   u s i n g   ` c o n f i g u r e S t o r e `   f r o m   t h e 
+ 
+   *   ` @ r e d u x j s / t o o l k i t `   p a c k a g e * * ,   w h i c h   r e p l a c e s   ` c r e a t e S t o r e ` : 
+ 
+   *   * * h t t p s : / / r e d u x . j s . o r g / i n t r o d u c t i o n / w h y - r t k - i s - r e d u x - t o d a y * * 
+ 
+   * 
+ 
+   *   T h e   o n l y   w a y   t o   c h a n g e   t h e   d a t a   i n   t h e   s t o r e   i s   t o   c a l l   ` d i s p a t c h ( ) `   o n   i t . 
+ 
+   * 
+ 
+   *   T h e r e   s h o u l d   o n l y   b e   a   s i n g l e   s t o r e   i n   y o u r   a p p .   T o   s p e c i f y   h o w   d i f f e r e n t 
+ 
+   *   p a r t s   o f   t h e   s t a t e   t r e e   r e s p o n d   t o   a c t i o n s ,   y o u   m a y   c o m b i n e   s e v e r a l   r e d u c e r s 
+ 
+   *   i n t o   a   s i n g l e   r e d u c e r   f u n c t i o n   b y   u s i n g   ` c o m b i n e R e d u c e r s ` . 
+ 
+   * 
+ 
+   *   @ p a r a m   { F u n c t i o n }   r e d u c e r   A   f u n c t i o n   t h a t   r e t u r n s   t h e   n e x t   s t a t e   t r e e ,   g i v e n 
+ 
+   *   t h e   c u r r e n t   s t a t e   t r e e   a n d   t h e   a c t i o n   t o   h a n d l e . 
+ 
+   * 
+ 
+   *   @ p a r a m   { a n y }   [ p r e l o a d e d S t a t e ]   T h e   i n i t i a l   s t a t e .   Y o u   m a y   o p t i o n a l l y   s p e c i f y   i t 
+ 
+   *   t o   h y d r a t e   t h e   s t a t e   f r o m   t h e   s e r v e r   i n   u n i v e r s a l   a p p s ,   o r   t o   r e s t o r e   a 
+ 
+   *   p r e v i o u s l y   s e r i a l i z e d   u s e r   s e s s i o n . 
+ 
+   *   I f   y o u   u s e   ` c o m b i n e R e d u c e r s `   t o   p r o d u c e   t h e   r o o t   r e d u c e r   f u n c t i o n ,   t h i s   m u s t   b e 
+ 
+   *   a n   o b j e c t   w i t h   t h e   s a m e   s h a p e   a s   ` c o m b i n e R e d u c e r s `   k e y s . 
+ 
+   * 
+ 
+   *   @ p a r a m   { F u n c t i o n }   [ e n h a n c e r ]   T h e   s t o r e   e n h a n c e r .   Y o u   m a y   o p t i o n a l l y   s p e c i f y   i t 
+ 
+   *   t o   e n h a n c e   t h e   s t o r e   w i t h   t h i r d - p a r t y   c a p a b i l i t i e s   s u c h   a s   m i d d l e w a r e , 
+ 
+   *   t i m e   t r a v e l ,   p e r s i s t e n c e ,   e t c .   T h e   o n l y   s t o r e   e n h a n c e r   t h a t   s h i p s   w i t h   R e d u x 
+ 
+   *   i s   ` a p p l y M i d d l e w a r e ( ) ` . 
+ 
+   * 
+ 
+   *   @ r e t u r n s   { S t o r e }   A   R e d u x   s t o r e   t h a t   l e t s   y o u   r e a d   t h e   s t a t e ,   d i s p a t c h   a c t i o n s 
+ 
+   *   a n d   s u b s c r i b e   t o   c h a n g e s . 
+ 
+   * / 
+ 
+ e x p o r t   f u n c t i o n   l e g a c y _ c r e a t e S t o r e < 
+ 
+     S , 
+ 
+     A   e x t e n d s   A c t i o n , 
+ 
+     E x t   e x t e n d s   { }   =   { } , 
+ 
+     S t a t e E x t   e x t e n d s   { }   =   { } , 
+ 
+     P r e l o a d e d S t a t e   =   S 
+ 
+ > ( 
+ 
+     r e d u c e r :   R e d u c e r < S ,   A ,   P r e l o a d e d S t a t e > , 
+ 
+     p r e l o a d e d S t a t e ? :   P r e l o a d e d S t a t e   |   u n d e f i n e d , 
+ 
+     e n h a n c e r ? :   S t o r e E n h a n c e r < E x t ,   S t a t e E x t > 
+ 
+ ) :   S t o r e < S ,   A ,   U n k n o w n I f N o n S p e c i f i c < S t a t e E x t > >   &   E x t 
+ 
+ e x p o r t   f u n c t i o n   l e g a c y _ c r e a t e S t o r e < 
+ 
+     S , 
+ 
+     A   e x t e n d s   A c t i o n , 
+ 
+     E x t   e x t e n d s   { }   =   { } , 
+ 
+     S t a t e E x t   e x t e n d s   { }   =   { } , 
+ 
+     P r e l o a d e d S t a t e   =   S 
+ 
+ > ( 
+ 
+     r e d u c e r :   R e d u c e r < S ,   A > , 
+ 
+     p r e l o a d e d S t a t e ? :   P r e l o a d e d S t a t e   |   S t o r e E n h a n c e r < E x t ,   S t a t e E x t >   |   u n d e f i n e d , 
+ 
+     e n h a n c e r ? :   S t o r e E n h a n c e r < E x t ,   S t a t e E x t > 
+ 
+ ) :   S t o r e < S ,   A ,   U n k n o w n I f N o n S p e c i f i c < S t a t e E x t > >   &   E x t   { 
+ 
+     r e t u r n   c r e a t e S t o r e ( r e d u c e r ,   p r e l o a d e d S t a t e   a s   a n y ,   e n h a n c e r ) 
+ 
+ } 
+ 
+ 
+ = = = = =   S A L E S _ P A G E   = = = = = 
+ 
+ i m p o r t   L i n k   f r o m   " n e x t / l i n k " ; 
+ 
+ 
+ 
+ e x p o r t   d e f a u l t   f u n c t i o n   S a l e s P a g e ( )   { 
+ 
+     c o n s t   m o d u l e s   =   [ 
+ 
+         [ " L e a d   M a s t e r " ,   " / l e a d - m a s t e r " ] , 
+ 
+         [ " I m p o r t   E n g i n e " ,   " / i m p o r t s " ] , 
+ 
+         [ " S a l e s   D a s h b o a r d " ,   " / s a l e s - d a s h b o a r d " ] , 
+ 
+         [ " S a l e s   K a n b a n " ,   " / s a l e s - k a n b a n " ] , 
+ 
+         [ " T o d a y ' s   F o l l o w u p " ,   " / f o l l o w u p s / t o d a y " ] , 
+ 
+         [ " F o l l o w u p s " ,   " / f o l l o w u p s " ] , 
+ 
+         [ " Q u o t a t i o n s " ,   " / q u o t a t i o n s " ] , 
+ 
+         [ " C l i e n t s " ,   " / c l i e n t s " ] , 
+ 
+     ] ; 
+ 
+ 
+ 
+     r e t u r n   ( 
+ 
+         < d i v   c l a s s N a m e = " p - 8 " > 
+ 
+             < h 1   c l a s s N a m e = " t e x t - 3 x l   f o n t - b o l d   m b - 2 " > S a l e s   I n t e l l i g e n c e < / h 1 > 
+ 
+             < p   c l a s s N a m e = " t e x t - s l a t e - 4 0 0   m b - 6 " > 
+ 
+                 L e a d - t o - o r d e r   c o n v e r s i o n   w o r k b e n c h 
+ 
+             < / p > 
+ 
+ 
+ 
+             < d i v   c l a s s N a m e = " g r i d   g r i d - c o l s - 4   g a p - 4 " > 
+ 
+                 { m o d u l e s . m a p ( ( [ n a m e ,   h r e f ] )   = >   ( 
+ 
+                     < L i n k 
+ 
+                         k e y = { h r e f } 
+ 
+                         h r e f = { h r e f } 
+ 
+                         c l a s s N a m e = " b o r d e r   r o u n d e d - x l   p - 5   h o v e r : b o r d e r - c y a n - 4 0 0 " 
+ 
+                     > 
+ 
+                         { n a m e } 
+ 
+                     < / L i n k > 
+ 
+                 ) ) } 
+ 
+             < / d i v > 
+ 
+         < / d i v > 
+ 
+     ) ; 
+ 
+ } 
+ 
+ i m p o r t   L i n k   f r o m   " n e x t / l i n k " ; 
+ 
+ 
+ 
+ e x p o r t   d e f a u l t   f u n c t i o n   S a l e s W o r k b e n c h ( ) { 
+ 
+ 
+ 
+ c o n s t   m o d u l e s   =   [ 
+ 
+ [ " L e a d   M a s t e r " , " / l e a d - m a s t e r " ] , 
+ 
+ [ " C l i c k U p   L e a d s " , " / c l i c k u p - t a s k s " ] , 
+ 
+ [ " I m p o r t   E n g i n e " , " / i m p o r t s " ] , 
+ 
+ [ " S a l e s   D a s h b o a r d " , " / s a l e s - d a s h b o a r d " ] , 
+ 
+ [ " S a l e s   K a n b a n " , " / s a l e s - k a n b a n " ] , 
+ 
+ [ " T o d a y ' s   F o l l o w u p " , " / f o l l o w u p s / t o d a y " ] , 
+ 
+ [ " F o l l o w u p s " , " / f o l l o w u p s " ] , 
+ 
+ [ " Q u o t a t i o n s " , " / q u o t a t i o n s " ] , 
+ 
+ [ " C l i e n t s " , " / c l i e n t s " ] , 
+ 
+ [ " S a l e s   R e p o r t s " , " / s a l e s - r e p o r t s " ] , 
+ 
+ [ " S a l e s   T a r g e t s " , " / s a l e s - t a r g e t s " ] , 
+ 
+ [ " S a l e s   A c t i v i t i e s " , " / s a l e s - a c t i v i t i e s " ] 
+ 
+ ] ; 
+ 
+ 
+ 
+ r e t u r n ( 
+ 
+ < d i v   c l a s s N a m e = " p - 8 " > 
+ 
+ < h 1   c l a s s N a m e = " t e x t - 3 x l   f o n t - b o l d   m b - 6 " > S a l e s   W o r k b e n c h < / h 1 > 
+ 
+ 
+ 
+ < d i v   c l a s s N a m e = " g r i d   g r i d - c o l s - 5   g a p - 4 " > 
+ 
+ 
+ 
+ { m o d u l e s . m a p ( ( m ) = > ( 
+ 
+ < L i n k 
+ 
+ k e y = { m [ 1 ] } 
+ 
+ h r e f = { m [ 1 ] } 
+ 
+ c l a s s N a m e = " b o r d e r   r o u n d e d - x l   p - 5   h o v e r : b o r d e r - c y a n - 4 0 0 " 
+ 
+ > 
+ 
+ { m [ 0 ] } 
+ 
+ < / L i n k > 
+ 
+ ) ) } 
+ 
+ 
+ 
+ < / d i v > 
+ 
+ < / d i v > 
+ 
+ ) ; 
+ 
+ } 
+ 
+ 
+ = = = = =   S I D E B A R   = = = = = 
+ 
+ " u s e   c l i e n t " ; 
+ 
+ 
+ 
+ i m p o r t   L i n k   f r o m   " n e x t / l i n k " ; 
+ 
+ i m p o r t   {   u s e P a t h n a m e   }   f r o m   " n e x t / n a v i g a t i o n " ; 
+ 
+ i m p o r t   {   c a n A c c e s s R o u t e   }   f r o m   " @ / l i b / r b a c / r o u t e - a c c e s s " ; 
+ 
+ i m p o r t   t y p e   {   F b o s R o l e   }   f r o m   " @ / l i b / r b a c / p e r m i s s i o n s " ; 
+ 
+ 
+ 
+ c o n s t   w o r k b e n c h L i n k s   =   [ 
+ 
+     {   n a m e :   " C E O   C o m m a n d   C e n t e r " ,   h r e f :   " / c e o - c o m m a n d - c e n t e r "   } , 
+ 
+ ] ; 
+ 
+ 
+ 
+ c o n s t   m e n u   =   [ 
+ 
+     {   n a m e :   " M a s t e r   D a s h b o a r d " ,   h r e f :   " / "   } , 
+ 
+     {   n a m e :   " S a l e s   O S " ,   h r e f :   " / s a l e s - w o r k b e n c h "   } , 
+ 
+     {   n a m e :   " O p e r a t i o n s   O S " ,   h r e f :   " / o p e r a t i o n s "   } , 
+ 
+     {   n a m e :   " F i n a n c e   O S " ,   h r e f :   " / f i n a n c e "   } , 
+ 
+     {   n a m e :   " E x e c u t i o n   H u b " ,   h r e f :   " / e x e c u t i o n - b o a r d "   } , 
+ 
+     {   n a m e :   " I n t e r n a l   C h a t " ,   h r e f :   " / c h a t - c e n t e r "   } , 
+ 
+     {   n a m e :   " K n o w l e d g e   C e n t e r " ,   h r e f :   " / k n o w l e d g e - h u b "   } , 
+ 
+     {   n a m e :   " A I   C e n t e r " ,   h r e f :   " / a i "   } , 
+ 
+     {   n a m e :   " D a t a   C e n t e r " ,   h r e f :   " / d a t a "   } , 
+ 
+     {   n a m e :   " I n t e g r a t i o n   H u b " ,   h r e f :   " / i n t e g r a t i o n s "   } , 
+ 
+     {   n a m e :   " A d m i n " ,   h r e f :   " / a d m i n "   } , 
+ 
+     {   n a m e :   " S e t t i n g s " ,   h r e f :   " / f b o s - s e t t i n g s "   } , 
+ 
+ ] ; 
+ 
+ 
+ 
+ e x p o r t   d e f a u l t   f u n c t i o n   S i d e b a r ( {   r o l e   } :   {   r o l e ? :   s t r i n g   } )   { 
+ 
+     c o n s t   p a t h n a m e   =   u s e P a t h n a m e ( ) ; 
+ 
+     c o n s t   f b o s R o l e   =   r o l e   a s   F b o s R o l e   |   u n d e f i n e d ; 
+ 
+ 
+ 
+     c o n s t   v i s i b l e M e n u   =   m e n u . f i l t e r ( ( i t e m )   = > 
+ 
+         i t e m . h r e f   = = =   " / "   ?   t r u e   :   c a n A c c e s s R o u t e ( f b o s R o l e ,   i t e m . h r e f ) 
+ 
+     ) ; 
+ 
+ 
+ 
+     c o n s t   v i s i b l e Q u i c k   =   w o r k b e n c h L i n k s . f i l t e r ( ( i t e m )   = > 
+ 
+         c a n A c c e s s R o u t e ( f b o s R o l e ,   i t e m . h r e f ) 
+ 
+     ) ; 
+ 
+ 
+ 
+     r e t u r n   ( 
+ 
+         < a s i d e   c l a s s N a m e = " w - 6 4   m i n - h - s c r e e n   b g - s l a t e - 9 0 0   t e x t - w h i t e   p - 4   b o r d e r - r   b o r d e r - s l a t e - 8 0 0 " > 
+ 
+             < h 1   c l a s s N a m e = " t e x t - 2 x l   f o n t - b o l d   m b - 2 " > F B O S < / h 1 > 
+ 
+             < p   c l a s s N a m e = " t e x t - x s   t e x t - s l a t e - 4 0 0   m b - 6 " > F l e x i f l a i r   B u s i n e s s   O S < / p > 
+ 
+ 
+ 
+             < n a v   c l a s s N a m e = " s p a c e - y - 1 " > 
+ 
+                 { v i s i b l e M e n u . m a p ( ( i t e m )   = >   ( 
+ 
+                     < S i d e b a r L i n k 
+ 
+                         k e y = { i t e m . h r e f } 
+ 
+                         h r e f = { i t e m . h r e f } 
+ 
+                         l a b e l = { i t e m . n a m e } 
+ 
+                         a c t i v e = { p a t h n a m e   = = =   i t e m . h r e f } 
+ 
+                     / > 
+ 
+                 ) ) } 
+ 
+             < / n a v > 
+ 
+ 
+ 
+             { v i s i b l e Q u i c k . l e n g t h   >   0   & &   ( 
+ 
+                 < d i v   c l a s s N a m e = " m t - 8   p t - 4   b o r d e r - t   b o r d e r - s l a t e - 8 0 0 " > 
+ 
+                     < p   c l a s s N a m e = " t e x t - x s   u p p e r c a s e   t r a c k i n g - w i d e   t e x t - s l a t e - 5 0 0   m b - 2 " > 
+ 
+                         Q u i c k   A c c e s s 
+ 
+                     < / p > 
+ 
+                     < d i v   c l a s s N a m e = " s p a c e - y - 1 " > 
+ 
+                         { v i s i b l e Q u i c k . m a p ( ( i t e m )   = >   ( 
+ 
+                             < S i d e b a r L i n k 
+ 
+                                 k e y = { i t e m . h r e f } 
+ 
+                                 h r e f = { i t e m . h r e f } 
+ 
+                                 l a b e l = { i t e m . n a m e } 
+ 
+                                 a c t i v e = { p a t h n a m e   = = =   i t e m . h r e f } 
+ 
+                             / > 
+ 
+                         ) ) } 
+ 
+                     < / d i v > 
+ 
+                 < / d i v > 
+ 
+             ) } 
+ 
+         < / a s i d e > 
+ 
+     ) ; 
+ 
+ } 
+ 
+ 
+ 
+ f u n c t i o n   S i d e b a r L i n k ( { 
+ 
+     h r e f , 
+ 
+     l a b e l , 
+ 
+     a c t i v e , 
+ 
+ } :   { 
+ 
+     h r e f :   s t r i n g ; 
+ 
+     l a b e l :   s t r i n g ; 
+ 
+     a c t i v e ? :   b o o l e a n ; 
+ 
+ } )   { 
+ 
+     r e t u r n   ( 
+ 
+         < L i n k 
+ 
+             h r e f = { h r e f } 
+ 
+             c l a s s N a m e = { 
+ 
+                 a c t i v e 
+ 
+                     ?   " b l o c k   r o u n d e d - l g   p x - 3   p y - 2   t e x t - s m   b g - c y a n - 6 0 0 " 
+ 
+                     :   " b l o c k   r o u n d e d - l g   p x - 3   p y - 2   t e x t - s m   h o v e r : b g - s l a t e - 8 0 0 " 
+ 
+             } 
+ 
+         > 
+ 
+             { l a b e l } 
+ 
+         < / L i n k > 
+ 
+     ) ; 
+ 
+ } 
+ 
+ 
+ = = = = =   A U T H _ H O O K   = = = = = 
+ 
+ ' u s e   c l i e n t ' 
+ 
+ 
+ 
+ i m p o r t   {   c r e a t e C o n t e x t ,   u s e C o n t e x t ,   u s e E f f e c t ,   u s e S t a t e ,   u s e C a l l b a c k   }   f r o m   ' r e a c t ' 
+ 
+ i m p o r t   {   M O C K _ U S E R   }   f r o m   ' @ / l i b / a u t h / d i s a b l e d ' 
+ 
+ i m p o r t   {   i s A u t h D i s a b l e d   }   f r o m   ' @ / l i b / a u t h / d i s a b l e d ' 
+ 
+ i m p o r t   {   c r e a t e S u p a b a s e B r o w s e r C l i e n t   }   f r o m   ' @ / l i b / s u p a b a s e / b r o w s e r ' 
+ 
+ 
+ 
+ i n t e r f a c e   A u t h U s e r   { 
+ 
+     i d :   s t r i n g 
+ 
+     e m a i l :   s t r i n g   |   u n d e f i n e d 
+ 
+     r o l e :   s t r i n g   |   n u l l 
+ 
+     p r o f i l e :   { 
+ 
+         f u l l _ n a m e :   s t r i n g   |   n u l l 
+ 
+         a v a t a r _ u r l :   s t r i n g   |   n u l l 
+ 
+     }   |   n u l l 
+ 
+ } 
+ 
+ 
+ 
+ i n t e r f a c e   A u t h S t a t e   { 
+ 
+     u s e r :   A u t h U s e r   |   n u l l 
+ 
+     l o a d i n g :   b o o l e a n 
+ 
+     e r r o r :   s t r i n g   |   n u l l 
+ 
+ } 
+ 
+ 
+ 
+ c o n s t   A u t h C o n t e x t   =   c r e a t e C o n t e x t < A u t h S t a t e > ( { 
+ 
+     u s e r :   n u l l , 
+ 
+     l o a d i n g :   t r u e , 
+ 
+     e r r o r :   n u l l , 
+ 
+ } ) 
+ 
+ 
+ 
+ e x p o r t   f u n c t i o n   u s e A u t h ( )   { 
+ 
+     r e t u r n   u s e C o n t e x t ( A u t h C o n t e x t ) 
+ 
+ } 
+ 
+ 
+ 
+ / * * 
+ 
+   *   F e t c h e s   t h e   e n r i c h e d   s e s s i o n   ( u s e r   +   r o l e   +   p r o f i l e )   f r o m   t h e   s e r v e r - s i d e 
+ 
+   *   / a p i / a u t h / s e s s i o n   e n d p o i n t .   T h i s   i s   t h e   s i n g l e   s o u r c e   o f   t r u t h   f o r   a u t h   s t a t e 
+ 
+   *   i n   C l i e n t   C o m p o n e n t s   b e c a u s e : 
+ 
+   * 
+ 
+   *   1 .   I t   c a l l s   g e t U s e r ( )   s e r v e r - s i d e   ( v a l i d a t e s   t h e   J W T   w i t h   S u p a b a s e   A u t h ) . 
+ 
+   *   2 .   I t   r e t u r n s   t h e   r o l e   f r o m   t h e   p r o f i l e s   t a b l e   ( r e q u i r e s   s e r v i c e   r o l e   k e y ) . 
+ 
+   *   3 .   B r o w s e r - s i d e   g e t S e s s i o n ( )   c a n n o t   b e   t r u s t e d   f o r   s e c u r i t y   d e c i s i o n s . 
+ 
+   * / 
+ 
+ a s y n c   f u n c t i o n   f e t c h S e s s i o n ( ) :   P r o m i s e < A u t h U s e r   |   n u l l >   { 
+ 
+     c o n s t   r e s   =   a w a i t   f e t c h ( ' / a p i / a u t h / s e s s i o n ' ,   {   c r e d e n t i a l s :   ' i n c l u d e '   } ) 
+ 
+     i f   ( ! r e s . o k )   r e t u r n   n u l l 
+ 
+     c o n s t   d a t a   =   a w a i t   r e s . j s o n ( ) 
+ 
+     r e t u r n   d a t a . u s e r   ? ?   n u l l 
+ 
+ } 
+ 
+ 
+ 
+ c o n s t   M O C K _ A U T H _ U S E R :   A u t h U s e r   =   { 
+ 
+     i d :   M O C K _ U S E R . i d , 
+ 
+     e m a i l :   M O C K _ U S E R . e m a i l , 
+ 
+     r o l e :   M O C K _ U S E R . r o l e , 
+ 
+     p r o f i l e :   {   f u l l _ n a m e :   M O C K _ U S E R . n a m e ,   a v a t a r _ u r l :   n u l l   } , 
+ 
+ } 
+ 
+ 
+ 
+ e x p o r t   f u n c t i o n   A u t h P r o v i d e r ( {   c h i l d r e n   } :   {   c h i l d r e n :   R e a c t . R e a c t N o d e   } )   { 
+ 
+     c o n s t   a u t h O f f   =   i s A u t h D i s a b l e d ( ) 
+ 
+     c o n s t   [ s t a t e ,   s e t S t a t e ]   =   u s e S t a t e < A u t h S t a t e > ( { 
+ 
+         u s e r :   a u t h O f f   ?   M O C K _ A U T H _ U S E R   :   n u l l , 
+ 
+         l o a d i n g :   ! a u t h O f f , 
+ 
+         e r r o r :   n u l l , 
+ 
+     } ) 
+ 
+ 
+ 
+     c o n s t   r e f r e s h   =   u s e C a l l b a c k ( a s y n c   ( )   = >   { 
+ 
+         s e t S t a t e ( ( s )   = >   ( {   . . . s ,   l o a d i n g :   t r u e ,   e r r o r :   n u l l   } ) ) 
+ 
+         t r y   { 
+ 
+             c o n s t   u s e r   =   a w a i t   f e t c h S e s s i o n ( ) 
+ 
+             s e t S t a t e ( {   u s e r ,   l o a d i n g :   f a l s e ,   e r r o r :   n u l l   } ) 
+ 
+         }   c a t c h   ( e r r )   { 
+ 
+             s e t S t a t e ( {   u s e r :   n u l l ,   l o a d i n g :   f a l s e ,   e r r o r :   S t r i n g ( e r r )   } ) 
+ 
+         } 
+ 
+     } ,   [ ] ) 
+ 
+ 
+ 
+     u s e E f f e c t ( ( )   = >   { 
+ 
+         i f   ( i s A u t h D i s a b l e d ( ) )   { 
+ 
+             s e t S t a t e ( {   u s e r :   M O C K _ A U T H _ U S E R ,   l o a d i n g :   f a l s e ,   e r r o r :   n u l l   } ) 
+ 
+             r e t u r n 
+ 
+         } 
+ 
+ 
+ 
+         r e f r e s h ( ) 
+ 
+ 
+ 
+         / /   L i s t e n   f o r   S u p a b a s e   a u t h   s t a t e   c h a n g e s   ( s i g n - i n ,   s i g n - o u t ,   t o k e n   r e f r e s h ) 
+ 
+         / /   a n d   r e - f e t c h   t h e   s e r v e r   s e s s i o n   t o   k e e p   t h e   c l i e n t   s t a t e   i n   s y n c . 
+ 
+         c o n s t   s u p a b a s e   =   c r e a t e S u p a b a s e B r o w s e r C l i e n t ( ) 
+ 
+         c o n s t   { 
+ 
+             d a t a :   {   s u b s c r i p t i o n   } , 
+ 
+         }   =   s u p a b a s e . a u t h . o n A u t h S t a t e C h a n g e ( ( e v e n t )   = >   { 
+ 
+             i f   ( 
+ 
+                 e v e n t   = = =   ' S I G N E D _ I N '   | | 
+ 
+                 e v e n t   = = =   ' S I G N E D _ O U T '   | | 
+ 
+                 e v e n t   = = =   ' T O K E N _ R E F R E S H E D '   | | 
+ 
+                 e v e n t   = = =   ' U S E R _ U P D A T E D ' 
+ 
+             )   { 
+ 
+                 r e f r e s h ( ) 
+ 
+             } 
+ 
+         } ) 
+ 
+ 
+ 
+         r e t u r n   ( )   = >   { 
+ 
+             s u b s c r i p t i o n . u n s u b s c r i b e ( ) 
+ 
+         } 
+ 
+     } ,   [ r e f r e s h ] ) 
+ 
+ 
+ 
+     r e t u r n   < A u t h C o n t e x t . P r o v i d e r   v a l u e = { s t a t e } > { c h i l d r e n } < / A u t h C o n t e x t . P r o v i d e r > 
+ 
+ } 
+ 
+ 
+ = = = = =   L I B _ U T I L S   = = = = = 
+ 
+ i m p o r t   {   c l s x ,   t y p e   C l a s s V a l u e   }   f r o m   " c l s x " 
+ 
+ i m p o r t   {   t w M e r g e   }   f r o m   " t a i l w i n d - m e r g e " 
+ 
+ 
+ 
+ e x p o r t   f u n c t i o n   c n ( . . . i n p u t s :   C l a s s V a l u e [ ] )   { 
+ 
+     r e t u r n   t w M e r g e ( c l s x ( i n p u t s ) ) 
+ 
+ } 
+ 
+ 
