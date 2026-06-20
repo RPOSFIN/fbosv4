@@ -114,5 +114,5 @@ export function buildTodayFollowupsResponse(
   return { items, counts, date: today };
 }
 
-export const FOLLOWUP_SELECT =
-  "*, leads(id, company_name, contact_person, mobile, status, updated_at)";
+/** Base select without embedded join — FK may be absent on legacy DBs. */
+export const FOLLOWUP_SELECT = "*";
