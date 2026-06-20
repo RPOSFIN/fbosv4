@@ -85,6 +85,43 @@ async function storeClickUpTasks(
   return inserted?.length || 0;
 }
 
+/** Populate clickup_tasks from leads that already have clickup_task_id (Apps Script / prior sync path). */
+export async function backfillClickUpTasksFromLeads(): Promise<number> {
+  const supabase = getAdminClient();
+  if (!supabase) return 0;
+
+  const { data: leads, error } = await supabase
+    .from("leads")
+    .select("clickup_task_id, company_name, status, source")
+    .not("clickup_task_id", "is", null);
+
+  if (error || !leads?.length) return 0;
+
+  const payload = leads
+    .filter((l) => l.clickup_task_id?.trim())
+    .map((l) => ({
+      external_id: String(l.clickup_task_id).trim(),
+      name: String(l.company_name || "ClickUp task"),
+      status: l.status || null,
+      list_name: l.source === "ClickUp" ? "Lead CRM" : null,
+      synced_at: new Date().toISOString(),
+    }));
+
+  if (!payload.length) return 0;
+
+  const { data, error: upsertErr } = await supabase
+    .from("clickup_tasks")
+    .upsert(payload, { onConflict: "external_id" })
+    .select("id");
+
+  if (upsertErr) {
+    console.warn("[clickup] backfill from leads:", upsertErr.message);
+    return 0;
+  }
+
+  return data?.length || 0;
+}
+
 export async function syncClickUpDemo(): Promise<ClickUpSyncResult> {
   const tasks = CLICKUP_DEMO.tasks.map((t) => {
     const list = CLICKUP_DEMO.lists.find((l) => l.id === t.list_id);
@@ -105,6 +142,7 @@ export async function syncClickUpDemo(): Promise<ClickUpSyncResult> {
 
   const tasksStored = await storeClickUpTasks(tasks);
   const leadResult = await syncClickUpTasksToLeads(CLICKUP_DEMO.tasks);
+  const backfilled = tasksStored === 0 ? await backfillClickUpTasksFromLeads() : 0;
 
   return {
     ok: true,
@@ -113,7 +151,7 @@ export async function syncClickUpDemo(): Promise<ClickUpSyncResult> {
     spaces: CLICKUP_DEMO.spaces,
     lists: CLICKUP_DEMO.lists,
     tasks: CLICKUP_DEMO.tasks,
-    tasksStored,
+    tasksStored: tasksStored || backfilled,
     leadsImported: leadResult.leadsImported,
     leadsUpdated: leadResult.leadsUpdated,
     leadsSkipped: leadResult.leadsSkipped,
@@ -446,8 +484,12 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
     }
   }
 
-  const tasksStored = await storeClickUpTasks(storePayload);
+  let tasksStored = await storeClickUpTasks(storePayload);
   const leadResult = await syncClickUpTasksToLeads(allTasks);
+
+  if (tasksStored === 0) {
+    tasksStored = await backfillClickUpTasksFromLeads();
+  }
 
   const leadParts: string[] = [];
   if (leadResult.leadsImported) leadParts.push(`${leadResult.leadsImported} inserted`);
