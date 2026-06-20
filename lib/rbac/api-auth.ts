@@ -76,15 +76,23 @@ export async function writeActivityLog(input: {
   user_name?: string;
   notes?: string;
 }) {
-  const supabase = await createSupabaseServerClient();
-  await supabase.from("activity_logs").insert([
-    {
-      entity_type: input.entity_type,
-      entity_id: input.entity_id,
-      action: input.action,
-      user_id: input.user_id,
-      user_name: input.user_name,
-      notes: input.notes,
-    },
-  ]);
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  if (!url || !anon) return;
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    await supabase.from("activity_logs").insert([
+      {
+        entity_type: input.entity_type,
+        entity_id: input.entity_id,
+        action: input.action,
+        user_id: input.user_id,
+        user_name: input.user_name,
+        notes: input.notes,
+      },
+    ]);
+  } catch {
+    // Activity log is non-critical; do not fail the request
+  }
 }

@@ -1,15 +1,19 @@
-import { NextResponse } from "next/server";
+import { apiSuccess, authorize } from "@/lib/rbac/api-auth";
+import { getMaskedIntegrationConfig } from "@/lib/integrations/mask-config";
 
 export async function GET() {
-  return NextResponse.json({
-    success: true,
-    service: "integrations-config"
-  });
+  const auth = await authorize("integrations", "read");
+  if ("error" in auth) return auth.error;
+
+  return apiSuccess(getMaskedIntegrationConfig());
 }
 
 export async function POST() {
-  return NextResponse.json({
-    success: true,
-    message: "Integration config placeholder"
+  const auth = await authorize("integrations", "update");
+  if ("error" in auth) return auth.error;
+
+  return apiSuccess({
+    message: "Integration config is managed via .env.local",
+    config: getMaskedIntegrationConfig(),
   });
 }
