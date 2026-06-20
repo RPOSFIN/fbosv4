@@ -142,7 +142,7 @@ export async function syncClickUpDemo(): Promise<ClickUpSyncResult> {
 
   const tasksStored = await storeClickUpTasks(tasks);
   const leadResult = await syncClickUpTasksToLeads(CLICKUP_DEMO.tasks);
-  const backfilled = tasksStored === 0 ? await backfillClickUpTasksFromLeads() : 0;
+  const backfilled = await backfillClickUpTasksFromLeads();
 
   return {
     ok: true,
@@ -151,7 +151,7 @@ export async function syncClickUpDemo(): Promise<ClickUpSyncResult> {
     spaces: CLICKUP_DEMO.spaces,
     lists: CLICKUP_DEMO.lists,
     tasks: CLICKUP_DEMO.tasks,
-    tasksStored: tasksStored || backfilled,
+    tasksStored: Math.max(tasksStored, backfilled),
     leadsImported: leadResult.leadsImported,
     leadsUpdated: leadResult.leadsUpdated,
     leadsSkipped: leadResult.leadsSkipped,
@@ -487,9 +487,8 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
   let tasksStored = await storeClickUpTasks(storePayload);
   const leadResult = await syncClickUpTasksToLeads(allTasks);
 
-  if (tasksStored === 0) {
-    tasksStored = await backfillClickUpTasksFromLeads();
-  }
+  const backfilled = await backfillClickUpTasksFromLeads();
+  tasksStored = Math.max(tasksStored, backfilled);
 
   const leadParts: string[] = [];
   if (leadResult.leadsImported) leadParts.push(`${leadResult.leadsImported} inserted`);
