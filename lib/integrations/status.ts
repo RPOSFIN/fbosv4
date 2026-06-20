@@ -1,5 +1,6 @@
 import { getAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getConnectorEnvConfig } from "@/lib/integrations/config";
 import {
   DEFAULT_TALLY_COMPANY_NAME,
@@ -46,8 +47,15 @@ function resolveStatusFromEnv(name: ConnectorName): IntegrationStatus {
   return "pending";
 }
 
-async function getSupabaseForIntegrations() {
-  return getAdminClient() ?? (await createSupabaseServerClient());
+async function getSupabaseForIntegrations(): Promise<SupabaseClient | null> {
+  const admin = getAdminClient();
+  if (admin) return admin;
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  if (!url || !anon) return null;
+
+  return createSupabaseServerClient();
 }
 
 type RawIntegrationRow = Record<string, unknown>;
@@ -86,6 +94,7 @@ function rowToPartial(row: RawIntegrationRow): Partial<IntegrationRecord> {
 
 export async function tableExists(): Promise<boolean> {
   const supabase = await getSupabaseForIntegrations();
+  if (!supabase) return false;
   const { error } = await supabase
     .from("integrations")
     .select("id", { head: true, count: "exact" });
@@ -104,6 +113,7 @@ export async function upsertIntegrationRow(input: {
   if (!exists) return;
 
   const supabase = await getSupabaseForIntegrations();
+  if (!supabase) return;
   const envConfig = getConnectorEnvConfig(input.connector_name);
 
   const payload: Record<string, unknown> = {
@@ -219,11 +229,13 @@ export async function getIntegrationStatuses(): Promise<IntegrationRecord[]> {
 
   if (exists) {
     const supabase = await getSupabaseForIntegrations();
-    const { data } = await supabase.from("integrations").select("*");
-    for (const row of data || []) {
-      const partial = rowToPartial(row as RawIntegrationRow);
-      if (partial.connector_name) {
-        rowsByName.set(partial.connector_name, partial);
+    if (supabase) {
+      const { data } = await supabase.from("integrations").select("*");
+      for (const row of data || []) {
+        const partial = rowToPartial(row as RawIntegrationRow);
+        if (partial.connector_name) {
+          rowsByName.set(partial.connector_name, partial);
+        }
       }
     }
   }
