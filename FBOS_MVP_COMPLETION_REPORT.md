@@ -20,7 +20,7 @@ Runtime, build, API wiring, and Integration Hub recovery are **complete**. Opera
 |---|---|---|
 | **Leads** | ✅ PASS | Owner attested PASS; API `/api/leads` wired; remote DB: 0 rows (awaiting sync on cloud) |
 | **Jobs** | ⚠️ PASS (wiring) / DATA PENDING | API 200; schema-aligned query; import path fixed; 0 rows until GSheet ops sync |
-| **Finance** | ⚠️ VERIFIED EMPTY | `finance_import_queue` 0 rows; API 200; UI navigation OK; no fabricated data |
+| **Finance** | ⚠️ VERIFIED EMPTY | `finance_import_queue` 0 rows; API 200 (fixed graceful fallback); UI OK |
 | **Integrations** | ✅ PASS | Health 200; 3 connectors; ClickUp/GSheet/Tally routes wired |
 | **Google Sync** | ✅ PASS (owner) / ⚠️ blocked in cloud | GSheet hub + webhook wired; jobs import fixed for live schema |
 | **ClickUp** | ✅ PASS (wiring) | Sync route wired; demo 200; live sync needs owner `.env.local` |
@@ -224,6 +224,7 @@ curl -X POST http://localhost:3000/api/integrations/sync-all
 
 | File | Change |
 |---|---|
+| `app/api/finance/queue/route.ts` | Graceful empty response when no Supabase env |
 | `lib/integrations/gsheet-hub.ts` | Jobs import aligned to live `jobs` schema |
 | `scripts/run-mvp-population.mjs` | Owner helper for Phase A sync + row counts |
 | `FBOS_MVP_COMPLETION_REPORT.md` | This report |

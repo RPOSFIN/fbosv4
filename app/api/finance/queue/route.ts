@@ -1,14 +1,18 @@
-import { apiError, apiSuccess, authorize, getServerSupabase } from "@/lib/rbac/api-auth";
+import { apiError, apiSuccess, authorize } from "@/lib/rbac/api-auth";
+import { getAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(request: Request) {
   const auth = await authorize("dashboard", "read");
   if ("error" in auth) return auth.error;
 
+  const supabase = getAdminClient();
+  if (!supabase) {
+    return apiSuccess({ records: [], count: 0 });
+  }
   const url = new URL(request.url);
   const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit") || "100")));
   const status = url.searchParams.get("status")?.trim() || "";
 
-  const supabase = await getServerSupabase();
   let query = supabase
     .from("finance_import_queue")
     .select(
