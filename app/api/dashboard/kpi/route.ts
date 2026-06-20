@@ -15,7 +15,15 @@ export async function GET() {
   if ("error" in auth) return auth.error;
 
   const supabase = await getServerSupabase();
-  const tables = ["leads", "followups", "quotations", "clients", "jobs"] as const;
+  const tables = [
+    "leads",
+    "followups",
+    "quotations",
+    "clients",
+    "jobs",
+    "finance_import_queue",
+    "clickup_tasks",
+  ] as const;
   const counts: Record<string, number> = {};
 
   for (const table of tables) {
@@ -23,7 +31,10 @@ export async function GET() {
       .from(table)
       .select("*", { count: "exact", head: true });
 
-    if (error) return apiError(error.message, 500);
+    if (error) {
+      counts[table] = 0;
+      continue;
+    }
     counts[table] = count || 0;
   }
 
@@ -42,6 +53,8 @@ export async function GET() {
     quotations: counts.quotations,
     clients: counts.clients,
     jobs: counts.jobs,
+    financeQueue: counts.finance_import_queue,
+    clickupTasks: counts.clickup_tasks,
     integrations: getIntegrationSummary(connectors),
   });
 }

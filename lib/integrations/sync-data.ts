@@ -55,6 +55,10 @@ export async function loadIntegrationSyncData(): Promise<IntegrationSyncData> {
     };
   }
 
+  const { count: clickupTaskCount } = await supabase
+    .from("clickup_tasks")
+    .select("id", { count: "exact", head: true });
+
   const { data: tasks } = await supabase
     .from("clickup_tasks")
     .select("id, external_id, name, status, list_name, space_name, synced_at")
@@ -124,7 +128,7 @@ export async function loadIntegrationSyncData(): Promise<IntegrationSyncData> {
   return {
     tasks: clickupTasks,
     clickupTasks,
-    clickupTaskCount: clickupTasks.length,
+    clickupTaskCount: clickupTaskCount ?? clickupTasks.length,
     financeRecordCount: financeCount ?? financeRecords.length,
     lastSyncAt: lastSyncAt ?? undefined,
     source: "supabase",
