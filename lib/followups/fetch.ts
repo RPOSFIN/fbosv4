@@ -8,6 +8,31 @@ import {
   type TodayFollowupsResponse,
 } from "@/lib/followups/query";
 
+type LeadSnippet = NonNullable<FollowupRow["leads"]>;
+
+async function attachLeadsToFollowups(
+  supabase: SupabaseClient,
+  rows: FollowupRow[]
+): Promise<FollowupRow[]> {
+  const leadIds = [
+    ...new Set(rows.map((r) => r.lead_id).filter(Boolean)),
+  ] as string[];
+  if (!leadIds.length) return rows;
+
+  const { data: leads, error } = await supabase
+    .from("leads")
+    .select("id, company_name, contact_person, mobile, status, updated_at")
+    .in("id", leadIds);
+
+  if (error || !leads?.length) return rows;
+
+  const leadMap = new Map(leads.map((l) => [l.id, l as LeadSnippet]));
+  return rows.map((row) => ({
+    ...row,
+    leads: row.lead_id ? leadMap.get(row.lead_id) ?? null : null,
+  }));
+}
+
 export async function fetchFollowups(
   supabase: SupabaseClient,
   options?: { leadId?: string | null }
@@ -24,7 +49,7 @@ export async function fetchFollowups(
   });
 
   if (error) throw new Error(error.message);
-  return (data as FollowupRow[]) || [];
+  return attachLeadsToFollowups(supabase, (data as FollowupRow[]) || []);
 }
 
 export async function fetchTodayFollowups(
@@ -38,7 +63,11 @@ export async function fetchTodayFollowups(
     .or(`next_followup.lte.${today},next_followup.is.null`);
 
   if (error) throw new Error(error.message);
-  return buildTodayFollowupsResponse((data as FollowupRow[]) || [], today);
+  const rows = await attachLeadsToFollowups(
+    supabase,
+    (data as FollowupRow[]) || []
+  );
+  return buildTodayFollowupsResponse(rows, today);
 }
 
 export async function countTodayFollowups(

@@ -155,13 +155,8 @@ async function fetchClickUpTasksForList(
   storePayload: Parameters<typeof storeClickUpTasks>[0],
   allTasks: ClickUpLeadTask[]
 ): Promise<void> {
-  const tasksRes = await fetch(
-    `https://api.clickup.com/api/v2/list/${list.id}/task?archived=false&page=0&include_closed=true&subtasks=true`,
-    { headers: { Authorization: token } }
-  );
-  if (!tasksRes.ok) return;
-
-  const tasksData = (await tasksRes.json()) as {
+  let page = 0;
+  let tasksData: {
     tasks?: Array<{
       id: string;
       name: string;
@@ -174,22 +169,39 @@ async function fetchClickUpTasksForList(
     }>;
   };
 
-  for (const t of tasksData.tasks || []) {
-    const parsed = parseClickUpLeadTask(t);
-    allTasks.push(parsed);
-    storePayload.push({
-      id: t.id,
-      name: t.name,
-      status: t.status?.status,
-      team_id: ctx.teamId,
-      team_name: ctx.teamName,
-      space_id: list.space_id,
-      space_name: ctx.spaceName,
-      list_id: list.id,
-      list_name: list.name,
-      raw: t,
-    });
-  }
+  do {
+    const pageRes = await fetch(
+      `https://api.clickup.com/api/v2/list/${list.id}/task?archived=false&page=${page}&include_closed=true&subtasks=true`,
+      { headers: { Authorization: token } }
+    );
+    if (!pageRes.ok) {
+      console.warn(
+        `[clickup] list ${list.id} page ${page} failed: HTTP ${pageRes.status}`
+      );
+      break;
+    }
+    tasksData = (await pageRes.json()) as typeof tasksData;
+    const batch = tasksData.tasks || [];
+    if (!batch.length) break;
+
+    for (const t of batch) {
+      const parsed = parseClickUpLeadTask(t);
+      allTasks.push(parsed);
+      storePayload.push({
+        id: t.id,
+        name: t.name,
+        status: t.status?.status,
+        team_id: ctx.teamId,
+        team_name: ctx.teamName,
+        space_id: list.space_id,
+        space_name: ctx.spaceName,
+        list_id: list.id,
+        list_name: list.name,
+        raw: t,
+      });
+    }
+    page += 1;
+  } while ((tasksData.tasks?.length ?? 0) >= 100);
 }
 
 function getClickUpCustomField(
@@ -401,7 +413,9 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
       );
     }
   } else {
-    const spaceLimit = spaceIdFilter ? spaces.length : 3;
+    const spaceLimit = spaceIdFilter
+      ? spaces.length
+      : Number(process.env.CLICKUP_SPACE_LIMIT || "10");
     for (const space of spaces.slice(0, spaceLimit)) {
       const listsRes = await fetch(
         `https://api.clickup.com/api/v2/space/${space.id}/list?archived=false`,
@@ -414,7 +428,10 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
         lists?: Array<{ id: string; name: string }>;
       };
 
-      const listSlice = spaceIdFilter ? listsData.lists || [] : (listsData.lists || []).slice(0, 2);
+      const listLimit = spaceIdFilter
+        ? (listsData.lists || []).length
+        : Number(process.env.CLICKUP_LIST_LIMIT || "5");
+      const listSlice = (listsData.lists || []).slice(0, listLimit);
 
       for (const list of listSlice) {
         lists.push({ id: list.id, name: list.name, space_id: space.id });

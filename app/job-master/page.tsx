@@ -20,6 +20,7 @@ type JobRow = {
 
 export default function JobMaster() {
   const [jobs, setJobs] = useState<JobRow[]>([]);
+  const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function JobMaster() {
       try {
         const res = await apiFetch<{ jobs: JobRow[]; count: number }>("/api/jobs?limit=100");
         setJobs(res.jobs || []);
+        setCount(res.count ?? res.jobs?.length ?? 0);
       } catch (e) {
         console.error(e);
       } finally {
@@ -50,7 +52,15 @@ export default function JobMaster() {
         <p className="text-slate-500">Loading…</p>
       ) : jobs.length === 0 ? (
         <div className="border border-dashed border-slate-700 rounded-xl p-8 text-center text-slate-400">
-          No jobs yet. Import <code>02_Operations_Jobs.csv</code> to your sheet and run Sync GSheet.
+          <p>No jobs in database ({count} total).</p>
+          <p className="mt-2 text-sm">
+            Jobs sync from Google Sheet tab <strong>08_Operations_Jobs</strong>.
+            Run <code>npm run p0:sync</code> or sync from{" "}
+            <Link href="/integrations" className="text-cyan-400 hover:underline">
+              Integrations
+            </Link>
+            .
+          </p>
         </div>
       ) : (
         <div className="overflow-x-auto border border-slate-800 rounded-xl">
