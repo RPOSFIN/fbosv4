@@ -3,7 +3,7 @@
 **Date:** 2026-06-20  
 **Target branch:** `cursor/p0-closure-0d65`  
 **Merge target:** `main` (NOT merged — validation only)  
-**Commit validated:** `b35fad3` — *P0 closure: sync script, env template, closure report*  
+**Commit validated:** `18b6d0a` — *Add pre-merge validation and branch mismatch reports (audit only, no merge)*  
 **Validator environment:** Cloud agent workspace (no `.env.local`)
 
 ---
@@ -14,9 +14,9 @@
 |---|---|
 | Expected branch | `cursor/p0-closure-0d65` |
 | Actual branch | ✅ `cursor/p0-closure-0d65` |
-| HEAD | `b35fad3cb75d3b4906f15dbc8f799dfac66b0434` |
+| HEAD | `18b6d0a9b882e48a6f2955682b86e984704e2604` |
 | Synced with remote | ✅ `origin/cursor/p0-closure-0d65` |
-| Commits ahead of `main` | **5** |
+| Commits ahead of `main` | **6** |
 
 ```
 7004c86 Fix MOCK_USER type: add name and role for config.ts consumers
@@ -24,9 +24,10 @@
 8d826ab MVP completion: fix jobs sheet import, population script, report
 9d3af24 Fix finance queue API graceful fallback when env absent
 b35fad3 P0 closure: sync script, env template, closure report
+18b6d0a Add pre-merge validation and branch mismatch reports (audit only, no merge)
 ```
 
-**Files changed vs `main`:** 19 files, +1389 / −73 lines
+**Files changed vs `main`:** 21 files (includes validation reports)
 
 ---
 
@@ -34,9 +35,9 @@ b35fad3 P0 closure: sync script, env template, closure report
 
 | Command | Result | Notes |
 |---|---|---|
-| `npm install` | ✅ **PASS** | 2 moderate audit advisories (pre-existing) |
+| `npm install` | ✅ **PASS** | 706 packages; 2 moderate audit advisories (pre-existing) |
 | `npx tsc --noEmit` | ✅ **PASS** | Exit 0 |
-| `npm run build` | ✅ **PASS** | Next.js 16.2.9 production build complete |
+| `npm run build` | ✅ **PASS** | Next.js 16.2.9 production build complete (81 routes) |
 | `npm run db:verify` | ❌ **FAIL** | `Missing NEXT_PUBLIC_SUPABASE_URL or Supabase key in .env.local` |
 | `npm run p0:counts` | ❌ **FAIL** | `.env.local not found` |
 | `npm run p0:sync` | ❌ **FAIL** | `.env.local not found` |
@@ -49,26 +50,26 @@ b35fad3 P0 closure: sync script, env template, closure report
 
 ## 3. Sync counts
 
-**Not executed** — `p0:sync` and `p0:counts` require `.env.local` on the validator machine.
+**Not executed with live credentials** — `p0:sync` and `p0:counts` require `.env.local` on the validator machine.
 
-### Supabase remote counts (MCP verified, before/after unchanged)
+### Expected tables (from `scripts/run-p0-closure.mjs`)
 
-| Table | Count |
+| Table | Count (not verified live) |
 |---|---|
-| jobs | 0 |
-| leads | 0 |
-| clickup_tasks | 0 |
-| finance_import_queue | 0 |
-| finance_transactions | 0 |
-| integrations | 3 |
+| leads | — |
+| jobs | — |
+| clickup_tasks | — |
+| finance_import_queue | — |
+| finance_transactions | — |
+| integrations | — |
 
 ### Runtime API sync (demo mode, no `.env.local`)
 
 | Endpoint | HTTP | Result |
 |---|---|---|
-| `POST /api/integrations/sync-all` | 200 | `allOk: true` — tally/clickup demo, gsheet health check |
-| `POST /api/integrations/clickup/sync` | 200 | Demo mode — 3 sample tasks (not persisted without service role) |
-| `POST /api/integrations/gsheet/sync` | 200 | Health check OK — 0 rows imported (no sheet credentials in cloud) |
+| `POST /api/integrations/gsheet/sync` | 200 | `ok: true`, health check OK — 0 rows imported |
+| `POST /api/integrations/clickup/sync` | 200 | Demo mode — sample teams/spaces/lists/tasks returned |
+| `GET /api/integrations/health` | 200 | 3 connectors (gsheet connected, clickup/tally pending) |
 
 **Owner must re-run on machine with `.env.local`:**
 
@@ -84,13 +85,12 @@ npm run p0:counts    # after — confirm deltas > 0
 
 | Module | Page/API | HTTP | Verdict |
 |---|---|---|---|
-| **Integration Hub** | `GET /api/integrations/health` | 200 | ✅ PASS — 3 connectors, ok:true |
-| **Integration Hub UI** | `/integrations` | 200 | ✅ PASS |
 | **Jobs** | `GET /api/jobs` | 200 | ✅ PASS — no schema error |
 | **Job Master UI** | `/job-master` | 200 | ✅ PASS |
 | **Finance** | `GET /api/finance/queue` | 200 | ✅ PASS — empty records |
 | **Finance UI** | `/finance` | 200 | ✅ PASS |
-| **Leads** | `/lead-master` | 200 | ✅ PASS |
+| **Integration Hub** | `GET /api/integrations/health` | 200 | ✅ PASS — 3 connectors, ok:true |
+| **Integration Hub UI** | `/integrations` | 200 | ✅ PASS |
 | **Google Sync** | `POST /api/integrations/gsheet/sync` | 200 | ✅ PASS (wiring; 0 imports without env) |
 | **ClickUp Sync** | `POST /api/integrations/clickup/sync` | 200 | ✅ PASS (demo; live needs token) |
 
@@ -100,14 +100,14 @@ npm run p0:counts    # after — confirm deltas > 0
 
 | Table | Populated? |
 |---|---|
-| jobs | ❌ No (0 rows) |
-| leads | ❌ No (0 rows) |
-| clickup_tasks | ❌ No (0 rows) |
-| finance_import_queue | ❌ No (0 rows) |
-| finance_transactions | ❌ No (0 rows) |
-| integrations | ✅ Yes (3 seed rows) |
+| jobs | ❓ Not verified (requires `.env.local` + `p0:counts`) |
+| leads | ❓ Not verified |
+| clickup_tasks | ❓ Not verified |
+| finance_import_queue | ❓ Not verified |
+| finance_transactions | ❓ Not verified |
+| integrations | ❓ Not verified |
 
-**Data population not validated in this environment.** Code wiring validated only.
+**Data population not validated in this environment.** Code wiring and runtime APIs validated only.
 
 ---
 
@@ -117,7 +117,7 @@ npm run p0:counts    # after — confirm deltas > 0
 |---|---|---|
 | B-01 | `npm run db:verify` not run with real `.env.local` | ⚠️ **Recommended before merge** |
 | B-02 | `npm run p0:sync` not executed with real credentials | ⚠️ **Recommended before merge** |
-| B-03 | Row count deltas not confirmed (all operational tables 0) | ⚠️ **Recommended before merge** |
+| B-03 | Row count deltas not confirmed | ⚠️ **Recommended before merge** |
 | B-04 | Git checkpoint not yet created for pre-merge | ⚠️ **Required by backup-first policy** |
 | B-05 | ZIP backup not verified | ⚠️ **Required by backup-first policy** |
 | B-06 | PR #7 still draft / unmerged | Informational |
@@ -134,9 +134,9 @@ Build passes. Runtime wiring passes. No merge-blocking compile errors.
 |---|---|
 | Branch correct | ✅ |
 | Build green | ✅ |
-| Runtime wiring | ✅ |
+| Runtime wiring (pages + APIs) | ✅ |
 | DB verify with live env | ❌ Not run |
-| Data population | ❌ Not run |
+| Data population (`p0:sync` / `p0:counts`) | ❌ Not run |
 | Backup checkpoint | ❌ Not created yet |
 
 ### **PARTIAL PASS — safe to merge code; owner should complete env-backed validation + backup first**
@@ -166,6 +166,9 @@ Confirm:
 - [ ] Row counts increased for expected tables
 - [ ] Integration Hub shows connectors + source = `supabase`
 - [ ] Job Master loads without 500
+- [ ] Finance page loads without 500
+- [ ] Google Sync returns imported rows (not just health check)
+- [ ] ClickUp sync returns live tasks (not `demo: true`)
 
 ---
 
