@@ -24,15 +24,47 @@ export function getGoogleSheetId() {
   );
 }
 
+export type ResolvedGid = { gid: string; source: string };
+
+const OPERATIONS_GID_KEYS = [
+  "GOOGLE_SHEET_GID_OPERATIONS",
+  "GOOGLE_SHEET_GID_ORDERS",
+  "GOOGLE_SHEET_GID_JOBS",
+] as const;
+
+/** Resolve 02_Order_Master / operations tab GID with env var precedence. */
+export function getOperationsGidCandidates(): ResolvedGid[] {
+  const seen = new Set<string>();
+  const out: ResolvedGid[] = [];
+  for (const key of OPERATIONS_GID_KEYS) {
+    const gid = process.env[key]?.trim();
+    if (gid && !seen.has(gid)) {
+      seen.add(gid);
+      out.push({ gid, source: key });
+    }
+  }
+  return out;
+}
+
+export function resolveOperationsGid(): ResolvedGid {
+  return getOperationsGidCandidates()[0] ?? { gid: "", source: "" };
+}
+
 export function getSheetTabGids() {
   const fallback = envTrim("GOOGLE_SHEET_GID");
+  const ops = resolveOperationsGid();
   return {
     leads: envTrim("GOOGLE_SHEET_GID_LEADS", "GOOGLE_SHEET_GID") || fallback,
     clients: envTrim("GOOGLE_SHEET_GID_CLIENTS"),
-    quotations: envTrim("GOOGLE_SHEET_GID_QUOTATIONS", "GOOGLE_SHEET_GID_ORDERS"),
-    jobs: envTrim("GOOGLE_SHEET_GID_JOBS", "GOOGLE_SHEET_GID_OPERATIONS"),
+    quotations: envTrim("GOOGLE_SHEET_GID_QUOTATIONS"),
+    jobs:
+      envTrim(
+        "GOOGLE_SHEET_GID_JOBS",
+        "GOOGLE_SHEET_GID_ORDERS",
+        "GOOGLE_SHEET_GID_OPERATIONS"
+      ) || ops.gid,
     followups: envTrim("GOOGLE_SHEET_GID_FOLLOWUPS"),
-    operations: envTrim("GOOGLE_SHEET_GID_OPERATIONS", "GOOGLE_SHEET_GID_JOBS"),
+    operations: ops.gid,
     finance: envTrim("GOOGLE_SHEET_GID_FINANCE", "GOOGLE_SHEET_GID"),
   };
 }

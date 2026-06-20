@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 /**
  * Trace Google Sheet tabs + Supabase row counts.
- * Usage: node scripts/trace-data-flow.mjs
+ * Usage: npm run trace:data
  */
 import { readFileSync, existsSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
+import {
+  getOperationsGidCandidates,
+  getSheetTabGids,
+  resolveOperationsGid,
+  countJobCandidates,
+} from "./lib/resolve-sheet-gids.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -78,60 +84,61 @@ async function fetchTabRows(sheetId, gid) {
   return { rows, headers };
 }
 
-function countJobCandidates(rows) {
-  let withOrderId = 0;
-  for (const raw of rows) {
-    const keys = Object.keys(raw).map((k) =>
-      k.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "")
-    );
-    const vals = Object.fromEntries(
-      Object.entries(raw).map(([k, v]) => [
-        k.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, ""),
-        String(v || "").trim(),
-      ])
-    );
-    const jobNo =
-      vals.job_no ||
-      vals.job_number ||
-      vals.order_id ||
-      vals.order_no ||
-      vals.orderid ||
-      "";
-    if (jobNo) withOrderId++;
-  }
-  return { total: rows.length, withJobKey: withOrderId };
-}
-
 loadEnv();
 
 const sheetId =
   process.env.GOOGLE_SHEET_ID ||
   process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID ||
   "";
-const tabs = {
-  leads: process.env.GOOGLE_SHEET_GID_LEADS || process.env.GOOGLE_SHEET_GID || "",
-  operations:
-    process.env.GOOGLE_SHEET_GID_OPERATIONS ||
-    process.env.GOOGLE_SHEET_GID_JOBS ||
-    "",
-  jobs:
-    process.env.GOOGLE_SHEET_GID_JOBS ||
-    process.env.GOOGLE_SHEET_GID_OPERATIONS ||
-    "",
-  finance: process.env.GOOGLE_SHEET_GID_FINANCE || process.env.GOOGLE_SHEET_GID || "",
-  clients: process.env.GOOGLE_SHEET_GID_CLIENTS || "",
-  followups: process.env.GOOGLE_SHEET_GID_FOLLOWUPS || "",
-};
+const tabs = getSheetTabGids();
+const opsResolved = resolveOperationsGid();
+const opsCandidates = getOperationsGidCandidates();
 
-console.log("=== ENV TAB GIDs ===");
+console.log("=== OPERATIONS / ORDER MASTER GID ===");
+console.log("detected operations gid:", opsResolved.gid || "(none)");
+console.log("source variable:", opsResolved.source || "(none)");
+console.log("candidates:", JSON.stringify(opsCandidates, null, 2));
+
+console.log("\n=== ENV TAB GIDs ===");
 console.log(JSON.stringify(tabs, null, 2));
 console.log("GOOGLE_SHEET_ID:", sheetId || "(not set)");
 console.log("GOOGLE_WEBAPP_URL:", process.env.GOOGLE_WEBAPP_URL ? "set" : "not set");
 console.log("CLICKUP_API_TOKEN:", process.env.CLICKUP_API_TOKEN ? "set" : "not set");
 console.log("CLICKUP_LIST_ID:", process.env.CLICKUP_LIST_ID || "(not set)");
 
-console.log("\n=== SHEET TAB ROW COUNTS ===");
+console.log("\n=== ORDER MASTER (02_Order_Master) ===");
+if (!opsResolved.gid) {
+  console.log("SKIP — set GOOGLE_SHEET_GID_OPERATIONS or GOOGLE_SHEET_GID_ORDERS");
+} else {
+  let orderRows = [];
+  let usedSource = "";
+  let usedGid = "";
+  for (const { gid, source } of opsCandidates) {
+    const { rows, headers, error } = await fetchTabRows(sheetId, gid);
+    console.log(`try ${source}=${gid}: ${rows.length} data rows${error ? " — " + error : ""}`);
+    if (rows.length && !orderRows.length) {
+      orderRows = rows;
+      usedSource = source;
+      usedGid = gid;
+      const jc = countJobCandidates(rows);
+      console.log("  headers (first 8):", headers.slice(0, 8).join(", "));
+      console.log("  order master row count:", rows.length);
+      console.log("  jobs rows discovered (Order ID / job key):", jc.withJobKey);
+      if (jc.samples.length) {
+        console.log("  sample mappings:", JSON.stringify(jc.samples));
+      }
+    }
+  }
+  if (!orderRows.length) {
+    console.log("order master row count: 0 (check sheet sharing or GID)");
+  } else {
+    console.log(`active source: ${usedSource}=${usedGid}`);
+  }
+}
+
+console.log("\n=== OTHER SHEET TAB ROW COUNTS ===");
 for (const [name, gid] of Object.entries(tabs)) {
+  if (name === "operations" || name === "operationsSource" || name === "jobs") continue;
   if (!gid) {
     console.log(`${name}: SKIP (no GID)`);
     continue;
@@ -141,10 +148,6 @@ for (const [name, gid] of Object.entries(tabs)) {
   if (error) console.log(line, "—", error);
   else {
     console.log(line, headers.length ? `— headers: ${headers.slice(0, 6).join(", ")}...` : "");
-    if (name === "operations" || name === "jobs") {
-      const jc = countJobCandidates(rows);
-      console.log(`  job key candidates: ${jc.withJobKey}/${jc.total}`);
-    }
   }
 }
 
@@ -183,3 +186,6 @@ const { count: withTaskId } = await supabase
 
 console.log(`leads (source=ClickUp): ${clickupLeads ?? 0}`);
 console.log(`leads (clickup_task_id set): ${withTaskId ?? 0}`);
+console.log(
+  `clickup_tasks backfill potential: ${withTaskId ?? 0} (from leads.clickup_task_id)`
+);

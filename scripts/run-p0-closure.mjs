@@ -11,7 +11,7 @@
  * Env:
  *   FBOS_BASE_URL  — override base URL (default: auto-detect localhost:3000-3002)
  */
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { spawnSync } from "child_process";
@@ -123,14 +123,17 @@ async function runSync(base, path, label) {
 
 function runDirectSync() {
   console.log("\n=== DIRECT SYNC (in-process, no dev server) ===");
+  const tsxBin = join(root, "node_modules", ".bin", "tsx");
+  const script = join(root, "scripts", "p0-sync-direct.ts");
+  const useLocal = existsSync(tsxBin);
   const result = spawnSync(
-    "npx",
-    ["tsx", "scripts/p0-sync-direct.ts"],
-    { cwd: root, stdio: "inherit", env: process.env }
+    useLocal ? tsxBin : "npx",
+    useLocal ? [script] : ["tsx", script],
+    { cwd: root, stdio: "inherit", env: process.env, shell: !useLocal }
   );
   if (result.status !== 0) {
     console.error(
-      "Direct sync failed. Install tsx: npx tsx scripts/p0-sync-direct.ts"
+      "Direct sync failed. Run: npm install (tsx devDependency required)"
     );
     process.exit(result.status ?? 1);
   }

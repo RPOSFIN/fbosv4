@@ -1,7 +1,9 @@
 import {
   getGSheetCsvUrlForGid,
   getGoogleSheetId,
+  getOperationsGidCandidates,
   getSheetTabGids,
+  resolveOperationsGid,
 } from "@/lib/google-config";
 import { syncGSheet, type GSheetSyncResult } from "@/lib/integrations/gsheet";
 import { getAdminClient } from "@/lib/supabase/admin";
@@ -15,6 +17,8 @@ export type HubPullResult = GSheetSyncResult & {
   followupsImported?: number;
   tabsSynced?: string[];
   operationsSourceRows?: number;
+  operationsSourceGid?: string;
+  operationsSourceEnv?: string;
 };
 
 function parseCsvLine(line: string): string[] {
@@ -157,13 +161,18 @@ async function importOperationsRows(
   return stats;
 }
 
-async function fetchOperationsRows(tabs: ReturnType<typeof getSheetTabGids>) {
-  const gids = [...new Set([tabs.operations, tabs.jobs].filter(Boolean))];
-  for (const gid of gids) {
+async function fetchOperationsRows() {
+  const candidates = getOperationsGidCandidates();
+  for (const { gid, source } of candidates) {
     const rows = await fetchRawRows(gid);
-    if (rows.length) return { rows, gid };
+    if (rows.length) return { rows, gid, source };
   }
-  return { rows: [] as Record<string, string>[], gid: gids[0] || "" };
+  const first = candidates[0];
+  return {
+    rows: [] as Record<string, string>[],
+    gid: first?.gid || "",
+    source: first?.source || "",
+  };
 }
 
 async function importFinanceRows(rows: Record<string, string>[]): Promise<number> {
@@ -330,15 +339,22 @@ export async function syncGSheetHub(): Promise<HubPullResult> {
   let operationsSkipped = 0;
   let operationsFailed = 0;
   let operationsSourceRows = 0;
-  const opGid = tabs.operations || tabs.jobs;
+  let operationsSourceGid = "";
+  let operationsSourceEnv = "";
+  const opsResolved = resolveOperationsGid();
+  const opGid = opsResolved.gid;
   if (opGid) {
-    const { rows: opRows, gid } = await fetchOperationsRows(tabs);
+    const { rows: opRows, gid, source } = await fetchOperationsRows();
     operationsSourceRows = opRows.length;
+    operationsSourceGid = gid;
+    operationsSourceEnv = source;
     const opStats = await importOperationsRows(opRows);
     operationsImported = opStats.imported;
     operationsSkipped = opStats.skipped;
     operationsFailed = opStats.failed;
-    if (opRows.length) tabsSynced.push(`operations (${gid}, ${opRows.length} rows)`);
+    if (opRows.length) {
+      tabsSynced.push(`operations (${source}=${gid}, ${opRows.length} rows)`);
+    }
   }
 
   let financeImported = 0;
@@ -381,12 +397,14 @@ export async function syncGSheetHub(): Promise<HubPullResult> {
     operationsSkipped,
     operationsFailed,
     operationsSourceRows,
+    operationsSourceGid,
+    operationsSourceEnv,
     financeImported,
     clientsImported,
     followupsImported,
     tabsSynced,
     message: leadResult.ok
-      ? `${leadResult.message}${extra}${sheetId ? ` · tabs: ${tabsSynced.join(", ") || "leads only"}` : ""}${!opGid ? " · WARNING: set GOOGLE_SHEET_GID_OPERATIONS for 02_Order_Master" : operationsSourceRows === 0 ? " · WARNING: operations tab returned 0 rows" : ""}`
+      ? `${leadResult.message}${extra}${sheetId ? ` · tabs: ${tabsSynced.join(", ") || "leads only"}` : ""}${!opGid ? " · WARNING: set GOOGLE_SHEET_GID_OPERATIONS or GOOGLE_SHEET_GID_ORDERS for 02_Order_Master" : operationsSourceRows === 0 ? ` · WARNING: operations tab ${operationsSourceEnv}=${operationsSourceGid} returned 0 rows` : ""}`
       : leadResult.message,
   };
 }
