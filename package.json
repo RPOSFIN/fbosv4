@@ -12,6 +12,7 @@
     "p0:sync": "node scripts/run-p0-closure.mjs",
     "p0:sync:direct": "node scripts/run-p0-closure.mjs --direct",
     "p0:counts": "node scripts/run-p0-closure.mjs --counts",
+    "p0:close": "node scripts/p0-close-population.mjs",
     "trace:data": "node scripts/trace-data-flow.mjs",
     "validate": "npm run lint && npm run build && npm run db:verify"
   },
@@ -44,6 +45,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5"
   }
 }

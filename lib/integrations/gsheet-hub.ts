@@ -1,5 +1,6 @@
 import {
   getGSheetCsvUrlForGid,
+  getGSheetGvizCsvUrlForGid,
   getGoogleSheetId,
   getSheetTabGids,
 } from "@/lib/google-config";
@@ -40,14 +41,7 @@ function parseCsvLine(line: string): string[] {
   return cols;
 }
 
-async function fetchRawRows(gid: string): Promise<Record<string, string>[]> {
-  const url = getGSheetCsvUrlForGid(gid);
-  if (!url) return [];
-
-  const res = await fetch(url, { cache: "no-store" });
-  const text = await res.text();
-  if (!res.ok || text.includes("accounts.google.com/ServiceLogin")) return [];
-
+function parseCsvText(text: string): Record<string, string>[] {
   const lines = text.split(/\r?\n/).filter(Boolean);
   if (lines.length < 2) return [];
 
@@ -62,6 +56,28 @@ async function fetchRawRows(gid: string): Promise<Record<string, string>[]> {
     rows.push(raw);
   }
   return rows;
+}
+
+async function fetchRawRows(gid: string): Promise<Record<string, string>[]> {
+  if (!gid) return [];
+
+  const urls = [
+    getGSheetGvizCsvUrlForGid(gid),
+    getGSheetCsvUrlForGid(gid),
+  ].filter(Boolean);
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      const text = await res.text();
+      if (!res.ok || text.includes("accounts.google.com/ServiceLogin")) continue;
+      const rows = parseCsvText(text);
+      if (rows.length) return rows;
+    } catch {
+      continue;
+    }
+  }
+  return [];
 }
 
 function normalizeSheetKey(key: string): string {
@@ -135,7 +151,6 @@ async function importOperationsRows(
         lower.production_status ||
         "Created",
       client_id,
-      updated_at: new Date().toISOString(),
     };
 
     const { data: existing } = await supabase
@@ -293,6 +308,10 @@ async function importFollowupsRows(rows: Record<string, string>[]): Promise<numb
   const supabase = getAdminClient();
   if (!supabase || !rows.length) return 0;
 
+  const { resolveFollowupDbShape } = await import("@/lib/followups/constants");
+  const { denormalizeFollowupForWrite } = await import("@/lib/followups/query");
+  const shape = await resolveFollowupDbShape(supabase);
+
   let count = 0;
   for (const raw of rows) {
     const lower: Record<string, string> = {};
@@ -300,16 +319,21 @@ async function importFollowupsRows(rows: Record<string, string>[]): Promise<numb
       lower[k.toLowerCase().replace(/\s+/g, "_")] = String(v || "").trim();
     }
     const company_name = lower.company_name || lower.company || "";
-    if (!company_name) continue;
+    const hasDate = !!(lower.next_followup || lower.followup_date);
+    if (!shape.legacy && !company_name) continue;
+    if (shape.legacy && !company_name && !hasDate) continue;
 
-    const payload = {
-      company_name,
-      contact_person: lower.contact_person || lower.contact || null,
-      next_followup: lower.next_followup || lower.followup_date || null,
-      status: lower.status || "Pending",
-      notes: lower.notes || null,
-      updated_at: new Date().toISOString(),
-    };
+    const payload = denormalizeFollowupForWrite(
+      {
+        company_name,
+        contact_person: lower.contact_person || lower.contact || null,
+        next_followup: lower.next_followup || lower.followup_date || null,
+        status: lower.status || "Pending",
+        notes: lower.notes || lower.remarks || null,
+        updated_at: new Date().toISOString(),
+      },
+      shape
+    );
 
     const { error } = await supabase.from("followups").insert(payload);
     if (!error) count++;
@@ -374,9 +398,16 @@ export async function syncGSheetHub(): Promise<HubPullResult> {
     followupsImported ? `followups ${followupsImported}` : "",
   ].filter(Boolean);
   const extra = extraParts.length ? ` · ${extraParts.join(" · ")}` : "";
+  const hubOk =
+    leadResult.ok ||
+    operationsImported > 0 ||
+    financeImported > 0 ||
+    clientsImported > 0 ||
+    followupsImported > 0;
 
   return {
     ...leadResult,
+    ok: hubOk,
     operationsImported,
     operationsSkipped,
     operationsFailed,
@@ -385,8 +416,8 @@ export async function syncGSheetHub(): Promise<HubPullResult> {
     clientsImported,
     followupsImported,
     tabsSynced,
-    message: leadResult.ok
-      ? `${leadResult.message}${extra}${sheetId ? ` · tabs: ${tabsSynced.join(", ") || "leads only"}` : ""}${!opGid ? " · WARNING: set GOOGLE_SHEET_GID_OPERATIONS for 02_Order_Master" : operationsSourceRows === 0 ? " · WARNING: operations tab returned 0 rows" : ""}`
+    message: hubOk
+      ? `${leadResult.ok ? leadResult.message : "Hub sync partial — leads skipped"}${extra}${sheetId ? ` · tabs: ${tabsSynced.join(", ") || "leads only"}` : ""}${!opGid ? " · WARNING: set GOOGLE_SHEET_GID_OPERATIONS for 02_Order_Master" : operationsSourceRows === 0 ? " · WARNING: operations tab returned 0 rows" : ""}`
       : leadResult.message,
   };
 }

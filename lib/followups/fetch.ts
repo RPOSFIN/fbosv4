@@ -1,8 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { resolveFollowupDbShape } from "@/lib/followups/constants";
 import {
   buildTodayFollowupsResponse,
   FOLLOWUP_SELECT,
   isCompletedStatus,
+  normalizeFollowupRows,
   todayDateString,
   type FollowupRow,
   type TodayFollowupsResponse,
@@ -37,35 +39,40 @@ export async function fetchFollowups(
   supabase: SupabaseClient,
   options?: { leadId?: string | null }
 ): Promise<FollowupRow[]> {
+  const { date: dateCol } = await resolveFollowupDbShape(supabase);
   let query = supabase.from("followups").select(FOLLOWUP_SELECT);
 
   if (options?.leadId) {
     query = query.eq("lead_id", options.leadId);
   }
 
-  const { data, error } = await query.order("next_followup", {
+  const { data, error } = await query.order(dateCol, {
     ascending: true,
     nullsFirst: false,
   });
 
   if (error) throw new Error(error.message);
-  return attachLeadsToFollowups(supabase, (data as FollowupRow[]) || []);
+  return attachLeadsToFollowups(
+    supabase,
+    normalizeFollowupRows((data as FollowupRow[]) || [])
+  );
 }
 
 export async function fetchTodayFollowups(
   supabase: SupabaseClient,
   today = todayDateString()
 ): Promise<TodayFollowupsResponse> {
+  const { date: dateCol } = await resolveFollowupDbShape(supabase);
   const { data, error } = await supabase
     .from("followups")
     .select(FOLLOWUP_SELECT)
     .not("status", "ilike", "completed")
-    .or(`next_followup.lte.${today},next_followup.is.null`);
+    .or(`${dateCol}.lte.${today},${dateCol}.is.null`);
 
   if (error) throw new Error(error.message);
   const rows = await attachLeadsToFollowups(
     supabase,
-    (data as FollowupRow[]) || []
+    normalizeFollowupRows((data as FollowupRow[]) || [])
   );
   return buildTodayFollowupsResponse(rows, today);
 }
@@ -74,11 +81,12 @@ export async function countTodayFollowups(
   supabase: SupabaseClient,
   today = todayDateString()
 ): Promise<number> {
+  const { date: dateCol } = await resolveFollowupDbShape(supabase);
   const { count, error } = await supabase
     .from("followups")
     .select("*", { count: "exact", head: true })
     .not("status", "ilike", "completed")
-    .or(`next_followup.lte.${today},next_followup.is.null`);
+    .or(`${dateCol}.lte.${today},${dateCol}.is.null`);
 
   if (error) throw new Error(error.message);
   return count || 0;

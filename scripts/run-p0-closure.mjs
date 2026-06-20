@@ -123,10 +123,11 @@ async function runSync(base, path, label) {
 
 function runDirectSync() {
   console.log("\n=== DIRECT SYNC (in-process, no dev server) ===");
+  const isWin = process.platform === "win32";
   const result = spawnSync(
-    "npx",
+    isWin ? "npx.cmd" : "npx",
     ["tsx", "scripts/p0-sync-direct.ts"],
-    { cwd: root, stdio: "inherit", env: process.env }
+    { cwd: root, stdio: "inherit", env: process.env, shell: isWin }
   );
   if (result.status !== 0) {
     console.error(

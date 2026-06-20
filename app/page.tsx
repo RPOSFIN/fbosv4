@@ -2,111 +2,124 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import CommandHeader from "@/components/command-center/command-header";
+import HorizontalClock from "@/components/command-center/horizontal-clock";
+import RouteStatusPanel from "@/components/command-center/route-status-panel";
+import AffirmationCarousel from "@/components/command-center/affirmation-carousel";
+import MetricCard from "@/components/command-center/metric-card";
+import TrendBar from "@/components/command-center/trend-bar";
+import { pageShell, panelPad } from "@/components/command-center/theme";
 import { apiFetch } from "@/lib/api/client";
+import { useRouteAlarm } from "@/hooks/use-route-alarm";
 
-type DashboardKpi = {
-  leads: number;
-  followups: number;
-  followupsToday: number;
-  jobs: number;
-  financeQueue: number;
-  clickupTasks: number;
+type CommandData = {
+  sales: { totalLeads: number; won: number; pendingFollowups: number; dormantLeads: number };
+  operations: { artworkPending: number; dispatchDelayed: number; overdueOrders: number; highPriority: number };
+  finance: { receivableLabel: string; payableLabel: string; freeCashLabel: string; healthScore: number };
+  trends: { salesTrend: number; collectionTrend: number; profitTrend: number; receivableTrend: number };
+  alerts: { freeCashWarning: string | null };
 };
 
+type Route = { employee: string; slots: { time: string; task: string }[]; updated_at: string };
+
 export default function Page() {
-  const [kpi, setKpi] = useState<DashboardKpi>({
-    leads: 0,
-    followups: 0,
-    followupsToday: 0,
-    jobs: 0,
-    financeQueue: 0,
-    clickupTasks: 0,
-  });
+  const [data, setData] = useState<CommandData | null>(null);
+  const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+
+  useRouteAlarm(routes);
 
   useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const data = await apiFetch<DashboardKpi>("/api/dashboard/kpi");
-        if (active) {
-          setKpi({
-            leads: data.leads ?? 0,
-            followups: data.followups ?? 0,
-            followupsToday: data.followupsToday ?? 0,
-            jobs: data.jobs ?? 0,
-            financeQueue: data.financeQueue ?? 0,
-            clickupTasks: data.clickupTasks ?? 0,
-          });
-          setError("");
-        }
-      } catch (e) {
-        if (active) {
-          setError(e instanceof Error ? e.message : "Failed to load dashboard");
-        }
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-    };
+    Promise.all([
+      apiFetch<CommandData>("/api/dashboard/command-center"),
+      apiFetch<{ routes: Route[] }>("/api/execution/routes"),
+    ])
+      .then(([cmd, rt]) => {
+        setData(cmd);
+        setRoutes(rt.routes || []);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-2">FBOS Dashboard</h1>
-      <p className="text-slate-400 text-sm mb-6">Live counts from Supabase</p>
+    <div className="min-h-screen">
+      <CommandHeader title="CEO Master Dashboard" />
+      <div className={`${pageShell} space-y-4 lg:space-y-5`}>
+        <HorizontalClock />
 
-      {error && <p className="text-red-400 mb-4">{error}</p>}
-      {loading ? (
-        <p className="text-slate-500">Loading…</p>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <KpiCard label="Leads" value={kpi.leads} href="/lead-master" />
-          <KpiCard
-            label="Followups"
-            value={kpi.followups}
-            href="/followups"
-            sub={`${kpi.followupsToday} due today`}
-          />
-          <KpiCard label="Jobs" value={kpi.jobs} href="/job-master" />
-          <KpiCard
-            label="Finance Queue"
-            value={kpi.financeQueue}
-            href="/finance"
-          />
-          <KpiCard
-            label="ClickUp Tasks"
-            value={kpi.clickupTasks}
-            href="/integrations"
-          />
+        {data?.alerts?.freeCashWarning && (
+          <div className="rounded-lg bg-amber-50 border border-amber-300 text-amber-900 px-4 py-3 text-[15px] font-medium">
+            ⚠ {data.alerts.freeCashWarning}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+          <div className="xl:col-span-4">
+            <RouteStatusPanel />
+          </div>
+          <div className="xl:col-span-8">
+            <AffirmationCarousel />
+          </div>
         </div>
-      )}
+
+        {loading ? (
+          <p className="text-slate-500 text-[15px]">Loading live data…</p>
+        ) : data ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <LivePanel title="Sales (Live)" href="/sales-workbench">
+              <MetricCard label="Total Leads" value={data.sales.totalLeads} accent="blue" />
+              <MetricCard label="WON" value={data.sales.won} accent="green" />
+              <MetricCard label="Pending Followups" value={data.sales.pendingFollowups} accent="orange" />
+              <MetricCard label="Dormant" value={data.sales.dormantLeads} />
+            </LivePanel>
+            <LivePanel title="Operations (Live)" href="/operations">
+              <MetricCard label="Artwork Pending" value={data.operations.artworkPending} />
+              <MetricCard label="Dispatch Delayed" value={data.operations.dispatchDelayed} accent="orange" />
+              <MetricCard label="Overdue Orders" value={data.operations.overdueOrders} accent="red" />
+              <MetricCard label="High Priority" value={data.operations.highPriority} accent="purple" />
+            </LivePanel>
+            <LivePanel title="Finance (Live)" href="/finance-dashboard">
+              <MetricCard label="Receivable" value={data.finance.receivableLabel} accent="green" />
+              <MetricCard label="Payable" value={data.finance.payableLabel} accent="orange" />
+              <MetricCard label="Free Cash" value={data.finance.freeCashLabel} accent="blue" />
+              <MetricCard label="Health" value={`${data.finance.healthScore}/100`} accent="purple" />
+            </LivePanel>
+            <LivePanel title="Trends (Live)" href="/finance-dashboard">
+              <TrendBar label="Sales" score={data.trends.salesTrend} color="bg-emerald-600" />
+              <TrendBar label="Collection" score={data.trends.collectionTrend} color="bg-blue-600" />
+              <TrendBar label="Profit" score={data.trends.profitTrend} color="bg-violet-600" />
+              <TrendBar label="Receivable" score={data.trends.receivableTrend} color="bg-orange-500" />
+            </LivePanel>
+          </div>
+        ) : null}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <QuickLink title="Quotation AI" href="/quotations" desc="AI quotes + WhatsApp" />
+          <QuickLink title="Compliance Hub" href="/compliance" desc="Vendor rules · Observations · Errors" />
+          <QuickLink title="Call Coach" href="/sales-workbench" desc="Recording + behaviour analysis" />
+        </div>
+      </div>
     </div>
   );
 }
 
-function KpiCard({
-  label,
-  value,
-  href,
-  sub,
-}: {
-  label: string;
-  value: number;
-  href: string;
-  sub?: string;
-}) {
+function LivePanel({ title, href, children }: { title: string; href: string; children: React.ReactNode }) {
   return (
-    <Link
-      href={href}
-      className="border border-slate-700 p-4 rounded-xl hover:border-cyan-500/40 transition-colors"
-    >
-      <h2 className="text-sm text-slate-400">{label}</h2>
-      <p className="text-4xl font-bold mt-1">{value.toLocaleString()}</p>
-      {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
+    <div className={`${panelPad} space-y-3 h-full`}>
+      <Link href={href} className="text-base font-bold text-blue-700 hover:text-blue-900">
+        {title} →
+      </Link>
+      <div className="grid grid-cols-2 gap-3">{children}</div>
+    </div>
+  );
+}
+
+function QuickLink({ title, href, desc }: { title: string; href: string; desc: string }) {
+  return (
+    <Link href={href} className={`${panelPad} block hover:border-blue-400 transition-colors`}>
+      <h3 className="text-base font-bold text-slate-900">{title}</h3>
+      <p className="text-sm text-slate-500 mt-1">{desc}</p>
     </Link>
   );
 }

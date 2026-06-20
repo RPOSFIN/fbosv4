@@ -2,11 +2,15 @@ import {
 
   getGSheetCsvUrl,
 
+  getGSheetGvizCsvUrlForGid,
+
   getGSheetFixSteps,
 
   getGoogleSheetId,
 
   getGoogleWebappUrl,
+
+  getSheetTabGids,
 
   isExplicitWebappUrl,
 
@@ -235,73 +239,55 @@ function parseCsvLine(line: string): string[] {
 }
 
 async function syncFromCsvUrl(): Promise<{ rows: SheetRow[]; status?: number }> {
+  const tabs = getSheetTabGids();
+  const urls = [
+    tabs.leads ? getGSheetGvizCsvUrlForGid(tabs.leads) : "",
+    getGSheetCsvUrl(),
+  ].filter(Boolean);
 
-  const csvUrl = getGSheetCsvUrl();
+  let lastStatus: number | undefined;
 
-  if (!csvUrl) return { rows: [] };
+  for (const csvUrl of urls) {
+    try {
+      const res = await fetch(csvUrl, { cache: "no-store" });
+      const text = await res.text();
+      const looksLikeLogin =
+        text.includes("accounts.google.com/ServiceLogin") ||
+        (text.trimStart().startsWith("<!DOCTYPE") && text.includes("login"));
 
+      if (!res.ok || looksLikeLogin) {
+        lastStatus = looksLikeLogin ? 401 : res.status;
+        continue;
+      }
 
+      const lines = text.split(/\r?\n/).filter(Boolean);
+      if (lines.length < 2) continue;
 
-  const res = await fetch(csvUrl, { cache: "no-store" });
+      const headers = parseCsvLine(lines[0]);
+      const rows: SheetRow[] = [];
+      for (const line of lines.slice(1)) {
+        const cols = parseCsvLine(line);
+        const raw: Record<string, string> = {};
+        headers.forEach((h, i) => {
+          raw[h] = cols[i] || "";
+        });
+        const normalized = normalizeRow(raw);
+        if (normalized) rows.push(normalized);
+      }
 
-  const text = await res.text();
-
-  const looksLikeLogin =
-
-    text.includes("accounts.google.com/ServiceLogin") ||
-
-    (text.trimStart().startsWith("<!DOCTYPE") && text.includes("login"));
-
-
-
-  if (!res.ok || looksLikeLogin) {
-
-    const status = looksLikeLogin ? 401 : res.status;
-
-    const err = new Error(
-
-      looksLikeLogin
-
-        ? "CSV fetch blocked (401) — sheet needs Viewer sharing or correct tab gid; /export URLs also need Publish to web"
-
-        : `CSV fetch failed (${res.status})`
-
-    ) as Error & { status?: number };
-
-    err.status = status;
-
-    throw err;
-
+      if (rows.length) return { rows };
+    } catch {
+      continue;
+    }
   }
 
-  const lines = text.split(/\r?\n/).filter(Boolean);
-
-  if (lines.length < 2) return { rows: [] };
-
-
-
-  const headers = parseCsvLine(lines[0]);
-
-  const rows: SheetRow[] = [];
-
-  for (const line of lines.slice(1)) {
-    const cols = parseCsvLine(line);
-    const raw: Record<string, string> = {};
-
-    headers.forEach((h, i) => {
-      raw[h] = cols[i] || "";
-    });
-
-    const normalized = normalizeRow(raw);
-
-    if (normalized) rows.push(normalized);
-
-  }
-
-
-
-  return { rows };
-
+  const err = new Error(
+    lastStatus === 401
+      ? "CSV fetch blocked (401) — sheet needs Viewer sharing or correct tab gid; /export URLs also need Publish to web"
+      : `CSV fetch failed (${lastStatus ?? "unknown"})`
+  ) as Error & { status?: number };
+  err.status = lastStatus;
+  throw err;
 }
 
 

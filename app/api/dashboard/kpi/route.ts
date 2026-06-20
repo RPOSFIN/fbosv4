@@ -1,20 +1,20 @@
-import {
-  apiError,
-  apiSuccess,
-  authorize,
-  getServerSupabase,
-} from "@/lib/rbac/api-auth";
+import { apiError, apiSuccess, authorize } from "@/lib/rbac/api-auth";
 import {
   getIntegrationStatuses,
   getIntegrationSummary,
 } from "@/lib/integrations/status";
 import { countTodayFollowups } from "@/lib/followups/fetch";
+import { getAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
   const auth = await authorize("dashboard", "read");
   if ("error" in auth) return auth.error;
 
-  const supabase = await getServerSupabase();
+  const supabase = getAdminClient();
+  if (!supabase) {
+    return apiError("Database not configured", 503);
+  }
+
   const tables = [
     "leads",
     "followups",

@@ -116,3 +116,57 @@ export function buildTodayFollowupsResponse(
 
 /** Base select without embedded join — FK may be absent on legacy DBs. */
 export const FOLLOWUP_SELECT = "*";
+
+import {
+  FOLLOWUP_COLS,
+  type FollowupDbShape,
+} from "@/lib/followups/constants";
+
+/** Map DB rows → app API shape (next_followup, notes). */
+export function normalizeFollowupRow(row: FollowupRow): FollowupRow {
+  const raw = row as FollowupRow & {
+    followup_date?: string | null;
+    remarks?: string | null;
+  };
+  return {
+    ...row,
+    next_followup: raw.next_followup ?? raw.followup_date ?? null,
+    notes: raw.notes ?? raw.remarks ?? null,
+  };
+}
+
+export function normalizeFollowupRows(rows: FollowupRow[]): FollowupRow[] {
+  return rows.map(normalizeFollowupRow);
+}
+
+/** Map app API body → DB column names for insert/update. */
+export function denormalizeFollowupForWrite(
+  body: Record<string, unknown>,
+  shape?: FollowupDbShape
+): Record<string, unknown> {
+  const dateCol = shape?.date ?? FOLLOWUP_COLS.date;
+  const notesCol = shape?.notes ?? FOLLOWUP_COLS.notes;
+  const legacy = shape?.legacy ?? true;
+
+  const out: Record<string, unknown> = {};
+
+  if (body.lead_id !== undefined) out.lead_id = body.lead_id ?? null;
+  if (body.status !== undefined) out.status = body.status;
+
+  const dateValue =
+    body.next_followup !== undefined ? body.next_followup : body[dateCol];
+  if (dateValue !== undefined) out[dateCol] = dateValue || null;
+
+  const notesValue = body.notes !== undefined ? body.notes : body[notesCol];
+  if (notesValue !== undefined) out[notesCol] = notesValue;
+
+  if (!legacy) {
+    if (body.company_name !== undefined) out.company_name = body.company_name;
+    if (body.contact_person !== undefined) out.contact_person = body.contact_person;
+    if (body.created_by !== undefined) out.created_by = body.created_by;
+    if (body.updated_by !== undefined) out.updated_by = body.updated_by;
+    if (body.updated_at !== undefined) out.updated_at = body.updated_at;
+  }
+
+  return out;
+}

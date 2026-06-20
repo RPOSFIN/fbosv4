@@ -22,10 +22,10 @@ export default function KnowledgeHubPage() {
   }, []);
 
   const sections = [
-    ["SOP Library", "/knowledge-hub"],
-    ["Checklist Library", "/knowledge-hub"],
-    ["Route Maps", "/knowledge-hub"],
-    ["Affirmations", "/knowledge-hub"],
+    ["SOP Library", "/knowledge-hub/sops"],
+    ["Checklist Library", "/knowledge-hub/checklists"],
+    ["Route Maps", "/knowledge-hub/route-maps"],
+    ["Affirmations", "/knowledge-hub/affirmations"],
   ];
 
   return (

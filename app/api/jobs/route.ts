@@ -16,11 +16,8 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from("jobs")
-    .select(
-      "id, job_no, client_id, status, created_at, updated_at, clients(company_name)",
-      { count: "exact" }
-    )
-    .order("updated_at", { ascending: false })
+    .select("id, job_no, client_id, status, created_at", { count: "exact" })
+    .order("created_at", { ascending: false })
     .limit(limit);
 
   if (status) query = query.eq("status", status);
@@ -28,29 +25,37 @@ export async function GET(request: Request) {
   const { data, error, count } = await query;
   if (error) return apiError(error.message, 500);
 
-  const jobs = (data || []).map((row) => {
-    const clients = row.clients as { company_name: string } | { company_name: string }[] | null;
-    const clientName = Array.isArray(clients)
-      ? clients[0]?.company_name ?? null
-      : clients?.company_name ?? null;
+  const clientIds = [
+    ...new Set((data || []).map((r) => r.client_id).filter(Boolean)),
+  ] as string[];
 
-    return {
-      id: row.id as string,
-      job_no: row.job_no as string,
-      status: row.status as string,
-      client_name: clientName,
-      product: null,
-      quantity: null,
-      amount: 0,
-      order_date: null,
-      delivery_date: null,
-      production_stage: null,
-      designer: null,
-      notes: null,
-      created_at: row.created_at as string,
-      updated_at: row.updated_at as string,
-    };
-  });
+  const clientMap = new Map<string, string>();
+  if (clientIds.length) {
+    const { data: clients } = await supabase
+      .from("clients")
+      .select("id, company_name")
+      .in("id", clientIds);
+    for (const c of clients || []) {
+      clientMap.set(c.id as string, c.company_name as string);
+    }
+  }
+
+  const jobs = (data || []).map((row) => ({
+    id: row.id as string,
+    job_no: row.job_no as string,
+    status: row.status as string,
+    client_name: row.client_id ? clientMap.get(row.client_id as string) ?? null : null,
+    product: null,
+    quantity: null,
+    amount: 0,
+    order_date: null,
+    delivery_date: null,
+    production_stage: null,
+    designer: null,
+    notes: null,
+    created_at: row.created_at as string,
+    updated_at: (row.created_at as string) || null,
+  }));
 
   return apiSuccess({ jobs, count: count ?? jobs.length });
 }
