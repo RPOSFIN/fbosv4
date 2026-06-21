@@ -1,0 +1,114 @@
+{
+  "exported_at": "2026-06-21T00:00:00Z",
+  "project": {
+    "name": "financeos",
+    "ref": "skqcjguegqouhbgturgs",
+    "api_url": "https://skqcjguegqouhbgturgs.supabase.co",
+    "region": "ap-northeast-1",
+    "status": "ACTIVE_HEALTHY"
+  },
+  "note": "FinanceOS is separate from FBOS. Do not merge Supabase projects.",
+  "tables": {
+    "families": [
+      {
+        "id": "7d04e5b0-5f46-4581-96f1-305b443a4b56",
+        "name": "juneja Family",
+        "created_at": "2026-06-14T13:06:33.22842+00:00",
+        "owner_user_id": null
+      }
+    ],
+    "family_members": [
+      {
+        "id": "df7399b9-3ac2-4a87-aacd-1979cd67fef6",
+        "family_id": "7d04e5b0-5f46-4581-96f1-305b443a4b56",
+        "name": "Primary User",
+        "relationship": "Self",
+        "role": "Primary",
+        "dob": null,
+        "occupation": "Business",
+        "is_active": true,
+        "created_at": "2026-06-14T13:07:35.751333+00:00"
+      },
+      {
+        "id": "5004e7d8-35eb-4bba-8b2d-eb927331b7e2",
+        "family_id": "7d04e5b0-5f46-4581-96f1-305b443a4b56",
+        "name": "Partner",
+        "relationship": "Spouse",
+        "role": "Partner",
+        "dob": null,
+        "occupation": "Homemaker",
+        "is_active": true,
+        "created_at": "2026-06-14T13:07:35.751333+00:00"
+      },
+      {
+        "id": "cb5c633c-94be-486f-9396-81faa0439071",
+        "family_id": "7d04e5b0-5f46-4581-96f1-305b443a4b56",
+        "name": "Senior 1",
+        "relationship": "Father",
+        "role": "Senior",
+        "dob": null,
+        "occupation": "Retired",
+        "is_active": true,
+        "created_at": "2026-06-14T13:07:35.751333+00:00"
+      },
+      {
+        "id": "bd34c483-6ed0-45ed-81ab-4dbbd8e5c11c",
+        "family_id": "7d04e5b0-5f46-4581-96f1-305b443a4b56",
+        "name": "Senior 2",
+        "relationship": "Mother",
+        "role": "Senior",
+        "dob": null,
+        "occupation": "Homemaker",
+        "is_active": true,
+        "created_at": "2026-06-14T13:07:35.751333+00:00"
+      },
+      {
+        "id": "70219528-0a24-4b23-b708-30e9d1e6ad6f",
+        "family_id": "7d04e5b0-5f46-4581-96f1-305b443a4b56",
+        "name": "Student 1",
+        "relationship": "Child",
+        "role": "Student",
+        "dob": null,
+        "occupation": "Student",
+        "is_active": true,
+        "created_at": "2026-06-14T13:07:35.751333+00:00"
+      }
+    ],
+    "income": [],
+    "expenses": [],
+    "investments": [
+      {
+        "id": "b1d6d7a7-ac48-4143-b9be-66011d8c7860",
+        "family_id": "7d04e5b0-5f46-4581-96f1-305b443a4b56",
+        "member_id": null,
+        "investment_type": "Mutual Fund",
+        "investment_name": "SIP Portfolio",
+        "invested_amount": 450000,
+        "current_value": 525000,
+        "start_date": null,
+        "notes": "Initial Test Investment",
+        "created_at": "2026-06-14T14:35:14.937549+00:00"
+      }
+    ],
+    "borrowings": [
+      {
+        "id": "bc4b9891-8292-45ce-bfc5-3dd58982aec5",
+        "family_id": "7d04e5b0-5f46-4581-96f1-305b443a4b56",
+        "loan_type": "Home Loan",
+        "loan_name": "SBI Home Loan",
+        "outstanding": 150000,
+        "emi": 12000,
+        "interest_rate": 8.5,
+        "remaining_months": 18,
+        "created_at": "2026-06-14T14:35:14.937549+00:00"
+      }
+    ],
+    "protection_policies": [],
+    "goals": [],
+    "engine_snapshots": [],
+    "networth_snapshots": [],
+    "financial_health_scores": [],
+    "transactions": [],
+    "budgets": []
+  }
+}
