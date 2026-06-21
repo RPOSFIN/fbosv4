@@ -11,6 +11,7 @@
     "db:integrations": "node scripts/apply-integrations-migration.mjs",
     "tally:audit": "node scripts/tally-audit.mjs",
     "tally:test": "node scripts/test-tally-gateway.mjs",
+    "tally:webapp": "node scripts/test-webapp-tally.mjs",
     "validate": "npm run lint && npm run build && npm run db:verify"
   },
   "dependencies": {

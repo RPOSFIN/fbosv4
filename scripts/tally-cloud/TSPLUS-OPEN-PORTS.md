@@ -31,19 +31,27 @@ Invoke-WebRequest -Uri http://127.0.0.1:9007 -Method POST -Body $body -ContentTy
 **PASS** = XML response aata hai (LEDGER tags dikhenge)  
 **FAIL** = connection refused → Tally gateway port 9007 enable nahi hai
 
-### Step 3 — Tally → Google Sheet installer (one-click)
+### Step 3 — One-click full setup (recommended)
 
-Server par repo/scripts folder se:
+TS Plus session mein **Admin**:
 
 ```cmd
 cd scripts\tally-cloud
-Test-TallyGateway.bat
-Install-TallySync.bat
+Setup-TallyCloud.bat
 ```
 
-Manual sync (bina scheduler):
+Ye automatically karega:
+1. Tally gateway test (`127.0.0.1:9007`)
+2. Webapp health check
+3. Task Scheduler install (har 2h)
+4. Pehli sync → `06_Finance_Sync`
+5. Report file: `FBOS-Tally-Setup-Report.json`
+
+Individual scripts:
 
 ```cmd
+Test-TallyGateway.bat
+Install-TallySync.bat
 Run-TallySync-Now.bat
 ```
 
@@ -122,4 +130,5 @@ curl -X POST http://localhost:3000/api/integrations/tally/sync
 | `connection refused :9007` | Tally F12 gateway enable + port 9007 |
 | Demo mode dikhe | `TALLY_HOST` + `TALLY_COMPANY_NAME` set karo, dev server restart |
 | Finance 0 in dashboard | Path A chalao — `06_Finance_Sync` rows check karo |
+| POST webapp 405 / Page Not Found | Apps Script redeploy: Web app, Execute as Me, Anyone can access |
 | Company name error | Tally F3 → Company Info → exact name copy karo |
