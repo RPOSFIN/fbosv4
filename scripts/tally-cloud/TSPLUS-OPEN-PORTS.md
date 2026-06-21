@@ -33,12 +33,18 @@ Invoke-WebRequest -Uri http://127.0.0.1:9007 -Method POST -Body $body -ContentTy
 
 ### Step 3 — Tally → Google Sheet installer (one-click)
 
-Server par:
+Server par repo/scripts folder se:
 
 ```cmd
-cd C:\FBOS\TallySync
-REM ya repo se copy: scripts\tally-cloud\
+cd scripts\tally-cloud
+Test-TallyGateway.bat
 Install-TallySync.bat
+```
+
+Manual sync (bina scheduler):
+
+```cmd
+Run-TallySync-Now.bat
 ```
 
 Ye karega:
