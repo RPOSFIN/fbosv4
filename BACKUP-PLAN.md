@@ -1,15 +1,19 @@
 # FBOS Backup Plan — CEO UI Stable (2026-06-21)
 
-## Checkpoint
+## Checkpoint (latest)
+
+| Item | Value |
+|------|-------|
+| **Commit** | *(after fix commit — see git log)* |
+| **Tag** | `backup/ceo-ui-stable-2026-06-21-v2` |
+| **Fixes in v2** | HorizontalClock hydration (Next.js "1 Issue" badge), affirmations API 500 → empty fallback |
+
+## Previous checkpoint
 
 | Item | Value |
 |------|-------|
 | **Commit** | `449f15a` |
-| **Message** | CHECKPOINT - FBOS Foundation Runtime Stable Before Agent Switch |
-| **Branch (work)** | `cursor/data-population-0d65` |
 | **Tag** | `backup/ceo-ui-stable-2026-06-21` |
-| **Backup branch** | `backup/ceo-ui-stable-2026-06-21` |
-| **GitHub** | https://github.com/RPOSFIN/fbosv4 |
 
 ## What this backup includes
 

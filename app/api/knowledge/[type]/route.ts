@@ -36,7 +36,17 @@ export async function GET(_request: Request, { params }: Params) {
     .select("*")
     .order("updated_at", { ascending: false });
 
-  if (error) return apiError(error.message, 500);
+  if (error) {
+    const msg = error.message || "";
+    if (
+      error.code === "PGRST205" ||
+      msg.includes("schema cache") ||
+      msg.includes("does not exist")
+    ) {
+      return apiSuccess([]);
+    }
+    return apiError(error.message, 500);
+  }
   return apiSuccess(data || []);
 }
 
