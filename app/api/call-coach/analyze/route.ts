@@ -1,7 +1,7 @@
 import { apiError, apiSuccess, authorize } from "@/lib/rbac/api-auth";
 
 export async function POST(request: Request) {
-  const auth = await authorize("call_coach", "create");
+  const auth = await authorize("call_coach_notes", "create");
   if ("error" in auth) return auth.error;
 
   const body = await request.json().catch(() => ({}));

@@ -1,3 +1,5 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 /** LIVE legacy schema (eahojgogyrgoelqevbvq). */
 export const FOLLOWUP_COLS = {
   date: "followup_date",
@@ -18,7 +20,7 @@ let cachedDbShape: FollowupDbShape | null = null;
 
 /** Detect column names once per process (LIVE vs fbosv4). */
 export async function resolveFollowupDbShape(
-  supabase: { from: (table: string) => { select: (cols: string) => { limit: (n: number) => Promise<{ error: { message?: string } | null }> } } }
+  supabase: SupabaseClient
 ): Promise<FollowupDbShape> {
   if (cachedDbShape) return cachedDbShape;
 
