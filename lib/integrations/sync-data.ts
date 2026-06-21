@@ -1,4 +1,5 @@
 import { getAdminClient } from "@/lib/supabase/admin";
+import { getServerDataClient } from "@/lib/supabase/server-data";
 
 export interface ClickUpTaskRow {
   id: string;
@@ -44,7 +45,7 @@ export type IntegrationSyncData = {
 };
 
 export async function loadIntegrationSyncData(): Promise<IntegrationSyncData> {
-  const supabase = getAdminClient();
+  const supabase = getAdminClient() ?? (await getServerDataClient());
   if (!supabase) {
     return {
       clickupTasks: [],

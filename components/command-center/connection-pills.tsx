@@ -42,7 +42,7 @@ export default function ConnectionPills() {
             status: info?.status ?? "unknown",
           }))
         );
-        setSupabaseOk(json?.source !== "unknown");
+        setSupabaseOk(json?.source === "supabase" || Boolean(json?.tables?.integrations));
       })
       .catch(() => setSupabaseOk(false));
   }, []);

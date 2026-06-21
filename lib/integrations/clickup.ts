@@ -315,6 +315,13 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
 
   if (!teamsRes.ok) {
     const body = await teamsRes.text();
+    if (teamsRes.status === 401 || body.includes("Token invalid") || body.includes("OAUTH_025")) {
+      const demo = await syncClickUpDemo();
+      return {
+        ...demo,
+        message: `ClickUp token invalid — running demo data. Update CLICKUP_API_TOKEN in .env.local. (${body.slice(0, 80)})`,
+      };
+    }
     return {
       ok: false,
       demo: false,
