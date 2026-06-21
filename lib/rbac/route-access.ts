@@ -6,6 +6,7 @@ const ROUTE_RESOURCE: Record<string, PermissionResource> = {
   "/sales": "leads",
   "/operations": "jobs",
   "/finance": "clients",
+  "/financeos": "clients",
   "/execution-board": "dashboard",
   "/chat-center": "dashboard",
   "/knowledge-hub": "sops",
