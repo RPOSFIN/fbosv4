@@ -341,21 +341,19 @@ async function syncFromWebapp(): Promise<{
 
 
   const rows = extractRows(data);
-
-  const healthOnly =
-
-    Boolean(data) &&
-
-    typeof data === "object" &&
-
-    (data as { success?: boolean }).success === true &&
-
-    !rows.length;
-
-
+  const healthOnly = isWebappHealthOnly(data, rows.length);
 
   return { rows, healthOnly, status: res.status, data };
+}
 
+function isWebappHealthOnly(data: unknown, rowCount: number): boolean {
+  if (rowCount > 0 || !data || typeof data !== "object") return false;
+  const obj = data as Record<string, unknown>;
+  if (obj.success === true) return true;
+  if (obj.ok === true && !obj.data && !obj.leads && !obj.rows && !obj.records) {
+    return true;
+  }
+  return false;
 }
 
 
@@ -437,139 +435,97 @@ export async function syncGSheet(): Promise<GSheetSyncResult> {
 
 
   const errors: string[] = [];
-
   let lastStatus: number | undefined;
-
-
+  let webappHealthy = false;
+  let webappData: unknown;
 
   const webappUrl = getGoogleWebappUrl();
-
   const csvUrl = getGSheetCsvUrl();
-
   const sheetId = getGoogleSheetId();
 
-
-
   if (webappUrl) {
-
     try {
-
       const webapp = await syncFromWebapp();
+      webappData = webapp.data;
 
       if (webapp.rows.length) {
-
         const imported = await importRowsToSupabase(webapp.rows);
-
         return buildSuccessResult(webapp.rows, imported, {
-
           healthOnly: webapp.healthOnly,
-
           source: "webapp",
-
           data: webapp.data,
-
         });
-
       }
 
-      if (webapp.healthOnly && !csvUrl) {
-
-        return buildSuccessResult([], {
-          leadsImported: 0,
-          leadsUpdated: 0,
-          leadsSkipped: 0,
-          clientsImported: 0,
-          inserted: 0,
-          updated: 0,
-          skipped: 0,
-        }, {
-
-          healthOnly: true,
-
-          source: "webapp",
-
-          data: webapp.data,
-
-        });
-
+      if (webapp.healthOnly) {
+        webappHealthy = true;
       }
-
     } catch (err) {
-
       const status = (err as { status?: number }).status;
-
       if (status) lastStatus = status;
-
       errors.push(err instanceof Error ? err.message : "Webapp sync failed");
-
     }
-
   } else if (sheetId) {
-
     errors.push(
-
       "No GOOGLE_WEBAPP_URL — using gviz CSV fallback (works with Viewer sharing)"
-
     );
-
   }
-
-
 
   if (csvUrl) {
-
     try {
-
       const csv = await syncFromCsvUrl();
-
       if (csv.rows.length) {
-
         const imported = await importRowsToSupabase(csv.rows);
-
         return buildSuccessResult(csv.rows, imported, { source: "csv" });
-
       }
-
-      errors.push("CSV fetched but no lead rows found (check column headers: company_name, company, etc.)");
-
+      if (!webappHealthy) {
+        errors.push(
+          "CSV fetched but no lead rows found (check column headers: company_name, company, etc.)"
+        );
+      }
     } catch (err) {
-
       const status = (err as { status?: number }).status;
-
       if (status) lastStatus = status;
-
-      errors.push(err instanceof Error ? err.message : "CSV sync failed");
-
+      if (!webappHealthy) {
+        errors.push(err instanceof Error ? err.message : "CSV sync failed");
+      }
     }
-
   } else if (!webappUrl) {
-
-    errors.push("No CSV URL — set GOOGLE_SHEET_ID (and optional GOOGLE_SHEET_GID) or GSHEET_CSV_URL");
-
+    errors.push(
+      "No CSV URL — set GOOGLE_SHEET_ID (and optional GOOGLE_SHEET_GID) or GSHEET_CSV_URL"
+    );
   }
 
-
+  if (webappHealthy) {
+    return buildSuccessResult(
+      [],
+      {
+        leadsImported: 0,
+        leadsUpdated: 0,
+        leadsSkipped: 0,
+        clientsImported: 0,
+        inserted: 0,
+        updated: 0,
+        skipped: 0,
+      },
+      {
+        healthOnly: true,
+        source: "webapp",
+        data: webappData,
+      }
+    );
+  }
 
   const fixSteps = getGSheetFixSteps(lastStatus);
-
   const message = errors.length
-
     ? errors.join(" · ")
-
     : "No rows imported from Google Sheets";
 
-
-
   return {
-
     ok: false,
-
     message: `${message}${sheetId ? ` (sheet: ${sheetId})` : ""}`,
-
     fixSteps,
-
   };
-
 }
 
 
