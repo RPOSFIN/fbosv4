@@ -12,6 +12,7 @@
     "tally:audit": "node scripts/tally-audit.mjs",
     "tally:test": "node scripts/test-tally-gateway.mjs",
     "tally:webapp": "node scripts/test-webapp-tally.mjs",
+    "tally:connect": "node scripts/complete-tally-connect.mjs",
     "validate": "npm run lint && npm run build && npm run db:verify"
   },
   "dependencies": {

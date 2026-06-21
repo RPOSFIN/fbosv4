@@ -192,5 +192,31 @@ $records = $all | ForEach-Object {
 }
 
 $payload = @{ action = "tally_finance"; records = @($records) } | ConvertTo-Json -Depth 8 -Compress
-$res = Invoke-RestMethod -Uri $WebAppUrl -Method POST -Body $payload -ContentType "application/json; charset=utf-8" -TimeoutSec 180
-Write-Host "OK: $($all.Count) rows -> 06_Finance_Sync | $($res | ConvertTo-Json -Compress)"
+$webappOk = $false
+try {
+  $res = Invoke-RestMethod -Uri $WebAppUrl -Method POST -Body $payload -ContentType "application/json; charset=utf-8" -TimeoutSec 180
+  Write-Host "Webapp OK: $($all.Count) rows -> 06_Finance_Sync | $($res | ConvertTo-Json -Compress)" -ForegroundColor Green
+  $webappOk = $true
+} catch {
+  Write-Host "Webapp POST failed: $_" -ForegroundColor Yellow
+  Write-Host "  (Common fix: Apps Script redeploy with Anyone access)" -ForegroundColor Yellow
+}
+
+$fbosWebhook = $env:FBOS_TALLY_WEBHOOK_URL
+$syncSecret = $env:SHEET_SYNC_SECRET
+if (-not $fbosWebhook) {
+  Write-Host "Tip: set FBOS_TALLY_WEBHOOK_URL=https://your-fbos-host/api/webhooks/tally-finance for Supabase ingest fallback" -ForegroundColor DarkGray
+} elseif (-not $syncSecret) {
+  Write-Host "FBOS webhook skipped — SHEET_SYNC_SECRET not set" -ForegroundColor Yellow
+} else {
+  try {
+    $fbosPayload = @{ action = "tally_finance"; secret = $syncSecret; records = @($records) } | ConvertTo-Json -Depth 8 -Compress
+    $headers = @{ Authorization = "Bearer $syncSecret"; "Content-Type" = "application/json; charset=utf-8" }
+    $fbosRes = Invoke-RestMethod -Uri $fbosWebhook -Method POST -Body $fbosPayload -Headers $headers -TimeoutSec 180
+    Write-Host "FBOS webhook OK: $($fbosRes | ConvertTo-Json -Compress)" -ForegroundColor Green
+  } catch {
+    Write-Host "FBOS webhook failed: $_" -ForegroundColor Red
+  }
+}
+
+if (-not $webappOk -and -not $fbosWebhook) { exit 1 }

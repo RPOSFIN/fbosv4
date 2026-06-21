@@ -41,6 +41,17 @@ Copy-Item -Path $SourceScript -Destination (Join-Path $InstallDir "TallyToSheet.
 $env:GOOGLE_WEBAPP_URL = $WebAppUrl
 Write-Host "Set machine env GOOGLE_WEBAPP_URL" -ForegroundColor Green
 
+$fbosWebhook = $env:FBOS_TALLY_WEBHOOK_URL
+if ($fbosWebhook) {
+  [System.Environment]::SetEnvironmentVariable("FBOS_TALLY_WEBHOOK_URL", $fbosWebhook, "Machine")
+  Write-Host "Set machine env FBOS_TALLY_WEBHOOK_URL" -ForegroundColor Green
+}
+$syncSecret = $env:SHEET_SYNC_SECRET
+if ($syncSecret) {
+  [System.Environment]::SetEnvironmentVariable("SHEET_SYNC_SECRET", $syncSecret, "Machine")
+  Write-Host "Set machine env SHEET_SYNC_SECRET" -ForegroundColor Green
+}
+
 $taskName = "FBOS_TallyToSheet_2h"
 $scriptPath = Join-Path $InstallDir "TallyToSheet.ps1"
 $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -TallyHost $TallyHost -TallyPort $TallyPort -CompanyName `"$CompanyName`""

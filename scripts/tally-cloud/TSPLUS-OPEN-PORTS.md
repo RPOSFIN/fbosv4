@@ -117,8 +117,9 @@ curl -X POST http://localhost:3000/api/integrations/tally/sync
 |------|---------------|----------|
 | **A: TallyToSheet.ps1** | WSIPL-89-72 server par | Production — har 2h Sheet + Supabase |
 | **B: FBOS syncTally()** | Dev laptop / cloud | Test + manual sync |
+| **C: FBOS webhook** | WSIPL-89-72 → FBOS URL | When GAS POST 405 — set `FBOS_TALLY_WEBHOOK_URL` + `SHEET_SYNC_SECRET` |
 
-**Recommendation:** Path **A** on server (Install-TallySync.bat). Path B tab jab firewall 9007 open ho aur hostname resolve ho.
+**Recommendation:** Path **A** on server (Setup-TallyCloud.bat). If webapp POST fails, use Path **C** webhook to FBOS.
 
 ---
 
