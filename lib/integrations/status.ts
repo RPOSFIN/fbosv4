@@ -47,7 +47,12 @@ function resolveStatusFromEnv(name: ConnectorName): IntegrationStatus {
 }
 
 async function getSupabaseForIntegrations() {
-  return getAdminClient() ?? (await createSupabaseServerClient());
+  const admin = getAdminClient();
+  if (admin) return admin;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  if (!url || !anon) return null;
+  return createSupabaseServerClient();
 }
 
 type RawIntegrationRow = Record<string, unknown>;
@@ -86,6 +91,7 @@ function rowToPartial(row: RawIntegrationRow): Partial<IntegrationRecord> {
 
 export async function tableExists(): Promise<boolean> {
   const supabase = await getSupabaseForIntegrations();
+  if (!supabase) return false;
   const { error } = await supabase
     .from("integrations")
     .select("id", { head: true, count: "exact" });
@@ -104,6 +110,7 @@ export async function upsertIntegrationRow(input: {
   if (!exists) return;
 
   const supabase = await getSupabaseForIntegrations();
+  if (!supabase) return;
   const envConfig = getConnectorEnvConfig(input.connector_name);
 
   const payload: Record<string, unknown> = {
@@ -219,6 +226,7 @@ export async function getIntegrationStatuses(): Promise<IntegrationRecord[]> {
 
   if (exists) {
     const supabase = await getSupabaseForIntegrations();
+    if (!supabase) return CONNECTORS.map((name) => mergeRecord(name));
     const { data } = await supabase.from("integrations").select("*");
     for (const row of data || []) {
       const partial = rowToPartial(row as RawIntegrationRow);

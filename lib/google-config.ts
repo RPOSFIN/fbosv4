@@ -1,12 +1,20 @@
-export const GOOGLE_WEBAPP_URL =
-  "https://script.google.com/macros/s/AKfycbyjpnsEUspB5UNosQskuvxWpppeutb1ZBXEXzI0VtjNhBpBObpI9dwSEvigF-VSS66wAw/exec";
+const DEFAULT_GOOGLE_WEBAPP_URL =
+  "https://script.google.com/macros/s/AKfycbzqkpY-z-fuXhdHp6s1sn090ZuqWzU1x7CbGC1hciDKUPqvmQFHKhQ6HM9P4U1pBBa6iw/exec";
 
 export function getGoogleWebappUrl() {
-  return GOOGLE_WEBAPP_URL;
+  return (
+    process.env.GOOGLE_WEBAPP_URL?.trim() ||
+    process.env.GOOGLE_SHEETS_WEBAPP_URL?.trim() ||
+    DEFAULT_GOOGLE_WEBAPP_URL
+  );
 }
 
 export function getGoogleSheetId() {
-  return process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID ?? "";
+  return (
+    process.env.GOOGLE_SHEET_ID?.trim() ||
+    process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID?.trim() ||
+    ""
+  );
 }
 
 export function getSheetTabGids() {
