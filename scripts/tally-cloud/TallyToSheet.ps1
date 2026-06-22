@@ -1,5 +1,6 @@
 # TallyToSheet.ps1 — WSIPL-89-72 | ONE sheet tab 06_Finance_Sync
 # Sab Tally data ek batch mein → Google Sheet → Supabase
+# PATCH_MARKER: DayBookChunkDays/TallyTimeoutSec/SVEXPORTFORMAT enabled (commit ee14b86)
 
 param(
   [string]$TallyHost = "127.0.0.1",
