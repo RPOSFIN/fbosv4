@@ -10,6 +10,8 @@ param(
   [string]$SyncSecret = $env:SHEET_SYNC_SECRET,
   [string]$FromDate = "20260401",
   [string]$ToDate = "20270331",
+  [int]$TallyTimeoutSec = 60,
+  [int]$DayBookChunkDays = 7,
   [string]$LogPath = ""
 )
 
@@ -36,7 +38,7 @@ function Get-Preview([string]$Text, [int]$Max = 500) {
   return $clean.Substring(0, $Max)
 }
 
-function Invoke-TallyXml([string]$Name, [string]$Body, [int]$TimeoutSec = 120) {
+function Invoke-TallyXml([string]$Name, [string]$Body, [int]$TimeoutSec = $TallyTimeoutSec) {
   $sw = [System.Diagnostics.Stopwatch]::StartNew()
   Write-Log "Tally request START name=$Name endpoint=$endpoint timeout=${TimeoutSec}s bytes=$($Body.Length)"
   try {
@@ -51,6 +53,23 @@ function Invoke-TallyXml([string]$Name, [string]$Body, [int]$TimeoutSec = 120) {
     Write-Warning $_
     return $null
   }
+}
+
+function Convert-TallyAmount([string]$Value) {
+  if (-not $Value) { return 0 }
+  $clean = ($Value -replace ',', '' -replace 'Dr', '' -replace 'Cr', '').Trim()
+  try { return [Math]::Abs([decimal]$clean) } catch {
+    Write-Log "Amount parse failed value=$Value clean=$clean" "WARN"
+    return 0
+  }
+}
+
+function New-TallyExportXml([string]$ReportName, [string]$StaticVariables = "") {
+  return "<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>$ReportName</ID></HEADER><BODY><DESC><STATICVARIABLES><SVEXPORTFORMAT>`$`$SysName:XML</SVEXPORTFORMAT>$StaticVariables</STATICVARIABLES></DESC></BODY></ENVELOPE>"
+}
+
+function Convert-YmdToDate([string]$Value) {
+  return [datetime]::ParseExact($Value, "yyyyMMdd", [System.Globalization.CultureInfo]::InvariantCulture)
 }
 
 function Format-TallyDate([string]$d) {
@@ -76,8 +95,9 @@ function Add-Row([hashtable]$Row) {
 }
 
 # Ledgers + bank/cash filter (also builds parent map for vouchers)
-Write-Log "FBOS Tally sync START endpoint=$endpoint company=$CompanyName from=$FromDate to=$ToDate webapp=$WebAppUrl webhook=$FbosWebhookUrl"
-$lXml = "<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Collection</TYPE><ID>List of Ledgers</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>$companyEsc</SVCURRENTCOMPANY></STATICVARIABLES></DESC></BODY></ENVELOPE>"
+Write-Log "FBOS Tally sync START endpoint=$endpoint company=$CompanyName from=$FromDate to=$ToDate chunkDays=$DayBookChunkDays timeout=${TallyTimeoutSec}s webapp=$WebAppUrl webhook=$FbosWebhookUrl"
+$companyStatic = "<SVCURRENTCOMPANY>$companyEsc</SVCURRENTCOMPANY>"
+$lXml = New-TallyExportXml "List of Accounts" $companyStatic
 $lRes = Invoke-TallyXml "List of Ledgers" $lXml
 if ($lRes) {
   [regex]::Matches($lRes, '<LEDGER[\s\S]*?</LEDGER>') | ForEach-Object {
@@ -86,8 +106,8 @@ if ($lRes) {
     if (-not $name) { return }
     $parent = if ($b -match '<PARENT>([^<]+)</PARENT>') { $Matches[1] } else { "" }
     $ledgerParents[$name] = $parent
-    $open = 0; if ($b -match '<OPENINGBALANCE>([^<]+)</OPENINGBALANCE>') { $open = [Math]::Abs([decimal]$Matches[1]) }
-    $close = 0; if ($b -match '<CLOSINGBALANCE>([^<]+)</CLOSINGBALANCE>') { $close = [Math]::Abs([decimal]$Matches[1]) }
+    $open = 0; if ($b -match '<OPENINGBALANCE>([^<]+)</OPENINGBALANCE>') { $open = Convert-TallyAmount $Matches[1] }
+    $close = 0; if ($b -match '<CLOSINGBALANCE>([^<]+)</CLOSINGBALANCE>') { $close = Convert-TallyAmount $Matches[1] }
     $gst = if ($b -match '<PARTYGSTIN>([^<]+)</PARTYGSTIN>') { $Matches[1] } else { "" }
 
     if ($parent -match 'Bank|Cash') {
@@ -117,53 +137,64 @@ if ($lRes) {
   }
 }
 
-# Vouchers — one row per ledger entry (parent_group for Sales/Expenses dashboard)
-$vXml = "<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Collection</TYPE><ID>Day Book</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>$companyEsc</SVCURRENTCOMPANY><SVFROMDATE>$FromDate</SVFROMDATE><SVTODATE>$ToDate</SVTODATE></STATICVARIABLES></DESC></BODY></ENVELOPE>"
-$vRes = Invoke-TallyXml "Day Book" $vXml
-if ($vRes) {
-  [regex]::Matches($vRes, '<VOUCHER[\s\S]*?</VOUCHER>') | ForEach-Object {
-    $b = $_.Value
-    $vDate = Format-TallyDate $(if ($b -match '<DATE>(\d+)</DATE>') { $Matches[1] } else { "" })
-    $vNo = $(if ($b -match '<VOUCHERNUMBER>([^<]+)</VOUCHERNUMBER>') { $Matches[1] } else { "" })
-    $vType = $(if ($b -match '<VOUCHERTYPENAME>([^<]+)</VOUCHERTYPENAME>') { $Matches[1] } else { "Voucher" })
-    $party = $(if ($b -match '<PARTYLEDGERNAME>([^<]+)</PARTYLEDGERNAME>') { $Matches[1] } else { "" })
-    $narr = $(if ($b -match '<NARRATION>([^<]+)</NARRATION>') { $Matches[1] } else { "" })
+# Vouchers — chunked Daybook export avoids full-FY Tally timeout
+$fromDt = Convert-YmdToDate $FromDate
+$toDt = Convert-YmdToDate $ToDate
+$cursor = $fromDt
+while ($cursor -le $toDt) {
+  $chunkTo = $cursor.AddDays($DayBookChunkDays - 1)
+  if ($chunkTo -gt $toDt) { $chunkTo = $toDt }
+  $chunkFromText = $cursor.ToString("yyyyMMdd")
+  $chunkToText = $chunkTo.ToString("yyyyMMdd")
+  $daybookStatic = "$companyStatic<SVFROMDATE>$chunkFromText</SVFROMDATE><SVTODATE>$chunkToText</SVTODATE>"
+  $vXml = New-TallyExportXml "Daybook" $daybookStatic
+  $vRes = Invoke-TallyXml "Daybook $chunkFromText-$chunkToText" $vXml
+  if ($vRes) {
+    [regex]::Matches($vRes, '<VOUCHER[\s\S]*?</VOUCHER>') | ForEach-Object {
+      $b = $_.Value
+      $vDate = Format-TallyDate $(if ($b -match '<DATE>(\d+)</DATE>') { $Matches[1] } else { "" })
+      $vNo = $(if ($b -match '<VOUCHERNUMBER>([^<]+)</VOUCHERNUMBER>') { $Matches[1] } else { "" })
+      $vType = $(if ($b -match '<VOUCHERTYPENAME>([^<]+)</VOUCHERTYPENAME>') { $Matches[1] } else { "Voucher" })
+      $party = $(if ($b -match '<PARTYLEDGERNAME>([^<]+)</PARTYLEDGERNAME>') { $Matches[1] } else { "" })
+      $narr = $(if ($b -match '<NARRATION>([^<]+)</NARRATION>') { $Matches[1] } else { "" })
 
-    [regex]::Matches($b, '<ALLLEDGERENTRIES\.LIST>[\s\S]*?</ALLLEDGERENTRIES\.LIST>') | ForEach-Object {
-      $le = $_.Value
-      $led = if ($le -match '<LEDGERNAME>([^<]+)</LEDGERNAME>') { $Matches[1] } else { "" }
-      if (-not $led) { return }
-      $amt = 0; if ($le -match '<AMOUNT>([^<]+)</AMOUNT>') { $amt = [Math]::Abs([decimal]$Matches[1]) }
-      if ($amt -eq 0) { return }
-      $isCr = $le -match '<AMOUNT>-'
-      $parent = if ($ledgerParents.ContainsKey($led)) { $ledgerParents[$led] } else { "" }
-      Add-Row @{
-        data_type = "voucher"
-        voucher_date = $vDate
-        voucher_no = $vNo
-        voucher_type = $vType
-        party_name = $party
-        ledger_name = $led
-        parent_group = $parent
-        description = "Voucher entry"
-        debit = $(if ($isCr) { 0 } else { $amt })
-        credit = $(if ($isCr) { $amt } else { 0 })
-        amount = $amt
-        narration = $narr
+      [regex]::Matches($b, '<ALLLEDGERENTRIES\.LIST>[\s\S]*?</ALLLEDGERENTRIES\.LIST>') | ForEach-Object {
+        $le = $_.Value
+        $led = if ($le -match '<LEDGERNAME>([^<]+)</LEDGERNAME>') { $Matches[1] } else { "" }
+        if (-not $led) { return }
+        $amt = 0; if ($le -match '<AMOUNT>([^<]+)</AMOUNT>') { $amt = Convert-TallyAmount $Matches[1] }
+        if ($amt -eq 0) { return }
+        $isCr = $le -match '<AMOUNT>-'
+        $parent = if ($ledgerParents.ContainsKey($led)) { $ledgerParents[$led] } else { "" }
+        Add-Row @{
+          data_type = "voucher"
+          voucher_date = $vDate
+          voucher_no = $vNo
+          voucher_type = $vType
+          party_name = $party
+          ledger_name = $led
+          parent_group = $parent
+          description = "Voucher entry"
+          debit = $(if ($isCr) { 0 } else { $amt })
+          credit = $(if ($isCr) { $amt } else { 0 })
+          amount = $amt
+          narration = $narr
+        }
       }
     }
   }
+  $cursor = $chunkTo.AddDays(1)
 }
 
 # Receivables — with bill/due dates + overdue_days for dashboard aging
-$rXml = "<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Collection</TYPE><ID>Bills Receivable</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>$companyEsc</SVCURRENTCOMPANY></STATICVARIABLES></DESC></BODY></ENVELOPE>"
+$rXml = New-TallyExportXml "Bills Receivable" $companyStatic
 $rRes = Invoke-TallyXml "Bills Receivable" $rXml
 if ($rRes) {
   [regex]::Matches($rRes, '<BILL[\s\S]*?</BILL>') | ForEach-Object {
     $b = $_.Value
     $party = if ($b -match '<LEDGERNAME>([^<]+)</LEDGERNAME>') { $Matches[1] } else { "" }
     $billNo = if ($b -match '<NAME>([^<]+)</NAME>') { $Matches[1] } else { "" }
-    $amt = 0; if ($b -match '<OPENINGBALANCE>([^<]+)</OPENINGBALANCE>') { $amt = [Math]::Abs([decimal]$Matches[1]) }
+    $amt = 0; if ($b -match '<OPENINGBALANCE>([^<]+)</OPENINGBALANCE>') { $amt = Convert-TallyAmount $Matches[1] }
     if ($amt -eq 0) { return }
     $billDate = Format-TallyDate $(if ($b -match '<BILLDATE>(\d+)</BILLDATE>') { $Matches[1] } elseif ($b -match '<DATE>(\d+)</DATE>') { $Matches[1] } else { "" })
     $dueDate = Format-TallyDate $(if ($b -match '<BILLCREDITPERIOD>(\d+)</BILLCREDITPERIOD>') { $Matches[1] } elseif ($b -match '<DUEDATE>(\d+)</DUEDATE>') { $Matches[1] } else { "" })
@@ -186,14 +217,14 @@ if ($rRes) {
 }
 
 # Payables
-$pXml = "<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Collection</TYPE><ID>Bills Payable</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>$companyEsc</SVCURRENTCOMPANY></STATICVARIABLES></DESC></BODY></ENVELOPE>"
+$pXml = New-TallyExportXml "Bills Payable" $companyStatic
 $pRes = Invoke-TallyXml "Bills Payable" $pXml
 if ($pRes) {
   [regex]::Matches($pRes, '<BILL[\s\S]*?</BILL>') | ForEach-Object {
     $b = $_.Value
     $party = if ($b -match '<LEDGERNAME>([^<]+)</LEDGERNAME>') { $Matches[1] } else { "" }
     $billNo = if ($b -match '<NAME>([^<]+)</NAME>') { $Matches[1] } else { "" }
-    $amt = 0; if ($b -match '<OPENINGBALANCE>([^<]+)</OPENINGBALANCE>') { $amt = [Math]::Abs([decimal]$Matches[1]) }
+    $amt = 0; if ($b -match '<OPENINGBALANCE>([^<]+)</OPENINGBALANCE>') { $amt = Convert-TallyAmount $Matches[1] }
     if ($amt -eq 0) { return }
     $dueDate = Format-TallyDate $(if ($b -match '<DUEDATE>(\d+)</DUEDATE>') { $Matches[1] } else { "" })
     $parent = if ($ledgerParents.ContainsKey($party)) { $ledgerParents[$party] } else { "Sundry Creditors" }

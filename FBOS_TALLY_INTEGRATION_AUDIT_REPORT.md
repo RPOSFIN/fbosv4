@@ -36,6 +36,8 @@ Original lines:
 - `-WebAppUrl`
 - `-FbosWebhookUrl`
 - `-SyncSecret`
+- `-TallyTimeoutSec`
+- `-DayBookChunkDays`
 
 This preserves the existing scheduled-task architecture and avoids the TSPlus registry blocker.
 
@@ -71,6 +73,8 @@ ToDate   = 20270331
 
 the most likely timeout is `Day Book`, because it can return a large voucher collection. `Bills Receivable` / `Bills Payable` may also be expensive depending on data size.
 
+**Fast fix applied:** `Daybook` now runs in configurable chunks (`-DayBookChunkDays`, default `7`) instead of one full-year request. Tally report XML also now uses export-style requests with `SVEXPORTFORMAT=$$SysName:XML`, and amount parsing is tolerant of commas / `Dr` / `Cr` suffixes.
+
 ### Timeout type determination
 
 | Candidate | Result |
@@ -93,6 +97,8 @@ the most likely timeout is `Day Book`, because it can return a large voucher col
   - `-WebAppUrl`
   - `-FbosWebhookUrl`
   - `-SyncSecret`
+  - `-TallyTimeoutSec`
+  - `-DayBookChunkDays`
 - Test run path passes same parameters.
 
 ### `TallyToSheet.ps1`
@@ -102,7 +108,12 @@ Added minimal diagnostics:
 - `-FbosWebhookUrl` parameter
 - `-SyncSecret` parameter
 - `-LogPath` parameter
+- `-TallyTimeoutSec` parameter
+- `-DayBookChunkDays` parameter
 - timestamped log lines to `TallyToSheet.log`
+- chunked `Daybook yyyyMMdd-yyyyMMdd` requests to avoid full-year timeout
+- export-style Tally XML requests with `SVEXPORTFORMAT=$$SysName:XML`
+- robust Tally amount parsing for commas / `Dr` / `Cr`
 - Tally request timing:
   - request name
   - endpoint
@@ -137,12 +148,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\TallyToSheet.ps1 `
   -CompanyName "Flexiflair Tech Private Limited" `
   -WebAppUrl "https://script.google.com/macros/s/AKfycbzqkpY-z-fuXhdHp6s1sn090ZuqWzU1x7CbGC1hciDKUPqvmQFHKhQ6HM9P4U1pBBa6iw/exec" `
   -FromDate 20260401 `
-  -ToDate 20260430
+  -ToDate 20260430 `
+  -TallyTimeoutSec 60 `
+  -DayBookChunkDays 7
 ```
 
 3. Read `TallyToSheet.log`.
 4. If April passes, expand the date range.
-5. If a specific Tally call times out, reduce date range or tune that report query.
+5. If a specific Tally chunk times out, reduce `-DayBookChunkDays` (for example `1`) or tune that report query.
 6. If Tally succeeds but Google times out/fails, inspect the `Google webapp POST` log line:
    - elapsed ms
    - payload bytes
@@ -170,7 +183,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\TallyToSheet.ps1 `
   -CompanyName "Flexiflair Tech Private Limited" `
   -WebAppUrl "https://script.google.com/macros/s/AKfycbzqkpY-z-fuXhdHp6s1sn090ZuqWzU1x7CbGC1hciDKUPqvmQFHKhQ6HM9P4U1pBBa6iw/exec" `
   -FromDate 20260401 `
-  -ToDate 20260430
+  -ToDate 20260430 `
+  -TallyTimeoutSec 60 `
+  -DayBookChunkDays 7
 ```
 
 ### Installer with registry-safe fallback
@@ -181,6 +196,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-TallySync.ps1 `
   -TallyHost 127.0.0.1 `
   -TallyPort 9007 `
   -CompanyName "Flexiflair Tech Private Limited" `
+  -TallyTimeoutSec 60 `
+  -DayBookChunkDays 7 `
   -TestRun
 ```
 
@@ -205,17 +222,17 @@ Get-Content .\TallyToSheet.log -Tail 100
 
 ### FAIL
 
-- `List of Ledgers`, `Day Book`, `Bills Receivable`, or `Bills Payable` logs `FAIL ... timed out`.
+- `List of Ledgers`, any `Daybook yyyyMMdd-yyyyMMdd` chunk, `Bills Receivable`, or `Bills Payable` logs `FAIL ... timed out`.
 - Google webapp POST logs failure/405 and no FBOS webhook is configured.
 - Both Google webapp and FBOS webhook fail.
 - No rows parsed from Tally after confirmed report responses.
 
 ## Next action if timeout persists
 
-If `Day Book` times out, rerun with smaller windows:
+If a `Daybook` chunk times out, rerun with smaller windows:
 
 ```powershell
--FromDate 20260401 -ToDate 20260407
+-FromDate 20260401 -ToDate 20260407 -DayBookChunkDays 1
 ```
 
 If weekly windows pass, schedule multiple smaller syncs or reduce the Day Book export range. This is a Tally report-size/runtime issue, not a port/connectivity issue.

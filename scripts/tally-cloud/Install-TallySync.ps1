@@ -9,6 +9,8 @@ param(
   [string]$CompanyName = "Flexiflair Tech Private Limited",
   [string]$FbosWebhookUrl = $env:FBOS_TALLY_WEBHOOK_URL,
   [string]$SyncSecret = $env:SHEET_SYNC_SECRET,
+  [int]$TallyTimeoutSec = 60,
+  [int]$DayBookChunkDays = 7,
   [switch]$SkipScheduler,
   [switch]$TestRun
 )
@@ -35,6 +37,8 @@ Write-Host "Tally       : http://${TallyHost}:${TallyPort}"
 Write-Host "Company     : $CompanyName"
 Write-Host "Web app     : $WebAppUrl"
 Write-Host "FBOS hook   : $FbosWebhookUrl"
+Write-Host "Timeout     : ${TallyTimeoutSec}s"
+Write-Host "Daybook step: $DayBookChunkDays day(s)"
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 Copy-Item -Path $SourceScript -Destination (Join-Path $InstallDir "TallyToSheet.ps1") -Force
@@ -67,7 +71,7 @@ if ($SyncSecret) {
 
 $taskName = "FBOS_TallyToSheet_2h"
 $scriptPath = Join-Path $InstallDir "TallyToSheet.ps1"
-$arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -TallyHost $TallyHost -TallyPort $TallyPort -CompanyName `"$CompanyName`" -WebAppUrl `"$WebAppUrl`""
+$arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -TallyHost $TallyHost -TallyPort $TallyPort -CompanyName `"$CompanyName`" -WebAppUrl `"$WebAppUrl`" -TallyTimeoutSec $TallyTimeoutSec -DayBookChunkDays $DayBookChunkDays"
 if ($FbosWebhookUrl) { $arguments += " -FbosWebhookUrl `"$FbosWebhookUrl`"" }
 if ($SyncSecret) { $arguments += " -SyncSecret `"$SyncSecret`"" }
 
@@ -94,7 +98,9 @@ if ($TestRun) {
     "-TallyHost", $TallyHost,
     "-TallyPort", $TallyPort,
     "-CompanyName", $CompanyName,
-    "-WebAppUrl", $WebAppUrl
+    "-WebAppUrl", $WebAppUrl,
+    "-TallyTimeoutSec", $TallyTimeoutSec,
+    "-DayBookChunkDays", $DayBookChunkDays
   )
   if ($FbosWebhookUrl) { $testArgs += @("-FbosWebhookUrl", $FbosWebhookUrl) }
   if ($SyncSecret) { $testArgs += @("-SyncSecret", $SyncSecret) }
