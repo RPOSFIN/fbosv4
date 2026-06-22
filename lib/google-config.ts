@@ -1,29 +1,39 @@
-const DEFAULT_GOOGLE_WEBAPP_URL =
+/** Fallback when env is unset (local dev only). Prefer GOOGLE_WEBAPP_URL in .env.local */
+export const GOOGLE_WEBAPP_URL =
   "https://script.google.com/macros/s/AKfycbzqkpY-z-fuXhdHp6s1sn090ZuqWzU1x7CbGC1hciDKUPqvmQFHKhQ6HM9P4U1pBBa6iw/exec";
+
+function envTrim(...keys: string[]): string {
+  for (const key of keys) {
+    const value = process.env[key]?.trim();
+    if (value) return value;
+  }
+  return "";
+}
 
 export function getGoogleWebappUrl() {
   return (
-    process.env.GOOGLE_WEBAPP_URL?.trim() ||
-    process.env.GOOGLE_SHEETS_WEBAPP_URL?.trim() ||
-    DEFAULT_GOOGLE_WEBAPP_URL
+    envTrim("GOOGLE_WEBAPP_URL", "GOOGLE_SHEETS_WEBAPP_URL") || GOOGLE_WEBAPP_URL
   );
 }
 
 export function getGoogleSheetId() {
-  return (
-    process.env.GOOGLE_SHEET_ID?.trim() ||
-    process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID?.trim() ||
-    ""
+  return envTrim(
+    "GOOGLE_SHEET_ID",
+    "GOOGLE_SHEETS_ID",
+    "NEXT_PUBLIC_GOOGLE_SHEET_ID"
   );
 }
 
 export function getSheetTabGids() {
+  const fallback = envTrim("GOOGLE_SHEET_GID");
   return {
-    leads: "",
-    clients: "",
-    quotations: "",
-    jobs: "",
-    followups: "",
+    leads: envTrim("GOOGLE_SHEET_GID_LEADS", "GOOGLE_SHEET_GID") || fallback,
+    clients: envTrim("GOOGLE_SHEET_GID_CLIENTS"),
+    quotations: envTrim("GOOGLE_SHEET_GID_QUOTATIONS", "GOOGLE_SHEET_GID_ORDERS"),
+    jobs: envTrim("GOOGLE_SHEET_GID_JOBS", "GOOGLE_SHEET_GID_OPERATIONS"),
+    followups: envTrim("GOOGLE_SHEET_GID_FOLLOWUPS"),
+    operations: envTrim("GOOGLE_SHEET_GID_OPERATIONS", "GOOGLE_SHEET_GID_JOBS"),
+    finance: envTrim("GOOGLE_SHEET_GID_FINANCE", "GOOGLE_SHEET_GID"),
   };
 }
 

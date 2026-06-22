@@ -1,8 +1,8 @@
 import { getAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getConnectorEnvConfig } from "@/lib/integrations/config";
 import {
-  DEFAULT_TALLY_COMPANY_NAME,
   isLocalTallyHost,
   normalizeTallyHost,
 } from "@/lib/integrations/tally-config";
@@ -46,12 +46,14 @@ function resolveStatusFromEnv(name: ConnectorName): IntegrationStatus {
   return "pending";
 }
 
-async function getSupabaseForIntegrations() {
+async function getSupabaseForIntegrations(): Promise<SupabaseClient | null> {
   const admin = getAdminClient();
   if (admin) return admin;
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
   if (!url || !anon) return null;
+
   return createSupabaseServerClient();
 }
 
@@ -226,12 +228,13 @@ export async function getIntegrationStatuses(): Promise<IntegrationRecord[]> {
 
   if (exists) {
     const supabase = await getSupabaseForIntegrations();
-    if (!supabase) return CONNECTORS.map((name) => mergeRecord(name));
-    const { data } = await supabase.from("integrations").select("*");
-    for (const row of data || []) {
-      const partial = rowToPartial(row as RawIntegrationRow);
-      if (partial.connector_name) {
-        rowsByName.set(partial.connector_name, partial);
+    if (supabase) {
+      const { data } = await supabase.from("integrations").select("*");
+      for (const row of data || []) {
+        const partial = rowToPartial(row as RawIntegrationRow);
+        if (partial.connector_name) {
+          rowsByName.set(partial.connector_name, partial);
+        }
       }
     }
   }

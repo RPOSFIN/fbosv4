@@ -75,18 +75,21 @@ async function importOperationsRows(rows: Record<string, string>[]): Promise<num
       lower.job_no || lower.job_number || lower.job_id || lower.order_no || "";
     if (!job_no) continue;
 
+    const clientLabel = lower.client_name || lower.client || "";
+    let client_id: string | null = null;
+    if (clientLabel) {
+      const { data: client } = await supabase
+        .from("clients")
+        .select("id")
+        .ilike("company_name", clientLabel)
+        .maybeSingle();
+      client_id = client?.id ?? null;
+    }
+
     const payload = {
       job_no,
       status: lower.status || lower.job_status || "Created",
-      client_name: lower.client_name || lower.client || null,
-      product: lower.product || lower.item || null,
-      quantity: parseFloat(lower.quantity || "0") || null,
-      amount: parseFloat(lower.amount || lower.value || "0") || 0,
-      order_date: lower.order_date || lower.date || null,
-      delivery_date: lower.delivery_date || null,
-      production_stage: lower.production_stage || lower.stage || null,
-      designer: lower.designer || null,
-      notes: lower.notes || null,
+      client_id,
       updated_at: new Date().toISOString(),
     };
 
