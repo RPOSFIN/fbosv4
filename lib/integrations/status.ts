@@ -1,4 +1,8 @@
 import { getAdminClient } from "@/lib/supabase/admin";
+import {
+  getDashboardStatus,
+  type DashboardStatus,
+} from "@/lib/dashboard/status";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getConnectorEnvConfig } from "@/lib/integrations/config";
@@ -41,7 +45,6 @@ const LEGACY_STATUS_MAP: Record<string, IntegrationStatus> = {
 
 function resolveStatusFromEnv(name: ConnectorName): IntegrationStatus {
   const env = getConnectorEnvConfig(name);
-  if (name === "gsheet" && env.configured) return "connected";
   if (env.configured) return "pending";
   return "pending";
 }
@@ -175,19 +178,37 @@ export async function upsertIntegrationRow(input: {
 
 function mergeRecord(
   name: ConnectorName,
-  row?: Partial<IntegrationRecord>
+  row?: Partial<IntegrationRecord>,
+  dashboard?: DashboardStatus
 ): IntegrationRecord {
   const env = getConnectorEnvConfig(name);
   const envStatus = resolveStatusFromEnv(name);
   const dbStatus = row?.status;
   const isDemo = Boolean(row?.config?.demo);
+  const counts = dashboard?.counts;
+  const config = row?.config || {};
+  const lastSyncAt = row?.last_sync_at ?? null;
 
   let status: IntegrationStatus = envStatus;
   if (dbStatus === "error") status = "error";
-  else if (dbStatus === "connected" || (env.configured && name === "gsheet")) {
-    status = "connected";
-  } else if (isDemo) {
-    status = "connected";
+  else if (name === "gsheet") {
+    const syncedTabs = Array.isArray(config.tabsSynced)
+      ? config.tabsSynced.length
+      : 0;
+    const importedRows =
+      Number(config.leadsImported || 0) +
+      Number(config.leadsUpdated || 0) +
+      Number(config.operationsImported || 0) +
+      Number(config.financeImported || 0) +
+      Number(config.clientsImported || 0);
+
+    status =
+      lastSyncAt && (syncedTabs > 0 || importedRows > 0)
+        ? "connected"
+        : "pending";
+  } else if (name === "clickup") {
+    status =
+      !isDemo && (counts?.clickup_tasks || lastSyncAt) ? "connected" : "pending";
   } else if (name === "tally") {
     const tallyHost = String(
       row?.config?.tallyHost || row?.config?.host || env.details.host || ""
@@ -195,8 +216,10 @@ function mergeRecord(
     const company = String(row?.config?.company || env.details.company || "");
     const cloudHost =
       tallyHost && !isLocalTallyHost(normalizeTallyHost(tallyHost));
-    if (cloudHost && company) status = dbStatus === "pending" ? "pending" : "connected";
-    else if (!cloudHost) status = "pending";
+    status =
+      cloudHost && company && (counts?.finance_import_queue || 0) > 0
+        ? "connected"
+        : "pending";
   } else if (!env.configured && name !== "gsheet") {
     status = "pending";
   } else if (dbStatus) {
@@ -216,15 +239,38 @@ function mergeRecord(
     connector_name: name,
     status,
     config: mergedConfig,
-    last_sync_at: row?.last_sync_at ?? null,
-    error_message: row?.error_message ?? null,
+    last_sync_at: lastSyncAt,
+    error_message:
+      row?.error_message ??
+      (name === "tally" && status === "pending" && env.configured
+        ? "Tally is configured but no finance rows are synced yet"
+        : name === "gsheet" && status === "pending" && env.configured
+          ? "Google Sheet is configured but no successful data sync is recorded"
+          : name === "clickup" && status === "pending" && env.configured
+            ? "ClickUp is configured but no real task sync is recorded"
+            : name === "clickup" && status === "pending"
+              ? "CLICKUP_API_TOKEN is not configured"
+            : null),
     demo: isDemo,
   };
 }
 
 export async function getIntegrationStatuses(): Promise<IntegrationRecord[]> {
+  const dashboard = await getDashboardStatus();
   const exists = await tableExists();
   const rowsByName = new Map<ConnectorName, Partial<IntegrationRecord>>();
+
+  for (const [rawName, rawRow] of Object.entries(dashboard.integrations)) {
+    const connector = normalizeConnectorName(rawName);
+    if (!connector) continue;
+    rowsByName.set(connector, {
+      connector_name: connector,
+      status: normalizeStatus(rawRow.status, "pending"),
+      config: rawRow.config || {},
+      last_sync_at: rawRow.lastSyncAt ?? null,
+      error_message: rawRow.errorMessage ?? null,
+    });
+  }
 
   if (exists) {
     const supabase = await getSupabaseForIntegrations();
@@ -239,7 +285,9 @@ export async function getIntegrationStatuses(): Promise<IntegrationRecord[]> {
     }
   }
 
-  return CONNECTORS.map((name) => mergeRecord(name, rowsByName.get(name)));
+  return CONNECTORS.map((name) =>
+    mergeRecord(name, rowsByName.get(name), dashboard)
+  );
 }
 
 export function getIntegrationSummary(records: IntegrationRecord[]) {

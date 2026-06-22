@@ -51,12 +51,13 @@ export function getGSheetCsvUrlForGid(gid: string) {
     : "";
 }
 
-export function getGSheetFixSteps() {
+export function getGSheetFixSteps(lastStatus?: number) {
   return [
     "Verify Google Sheet ID",
     "Verify Sheet Sharing",
     "Verify Web App URL",
     "Verify Tab GID Mapping",
+    ...(lastStatus ? [`Last Google response status: ${lastStatus}`] : []),
   ];
 }
 
