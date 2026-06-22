@@ -121,6 +121,12 @@ curl -X POST http://localhost:3000/api/integrations/tally/sync
 
 **Recommendation:** Path **A** on server (Setup-TallyCloud.bat). If webapp POST fails, use Path **C** webhook to FBOS.
 
+Path C writes through `/api/webhooks/tally-finance`. It first uses
+`SUPABASE_SERVICE_ROLE_KEY` when available, otherwise it falls back to the
+deployed `ingest_tally_finance_secret` RPC protected by `SHEET_SYNC_SECRET`.
+So Tally ingestion works even if the cloud/dev `.env.local` does not have the
+service-role key.
+
 ---
 
 ## Troubleshooting
@@ -132,4 +138,5 @@ curl -X POST http://localhost:3000/api/integrations/tally/sync
 | Demo mode dikhe | `TALLY_HOST` + `TALLY_COMPANY_NAME` set karo, dev server restart |
 | Finance 0 in dashboard | Path A chalao — `06_Finance_Sync` rows check karo |
 | POST webapp 405 / Page Not Found | Apps Script redeploy: Web app, Execute as Me, Anyone can access |
+| Supabase service role missing | OK for Tally webhook — secret RPC fallback is active |
 | Company name error | Tally F3 → Company Info → exact name copy karo |

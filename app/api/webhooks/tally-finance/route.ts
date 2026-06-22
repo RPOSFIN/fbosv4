@@ -17,6 +17,7 @@ export async function POST(request: Request) {
   let body: {
     action?: string;
     secret?: string;
+    dryRun?: boolean;
     records?: Record<string, unknown>[];
     rows?: Record<string, unknown>[];
   } = {};
@@ -51,11 +52,22 @@ export async function POST(request: Request) {
     );
   }
 
+  if (body.dryRun) {
+    return NextResponse.json({
+      ok: true,
+      dryRun: true,
+      records: records.length,
+      syncedAt: new Date().toISOString(),
+    });
+  }
+
   try {
-    const result = await ingestTallyFinanceRecords(records);
+    const verifiedSecret = token === secret ? token : bodySecret;
+    const result = await ingestTallyFinanceRecords(records, verifiedSecret);
     return NextResponse.json({
       ok: true,
       inserted: result.inserted,
+      source: result.source,
       records: records.length,
       sheetWrite: result.sheetWrite,
       syncedAt: new Date().toISOString(),

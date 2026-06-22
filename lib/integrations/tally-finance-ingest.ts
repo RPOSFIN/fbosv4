@@ -47,15 +47,18 @@ export function mapTallyRecordsToFinanceQueue(records: TallyFinanceRecord[]) {
 }
 
 export async function ingestTallyFinanceRecords(
-  records: TallyFinanceRecord[]
-): Promise<{ inserted: number; sheetWrite?: { ok: boolean; message: string } }> {
+  records: TallyFinanceRecord[],
+  secret?: string
+): Promise<{ inserted: number; sheetWrite?: { ok: boolean; message: string }; source: string }> {
   const { getAdminClient } = await import("@/lib/supabase/admin");
+  const { createClient } = await import("@supabase/supabase-js");
   const { pushTallyRecordsToSheet } = await import("@/lib/google-write");
 
   const rows = mapTallyRecordsToFinanceQueue(records);
-  if (!rows.length) return { inserted: 0 };
+  if (!rows.length) return { inserted: 0, source: "none" };
 
   let inserted = 0;
+  let source = "service_role";
   const supabase = getAdminClient();
   if (supabase) {
     const { data, error } = await supabase
@@ -76,6 +79,24 @@ export async function ingestTallyFinanceRecords(
       },
       { onConflict: "connector_name" }
     );
+  } else {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+    const anonKey =
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
+
+    if (url && anonKey && secret) {
+      const anon = createClient(url, anonKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const { data, error } = await anon.rpc("ingest_tally_finance_secret", {
+        p_secret: secret,
+        p_records: rows,
+      });
+      if (error) throw new Error(error.message);
+      inserted = Number((data as { inserted?: number } | null)?.inserted || 0);
+      source = "secret_rpc";
+    }
   }
 
   const sheetWrite = await pushTallyRecordsToSheet(
@@ -91,5 +112,6 @@ export async function ingestTallyFinanceRecords(
   return {
     inserted,
     sheetWrite: { ok: sheetWrite.ok, message: sheetWrite.message },
+    source,
   };
 }

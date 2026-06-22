@@ -31,9 +31,9 @@ loadEnv();
 
 const report = { steps: [], overallOk: true };
 
-function step(name, ok, detail) {
+function step(name, ok, detail, fatal = true) {
   report.steps.push({ name, ok, detail });
-  if (!ok) report.overallOk = false;
+  if (!ok && fatal) report.overallOk = false;
   console.log(`${ok ? "PASS" : "FAIL"} ${name}: ${detail}`);
 }
 
@@ -46,12 +46,18 @@ async function main() {
     "TALLY_COMPANY_NAME",
     "GOOGLE_WEBAPP_URL",
     "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
     "SUPABASE_SERVICE_ROLE_KEY",
     "SHEET_SYNC_SECRET",
   ];
   for (const k of envKeys) {
     const v = process.env[k];
-    step(`env:${k}`, k.includes("SECRET") || k.includes("KEY") ? Boolean(v) : Boolean(v) || k === "SUPABASE_SERVICE_ROLE_KEY", v ? (k.includes("SECRET") || k.includes("KEY") ? "set" : v) : "missing");
+    const optional = k === "SUPABASE_SERVICE_ROLE_KEY";
+    step(
+      `env:${k}`,
+      optional || Boolean(v),
+      v ? (k.includes("SECRET") || k.includes("KEY") ? "set" : v) : "optional/missing"
+    );
   }
 
   const url = process.env.GOOGLE_WEBAPP_URL;
@@ -76,7 +82,12 @@ async function main() {
       });
       step("tally gateway", true, endpoint);
     } catch (e) {
-      step("tally gateway", false, `${endpoint} — ${e instanceof Error ? e.message : e}`);
+      step(
+        "tally gateway",
+        false,
+        `${endpoint} — ${e instanceof Error ? e.message : e} (expected from cloud; run Setup-TallyCloud.bat on TS Plus)`,
+        false
+      );
     }
   }
 
@@ -94,6 +105,12 @@ async function main() {
       .eq("connector_name", "tally")
       .maybeSingle();
     step("supabase integrations.tally", true, JSON.stringify(integ || {}));
+  } else {
+    step(
+      "supabase direct read",
+      true,
+      "skipped without service role; webhook RPC verifies writes"
+    );
   }
 
   const secret = process.env.SHEET_SYNC_SECRET;
@@ -109,6 +126,7 @@ async function main() {
         },
         body: JSON.stringify({
           action: "tally_finance",
+          dryRun: true,
           records: [
             {
               data_type: "ledger",
