@@ -7,6 +7,8 @@ param(
   [string]$TallyHost = "127.0.0.1",
   [int]$TallyPort = 9007,
   [string]$CompanyName = "Flexiflair Tech Private Limited",
+  [string]$FbosWebhookUrl = $env:FBOS_TALLY_WEBHOOK_URL,
+  [string]$SyncSecret = $env:SHEET_SYNC_SECRET,
   [switch]$SkipScheduler,
   [switch]$TestRun
 )
@@ -32,29 +34,42 @@ Write-Host "Install dir : $InstallDir"
 Write-Host "Tally       : http://${TallyHost}:${TallyPort}"
 Write-Host "Company     : $CompanyName"
 Write-Host "Web app     : $WebAppUrl"
+Write-Host "FBOS hook   : $FbosWebhookUrl"
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 Copy-Item -Path $SourceScript -Destination (Join-Path $InstallDir "TallyToSheet.ps1") -Force
 
-# Machine-level env for Task Scheduler (runs without user login)
-[System.Environment]::SetEnvironmentVariable("GOOGLE_WEBAPP_URL", $WebAppUrl, "Machine")
-$env:GOOGLE_WEBAPP_URL = $WebAppUrl
-Write-Host "Set machine env GOOGLE_WEBAPP_URL" -ForegroundColor Green
-
-$fbosWebhook = $env:FBOS_TALLY_WEBHOOK_URL
-if ($fbosWebhook) {
-  [System.Environment]::SetEnvironmentVariable("FBOS_TALLY_WEBHOOK_URL", $fbosWebhook, "Machine")
-  Write-Host "Set machine env FBOS_TALLY_WEBHOOK_URL" -ForegroundColor Green
+function Set-MachineEnvSafe([string]$Name, [string]$Value) {
+  if (-not $Value) { return $false }
+  try {
+    [System.Environment]::SetEnvironmentVariable($Name, $Value, "Machine")
+    Write-Host "Set machine env $Name" -ForegroundColor Green
+    return $true
+  } catch {
+    Write-Host "Machine env $Name not set: $($_.Exception.Message)" -ForegroundColor Yellow
+    Write-Host "Continuing: value will be passed directly to scheduled task arguments." -ForegroundColor Yellow
+    return $false
+  }
 }
-$syncSecret = $env:SHEET_SYNC_SECRET
-if ($syncSecret) {
-  [System.Environment]::SetEnvironmentVariable("SHEET_SYNC_SECRET", $syncSecret, "Machine")
-  Write-Host "Set machine env SHEET_SYNC_SECRET" -ForegroundColor Green
+
+# Machine-level env for Task Scheduler (runs without user login)
+Set-MachineEnvSafe "GOOGLE_WEBAPP_URL" $WebAppUrl | Out-Null
+$env:GOOGLE_WEBAPP_URL = $WebAppUrl
+
+if ($FbosWebhookUrl) {
+  Set-MachineEnvSafe "FBOS_TALLY_WEBHOOK_URL" $FbosWebhookUrl | Out-Null
+  $env:FBOS_TALLY_WEBHOOK_URL = $FbosWebhookUrl
+}
+if ($SyncSecret) {
+  Set-MachineEnvSafe "SHEET_SYNC_SECRET" $SyncSecret | Out-Null
+  $env:SHEET_SYNC_SECRET = $SyncSecret
 }
 
 $taskName = "FBOS_TallyToSheet_2h"
 $scriptPath = Join-Path $InstallDir "TallyToSheet.ps1"
-$arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -TallyHost $TallyHost -TallyPort $TallyPort -CompanyName `"$CompanyName`""
+$arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -TallyHost $TallyHost -TallyPort $TallyPort -CompanyName `"$CompanyName`" -WebAppUrl `"$WebAppUrl`""
+if ($FbosWebhookUrl) { $arguments += " -FbosWebhookUrl `"$FbosWebhookUrl`"" }
+if ($SyncSecret) { $arguments += " -SyncSecret `"$SyncSecret`"" }
 
 if (-not $SkipScheduler) {
   $existing = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
@@ -74,7 +89,16 @@ if (-not $SkipScheduler) {
 
 if ($TestRun) {
   Write-Host "Running test sync..." -ForegroundColor Yellow
-  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath -TallyHost $TallyHost -TallyPort $TallyPort -CompanyName $CompanyName
+  $testArgs = @(
+    "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $scriptPath,
+    "-TallyHost", $TallyHost,
+    "-TallyPort", $TallyPort,
+    "-CompanyName", $CompanyName,
+    "-WebAppUrl", $WebAppUrl
+  )
+  if ($FbosWebhookUrl) { $testArgs += @("-FbosWebhookUrl", $FbosWebhookUrl) }
+  if ($SyncSecret) { $testArgs += @("-SyncSecret", $SyncSecret) }
+  & powershell.exe @testArgs
 }
 
 Write-Host ""

@@ -6,12 +6,16 @@ param(
   [int]$TallyPort = 9007,
   [string]$CompanyName = "Flexiflair Tech Private Limited",
   [string]$WebAppUrl = $env:GOOGLE_WEBAPP_URL,
+  [string]$FbosWebhookUrl = $env:FBOS_TALLY_WEBHOOK_URL,
+  [string]$SyncSecret = $env:SHEET_SYNC_SECRET,
   [string]$FromDate = "20260401",
-  [string]$ToDate = "20270331"
+  [string]$ToDate = "20270331",
+  [string]$LogPath = ""
 )
 
 $ErrorActionPreference = "Stop"
 if (-not $WebAppUrl) { Write-Error "GOOGLE_WEBAPP_URL set karo"; exit 1 }
+if (-not $LogPath) { $LogPath = Join-Path $PSScriptRoot "TallyToSheet.log" }
 
 $endpoint = "http://${TallyHost}:${TallyPort}"
 $companyEsc = [System.Security.SecurityElement]::Escape($CompanyName)
@@ -19,10 +23,34 @@ $syncedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 $all = [System.Collections.Generic.List[object]]::new()
 $ledgerParents = @{}
 
-function Invoke-TallyXml([string]$Body) {
+function Write-Log([string]$Message, [string]$Level = "INFO") {
+  $line = "{0} [{1}] {2}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $Level, $Message
+  Write-Host $line
+  try { Add-Content -Path $LogPath -Value $line -Encoding UTF8 } catch { }
+}
+
+function Get-Preview([string]$Text, [int]$Max = 500) {
+  if (-not $Text) { return "" }
+  $clean = $Text -replace "\s+", " "
+  if ($clean.Length -le $Max) { return $clean }
+  return $clean.Substring(0, $Max)
+}
+
+function Invoke-TallyXml([string]$Name, [string]$Body, [int]$TimeoutSec = 120) {
+  $sw = [System.Diagnostics.Stopwatch]::StartNew()
+  Write-Log "Tally request START name=$Name endpoint=$endpoint timeout=${TimeoutSec}s bytes=$($Body.Length)"
   try {
-    return (Invoke-WebRequest -Uri $endpoint -Method POST -Body $Body -ContentType "text/xml" -TimeoutSec 120 -UseBasicParsing).Content
-  } catch { Write-Warning $_; return $null }
+    $resp = Invoke-WebRequest -Uri $endpoint -Method POST -Body $Body -ContentType "text/xml" -TimeoutSec $TimeoutSec -UseBasicParsing
+    $sw.Stop()
+    $content = [string]$resp.Content
+    Write-Log "Tally request OK name=$Name status=$($resp.StatusCode) ms=$($sw.ElapsedMilliseconds) bytes=$($content.Length) preview=$(Get-Preview $content 300)"
+    return $content
+  } catch {
+    $sw.Stop()
+    Write-Log "Tally request FAIL name=$Name ms=$($sw.ElapsedMilliseconds) error=$($_.Exception.Message)" "ERROR"
+    Write-Warning $_
+    return $null
+  }
 }
 
 function Format-TallyDate([string]$d) {
@@ -48,8 +76,9 @@ function Add-Row([hashtable]$Row) {
 }
 
 # Ledgers + bank/cash filter (also builds parent map for vouchers)
+Write-Log "FBOS Tally sync START endpoint=$endpoint company=$CompanyName from=$FromDate to=$ToDate webapp=$WebAppUrl webhook=$FbosWebhookUrl"
 $lXml = "<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Collection</TYPE><ID>List of Ledgers</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>$companyEsc</SVCURRENTCOMPANY></STATICVARIABLES></DESC></BODY></ENVELOPE>"
-$lRes = Invoke-TallyXml $lXml
+$lRes = Invoke-TallyXml "List of Ledgers" $lXml
 if ($lRes) {
   [regex]::Matches($lRes, '<LEDGER[\s\S]*?</LEDGER>') | ForEach-Object {
     $b = $_.Value
@@ -90,7 +119,7 @@ if ($lRes) {
 
 # Vouchers — one row per ledger entry (parent_group for Sales/Expenses dashboard)
 $vXml = "<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Collection</TYPE><ID>Day Book</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>$companyEsc</SVCURRENTCOMPANY><SVFROMDATE>$FromDate</SVFROMDATE><SVTODATE>$ToDate</SVTODATE></STATICVARIABLES></DESC></BODY></ENVELOPE>"
-$vRes = Invoke-TallyXml $vXml
+$vRes = Invoke-TallyXml "Day Book" $vXml
 if ($vRes) {
   [regex]::Matches($vRes, '<VOUCHER[\s\S]*?</VOUCHER>') | ForEach-Object {
     $b = $_.Value
@@ -128,7 +157,7 @@ if ($vRes) {
 
 # Receivables — with bill/due dates + overdue_days for dashboard aging
 $rXml = "<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Collection</TYPE><ID>Bills Receivable</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>$companyEsc</SVCURRENTCOMPANY></STATICVARIABLES></DESC></BODY></ENVELOPE>"
-$rRes = Invoke-TallyXml $rXml
+$rRes = Invoke-TallyXml "Bills Receivable" $rXml
 if ($rRes) {
   [regex]::Matches($rRes, '<BILL[\s\S]*?</BILL>') | ForEach-Object {
     $b = $_.Value
@@ -158,7 +187,7 @@ if ($rRes) {
 
 # Payables
 $pXml = "<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Collection</TYPE><ID>Bills Payable</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>$companyEsc</SVCURRENTCOMPANY></STATICVARIABLES></DESC></BODY></ENVELOPE>"
-$pRes = Invoke-TallyXml $pXml
+$pRes = Invoke-TallyXml "Bills Payable" $pXml
 if ($pRes) {
   [regex]::Matches($pRes, '<BILL[\s\S]*?</BILL>') | ForEach-Object {
     $b = $_.Value
@@ -183,7 +212,7 @@ if ($pRes) {
   }
 }
 
-if ($all.Count -eq 0) { Write-Host "No Tally rows parsed"; exit 0 }
+if ($all.Count -eq 0) { Write-Log "No Tally rows parsed" "WARN"; exit 0 }
 
 $records = $all | ForEach-Object {
   $h = @{}
@@ -194,16 +223,22 @@ $records = $all | ForEach-Object {
 $payload = @{ action = "tally_finance"; records = @($records) } | ConvertTo-Json -Depth 8 -Compress
 $webappOk = $false
 try {
+  $sw = [System.Diagnostics.Stopwatch]::StartNew()
+  Write-Log "Google webapp POST START url=$WebAppUrl records=$($records.Count) bytes=$($payload.Length) timeout=180s"
   $res = Invoke-RestMethod -Uri $WebAppUrl -Method POST -Body $payload -ContentType "application/json; charset=utf-8" -TimeoutSec 180
+  $sw.Stop()
+  Write-Log "Google webapp POST OK ms=$($sw.ElapsedMilliseconds) response=$(Get-Preview ($res | ConvertTo-Json -Compress) 500)"
   Write-Host "Webapp OK: $($all.Count) rows -> 06_Finance_Sync | $($res | ConvertTo-Json -Compress)" -ForegroundColor Green
   $webappOk = $true
 } catch {
+  if ($sw) { $sw.Stop() }
+  Write-Log "Google webapp POST FAIL ms=$($sw.ElapsedMilliseconds) error=$($_.Exception.Message)" "ERROR"
   Write-Host "Webapp POST failed: $_" -ForegroundColor Yellow
   Write-Host "  (Common fix: Apps Script redeploy with Anyone access)" -ForegroundColor Yellow
 }
 
-$fbosWebhook = $env:FBOS_TALLY_WEBHOOK_URL
-$syncSecret = $env:SHEET_SYNC_SECRET
+$fbosWebhook = $FbosWebhookUrl
+$syncSecret = $SyncSecret
 if (-not $fbosWebhook) {
   Write-Host "Tip: set FBOS_TALLY_WEBHOOK_URL=https://your-fbos-host/api/webhooks/tally-finance for Supabase ingest fallback" -ForegroundColor DarkGray
 } elseif (-not $syncSecret) {
@@ -212,11 +247,18 @@ if (-not $fbosWebhook) {
   try {
     $fbosPayload = @{ action = "tally_finance"; secret = $syncSecret; records = @($records) } | ConvertTo-Json -Depth 8 -Compress
     $headers = @{ Authorization = "Bearer $syncSecret"; "Content-Type" = "application/json; charset=utf-8" }
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    Write-Log "FBOS webhook POST START url=$fbosWebhook records=$($records.Count) bytes=$($fbosPayload.Length) timeout=180s"
     $fbosRes = Invoke-RestMethod -Uri $fbosWebhook -Method POST -Body $fbosPayload -Headers $headers -TimeoutSec 180
+    $sw.Stop()
+    Write-Log "FBOS webhook POST OK ms=$($sw.ElapsedMilliseconds) response=$(Get-Preview ($fbosRes | ConvertTo-Json -Compress) 500)"
     Write-Host "FBOS webhook OK: $($fbosRes | ConvertTo-Json -Compress)" -ForegroundColor Green
   } catch {
+    if ($sw) { $sw.Stop() }
+    Write-Log "FBOS webhook POST FAIL ms=$($sw.ElapsedMilliseconds) error=$($_.Exception.Message)" "ERROR"
     Write-Host "FBOS webhook failed: $_" -ForegroundColor Red
   }
 }
 
 if (-not $webappOk -and -not $fbosWebhook) { exit 1 }
+Write-Log "FBOS Tally sync END rows=$($records.Count) webappOk=$webappOk webhookConfigured=$([bool]$fbosWebhook)"
