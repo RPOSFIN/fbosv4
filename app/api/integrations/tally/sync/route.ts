@@ -16,13 +16,14 @@ export async function POST() {
   try {
     const result = await syncTally();
     const now = new Date().toISOString();
+    const connected = result.ok && !result.demo && Boolean(result.recordsQueued);
 
     try {
       await upsertIntegrationRow({
         connector_name: "tally",
-        status: result.ok ? "connected" : "error",
-        last_sync_at: result.ok ? now : null,
-        error_message: result.ok ? null : result.message,
+        status: connected ? "connected" : result.ok ? "pending" : "error",
+        last_sync_at: connected ? now : null,
+        error_message: connected ? null : result.message,
         demo: result.demo,
         config: {
           endpoint: result.endpoint,
@@ -41,7 +42,7 @@ export async function POST() {
       await writeActivityLog({
         entity_type: "integration",
         entity_id: "tally",
-        action: result.ok ? "sync_success" : "sync_failed",
+        action: connected ? "sync_success" : "sync_failed",
         user_id: ctx.userId,
         user_name: ctx.fullName || ctx.email,
         notes: result.message,
@@ -52,7 +53,7 @@ export async function POST() {
 
     if (!result.ok) return apiError(result.message, 502);
 
-    return apiSuccess(result);
+    return apiSuccess({ ...result, connected });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Tally sync failed";
     return apiError(message, 500);

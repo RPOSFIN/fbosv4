@@ -120,7 +120,7 @@ async function syncTallyDemo(): Promise<TallySyncResult> {
     ok: true,
     demo: true,
     message: `Demo mode — ${vouchers.length} finance record(s) parsed${recordsQueued ? `, ${recordsQueued} queued` : ""}`,
-    recordsQueued: recordsQueued || vouchers.length,
+    recordsQueued,
     preview: {
       company,
       action: "sync_ledgers_demo",
@@ -286,7 +286,7 @@ export async function syncTally(): Promise<TallySyncResult> {
     demo: false,
     endpoint,
     message: `Tally cloud configured — gateway OK at ${endpoint}, sync queued for "${company}"`,
-    recordsQueued: recordsQueued || 1,
+    recordsQueued,
     preview: {
       company,
       action: "sync_ledgers_stub",
