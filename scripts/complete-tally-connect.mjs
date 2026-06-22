@@ -114,7 +114,7 @@ async function main() {
   }
 
   const secret = process.env.SHEET_SYNC_SECRET;
-  const base = process.env.FBOS_PUBLIC_URL || "http://localhost:3001";
+  const base = process.env.FBOS_PUBLIC_URL || "http://localhost:3000";
   const webhook = `${base.replace(/\/$/, "")}/api/webhooks/tally-finance`;
   if (secret) {
     try {
