@@ -150,6 +150,7 @@ while ($cursor -le $toDt) {
   $daybookStatic = "$companyStatic<SVFROMDATE>$chunkFromText</SVFROMDATE><SVTODATE>$chunkToText</SVTODATE>"
   $vXml = New-TallyExportXml "Daybook" $daybookStatic
   $vRes = Invoke-TallyXml "Daybook $chunkFromText-$chunkToText" $vXml
+  $chunkRowsBefore = $all.Count
   if ($vRes) {
     [regex]::Matches($vRes, '<VOUCHER[\s\S]*?</VOUCHER>') | ForEach-Object {
       $b = $_.Value
@@ -184,6 +185,8 @@ while ($cursor -le $toDt) {
       }
     }
   }
+  $chunkRowsParsed = $all.Count - $chunkRowsBefore
+  Write-Log "Daybook chunk parsed from=$chunkFromText to=$chunkToText rows=$chunkRowsParsed totalRows=$($all.Count)"
   $cursor = $chunkTo.AddDays(1)
 }
 
