@@ -21,6 +21,9 @@ export type ClickUpSyncResult = {
   message: string;
 };
 
+// --- FIX: Chunk Size Definition ---
+const CLICKUP_TASK_UPSERT_CHUNK = 25;
+
 async function storeClickUpTasks(
   tasks: Array<{
     id: string;
@@ -52,19 +55,27 @@ async function storeClickUpTasks(
     synced_at: new Date().toISOString(),
   }));
 
-  const { data: dedicatedData, error: dedicatedErr } = await supabase
-    .from("clickup_tasks")
-    .upsert(dedicatedPayload, { onConflict: "external_id" })
-    .select("id");
+  // --- Dedicated Table Chunked Upsert ---
+  let totalDedicatedStored = 0;
+  for (let i = 0; i < dedicatedPayload.length; i += CLICKUP_TASK_UPSERT_CHUNK) {
+    const chunk = dedicatedPayload.slice(i, i + CLICKUP_TASK_UPSERT_CHUNK);
+    const { data: dedicatedData, error: dedicatedErr } = await supabase
+      .from("clickup_tasks")
+      .upsert(chunk, { onConflict: "external_id" })
+      .select("id");
 
-  if (!dedicatedErr && (dedicatedData?.length || 0) > 0) {
-    return dedicatedData!.length;
+    if (dedicatedErr) {
+      console.warn("[clickup] dedicated table chunk error:", dedicatedErr.message);
+      break;
+    }
+    totalDedicatedStored += dedicatedData?.length || 0;
   }
 
-  if (dedicatedErr) {
-    console.warn("[clickup] dedicated table:", dedicatedErr.message);
+  if (totalDedicatedStored > 0) {
+    return totalDedicatedStored;
   }
 
+  // Fallback path
   const fallbackPayload = tasks.map((t) => ({
     task_title: `[ClickUp] ${t.name}`,
     related_entity: "clickup",
@@ -72,17 +83,23 @@ async function storeClickUpTasks(
     priority: "Medium",
   }));
 
-  const { data: inserted, error: fallbackErr } = await supabase
-    .from("tasks")
-    .insert(fallbackPayload)
-    .select("id");
+  // --- Fallback Table Chunked Insert ---
+  let totalFallbackStored = 0;
+  for (let i = 0; i < fallbackPayload.length; i += CLICKUP_TASK_UPSERT_CHUNK) {
+    const chunk = fallbackPayload.slice(i, i + CLICKUP_TASK_UPSERT_CHUNK);
+    const { data: inserted, error: fallbackErr } = await supabase
+      .from("tasks")
+      .insert(chunk)
+      .select("id");
 
-  if (fallbackErr) {
-    console.warn("[clickup] store tasks:", fallbackErr.message);
-    return 0;
+    if (fallbackErr) {
+      console.warn("[clickup] fallback table chunk error:", fallbackErr.message);
+      return totalFallbackStored;
+    }
+    totalFallbackStored += inserted?.length || 0;
   }
 
-  return inserted?.length || 0;
+  return totalFallbackStored;
 }
 
 /** Populate clickup_tasks from leads that already have clickup_task_id (Apps Script / prior sync path). */
@@ -109,17 +126,23 @@ export async function backfillClickUpTasksFromLeads(): Promise<number> {
 
   if (!payload.length) return 0;
 
-  const { data, error: upsertErr } = await supabase
-    .from("clickup_tasks")
-    .upsert(payload, { onConflict: "external_id" })
-    .select("id");
+  // --- Backfill Table Chunked Upsert ---
+  let totalBackfillStored = 0;
+  for (let i = 0; i < payload.length; i += CLICKUP_TASK_UPSERT_CHUNK) {
+    const chunk = payload.slice(i, i + CLICKUP_TASK_UPSERT_CHUNK);
+    const { data, error: upsertErr } = await supabase
+      .from("clickup_tasks")
+      .upsert(chunk, { onConflict: "external_id" })
+      .select("id");
 
-  if (upsertErr) {
-    console.warn("[clickup] backfill from leads:", upsertErr.message);
-    return 0;
+    if (upsertErr) {
+      console.warn("[clickup] backfill from leads chunk error:", upsertErr.message);
+      break;
+    }
+    totalBackfillStored += data?.length || 0;
   }
 
-  return data?.length || 0;
+  return totalBackfillStored;
 }
 
 export async function syncClickUpDemo(): Promise<ClickUpSyncResult> {
@@ -159,7 +182,6 @@ export async function syncClickUpDemo(): Promise<ClickUpSyncResult> {
     message: `Demo mode — ${CLICKUP_DEMO.tasks.length} sample task(s)${tasksStored ? `, ${tasksStored} stored` : ""}${leadResult.leadsImported || leadResult.leadsUpdated ? `, leads: ${leadResult.leadsImported} inserted, ${leadResult.leadsUpdated} updated` : ""}`,
   };
 }
-
 
 type ClickUpListRef = { id: string; name: string; space_id?: string };
 

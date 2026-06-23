@@ -5,6 +5,13 @@ import {
   getServerSupabase,
   writeActivityLog,
 } from "@/lib/rbac/api-auth";
+import { getAdminClient } from "@/lib/supabase/admin";
+
+async function getLeadsSupabase() {
+  const admin = getAdminClient();
+  if (admin) return admin;
+  return getServerSupabase();
+}
 
 export async function GET(request: Request) {
   const auth = await authorize("leads", "read");
@@ -18,7 +25,13 @@ export async function GET(request: Request) {
   const source = url.searchParams.get("source")?.trim() || "";
   const paginated = url.searchParams.has("page") || url.searchParams.has("limit");
 
-  const supabase = await getServerSupabase();
+  const supabase = await getLeadsSupabase();
+  if (!getAdminClient()) {
+    console.warn(
+      "[api/leads] SUPABASE_SERVICE_ROLE_KEY missing — RLS may hide rows. SUPA keys:",
+      Object.keys(process.env).filter((k) => k.includes("SUPA"))
+    );
+  }
 
   let query = supabase
     .from("leads")
@@ -61,7 +74,7 @@ export async function POST(request: Request) {
 
   const { ctx } = auth;
   const body = await request.json();
-  const supabase = await getServerSupabase();
+  const supabase = await getLeadsSupabase();
 
   const { data, error } = await supabase
     .from("leads")
