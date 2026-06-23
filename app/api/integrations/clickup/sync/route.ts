@@ -5,7 +5,7 @@ import {
   authorize,
   writeActivityLog,
 } from "@/lib/rbac/api-auth";
-import { syncClickUp } from "@/lib/integrations/clickup";
+import { runClickUpSync } from "@/lib/services/clickup-sync-service";
 import { loadIntegrationSyncData } from "@/lib/integrations/sync-data";
 import { upsertIntegrationRow } from "@/lib/integrations/status";
 
@@ -19,7 +19,7 @@ export async function POST() {
   if ("error" in auth) return auth.error;
 
   const { ctx } = auth;
-  const result = await syncClickUp();
+  const result = await runClickUpSync();
   const now = new Date().toISOString();
   const connected = result.ok && !result.demo && Boolean(result.tasksStored || result.leadsSynced);
 

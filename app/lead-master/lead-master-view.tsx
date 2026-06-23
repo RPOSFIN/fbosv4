@@ -154,18 +154,30 @@ export default function LeadMasterView() {
 
   const loadClickUp = useCallback(async () => {
     try {
-      const res = await apiFetch<{
-        syncData: { clickupTasks: ClickUpTask[]; clickupTaskCount: number };
-        connectors: Array<{
-          connector_name: string;
-          last_sync_at?: string | null;
-          config?: Record<string, unknown>;
-        }>;
-      }>("/api/integrations");
-      setClickupTasks(res.syncData.clickupTasks.slice(0, 6));
+      const [leadsRes, integrationsRes] = await Promise.all([
+        apiFetch<LeadsResponse>("/api/leads?source=ClickUp&limit=6&page=1"),
+        apiFetch<{
+          connectors: Array<{
+            connector_name: string;
+            last_sync_at?: string | null;
+            config?: Record<string, unknown>;
+          }>;
+        }>("/api/integrations"),
+      ]);
+
+      setClickupTasks(
+        leadsRes.leads.map((lead) => ({
+          id: lead.id,
+          external_id: lead.id,
+          name: lead.company_name,
+          status: lead.status || null,
+          list_name: lead.source || "ClickUp",
+          synced_at: lead.created_at,
+        }))
+      );
 
       const pickCounts = (name: string) => {
-        const c = res.connectors?.find((x) => x.connector_name === name);
+        const c = integrationsRes.connectors?.find((x) => x.connector_name === name);
         if (!c) return undefined;
         const cfg = c.config || {};
         const counts = {

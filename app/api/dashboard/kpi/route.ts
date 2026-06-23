@@ -9,15 +9,18 @@ import {
 } from "@/lib/integrations/status";
 import { countTodayFollowups } from "@/lib/followups/fetch";
 import { getDashboardStatus } from "@/lib/dashboard/status";
+import { getLeadStats } from "@/lib/services/lead-service";
 
 export async function GET() {
   const auth = await authorize("dashboard", "read");
   if ("error" in auth) return auth.error;
 
-  const dashboard = await getDashboardStatus();
-  const counts = dashboard.counts;
+  const [dashboard, leadStats, connectors] = await Promise.all([
+    getDashboardStatus(),
+    getLeadStats(),
+    getIntegrationStatuses(),
+  ]);
 
-  const connectors = await getIntegrationStatuses();
   let followupsToday = 0;
   try {
     const supabase = await getServerSupabase();
@@ -27,12 +30,14 @@ export async function GET() {
   }
 
   return apiSuccess({
-    leads: counts.leads,
-    followups: counts.followups,
+    leads: leadStats.total,
+    won: leadStats.won,
+    active: leadStats.active,
+    followups: dashboard.counts.followups,
     followupsToday,
-    quotations: counts.quotations,
-    clients: counts.clients,
-    jobs: counts.jobs,
+    quotations: dashboard.counts.quotations,
+    clients: dashboard.counts.clients,
+    jobs: dashboard.counts.jobs,
     integrations: getIntegrationSummary(connectors),
   });
 }

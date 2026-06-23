@@ -1,8 +1,10 @@
 import { apiSuccess, authorize } from "@/lib/rbac/api-auth";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { countTodayFollowups } from "@/lib/followups/fetch";
+import { getServerSupabase } from "@/lib/rbac/api-auth";
 import { getDashboardStatus } from "@/lib/dashboard/status";
-import { fetchLeadSalesMetrics } from "@/lib/leads/fetch";
+import { getLeadSalesMetrics } from "@/lib/services/lead-service";
+import { getOperationsMetrics } from "@/lib/services/operations-service";
 
 function sumAmount(rows: { amount?: number | null; record_type?: string | null }[], type: string) {
   return rows
@@ -21,9 +23,9 @@ export async function GET() {
   const auth = await authorize("dashboard", "read");
   if ("error" in auth) return auth.error;
 
-  const salesMetrics = await fetchLeadSalesMetrics();
-
+  const salesMetrics = await getLeadSalesMetrics();
   const supabase = getAdminClient();
+
   if (!supabase) {
     const dashboard = await getDashboardStatus();
     const counts = dashboard.counts;
@@ -31,7 +33,8 @@ export async function GET() {
     const receivable = finance.receivable;
     const payable = finance.payable;
     const freeCash = finance.freeCash;
-    const healthScore = receivable > 0 ? Math.min(100, Math.round((freeCash / receivable) * 100)) : 0;
+    const healthScore =
+      receivable > 0 ? Math.min(100, Math.round((freeCash / receivable) * 100)) : 0;
 
     return apiSuccess({
       sales: {
@@ -42,16 +45,7 @@ export async function GET() {
         pendingFollowups: counts.followups,
         dormantLeads: salesMetrics.dormantLeads,
       },
-      operations: {
-        totalOrders: counts.jobs,
-        dispatched: 0,
-        inProduction: 0,
-        pending: counts.jobs,
-        artworkPending: 0,
-        dispatchDelayed: 0,
-        overdueOrders: counts.jobs,
-        highPriority: 0,
-      },
+      operations: await getOperationsMetrics(),
       finance: {
         receivable,
         payable,
@@ -63,7 +57,10 @@ export async function GET() {
         queueCount: counts.finance_import_queue,
       },
       trends: {
-        salesTrend: Math.min(10, Math.round((salesMetrics.won / Math.max(salesMetrics.totalLeads, 1)) * 10)),
+        salesTrend: Math.min(
+          10,
+          Math.round((salesMetrics.won / Math.max(salesMetrics.totalLeads, 1)) * 10)
+        ),
         collectionTrend: 0,
         profitTrend: 0,
         receivableTrend: 0,
@@ -78,12 +75,8 @@ export async function GET() {
     });
   }
 
-  const [
-    jobsRes,
-    financeRes,
-    followupsToday,
-  ] = await Promise.all([
-    supabase.from("jobs").select("status, dispatch_status, invoice_status", { count: "exact" }),
+  const [operations, financeRes, followupsToday] = await Promise.all([
+    getOperationsMetrics(),
     supabase
       .from("finance_import_queue")
       .select("amount, record_type, party_name, voucher_date")
@@ -91,21 +84,7 @@ export async function GET() {
     countTodayFollowups(supabase).catch(() => 0),
   ]);
 
-  const jobs = jobsRes.data || [];
   const finance = financeRes.data || [];
-
-  const dispatched = jobs.filter((j) =>
-    String(j.dispatch_status || j.status || "").toUpperCase().includes("DISPATCH")
-  ).length;
-  const inProduction = jobs.filter((j) =>
-    String(j.status || "").toUpperCase().includes("PRODUCTION")
-  ).length;
-  const pending = jobs.filter((j) =>
-    ["PENDING", "CREATED", "OPEN"].some((s) =>
-      String(j.status || "").toUpperCase().includes(s)
-    )
-  ).length;
-
   const receivable = sumAmount(finance, "receivable");
   const payable = sumAmount(finance, "payable");
   const freeCash = Math.max(0, receivable - payable);
@@ -115,16 +94,19 @@ export async function GET() {
       0,
       Math.round(
         (salesMetrics.won / Math.max(salesMetrics.totalLeads, 1)) * 40 +
-          (dispatched / Math.max(jobs.length, 1)) * 30 +
+          (operations.dispatched / Math.max(operations.totalOrders, 1)) * 30 +
           (freeCash / Math.max(receivable, 1)) * 30
       )
     )
   );
 
-  const salesTrend = Math.min(10, Math.round((salesMetrics.won / Math.max(salesMetrics.totalLeads, 1)) * 10));
+  const salesTrend = Math.min(
+    10,
+    Math.round((salesMetrics.won / Math.max(salesMetrics.totalLeads, 1)) * 10)
+  );
   const collectionTrend = Math.min(10, Math.round((freeCash / Math.max(receivable, 1)) * 10));
   const profitTrend = Math.min(10, Math.round(healthScore / 10));
-  const receivableTrend = Math.min(10, Math.round((receivable > payable ? 6 : 3)));
+  const receivableTrend = Math.min(10, Math.round(receivable > payable ? 6 : 3));
 
   const topOverdue = finance
     .filter((r) => (r.record_type || "").toLowerCase().includes("receivable"))
@@ -139,16 +121,7 @@ export async function GET() {
       pendingFollowups: followupsToday,
       dormantLeads: salesMetrics.dormantLeads,
     },
-    operations: {
-      totalOrders: jobsRes.count ?? jobs.length,
-      dispatched,
-      inProduction: inProduction || Math.max(0, jobs.length - dispatched - pending),
-      pending,
-      artworkPending: 0,
-      dispatchDelayed: 0,
-      overdueOrders: pending,
-      highPriority: 0,
-    },
+    operations,
     finance: {
       receivable,
       payable,

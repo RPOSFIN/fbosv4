@@ -1,11 +1,5 @@
-import {
-  apiError,
-  apiSuccess,
-  authorize,
-  getServerSupabase,
-  writeActivityLog,
-} from "@/lib/rbac/api-auth";
-import { fetchLeadsPage } from "@/lib/leads/fetch";
+import { apiError, apiSuccess, authorize, getServerSupabase, writeActivityLog } from "@/lib/rbac/api-auth";
+import { getLeads } from "@/lib/services/lead-service";
 
 export async function GET(request: Request) {
   const auth = await authorize("leads", "read");
@@ -20,7 +14,7 @@ export async function GET(request: Request) {
   const paginated = url.searchParams.has("page") || url.searchParams.has("limit");
 
   try {
-    const result = await fetchLeadsPage({ page, limit, search, status, source });
+    const result = await getLeads({ page, limit, search, status, source });
 
     if (paginated) {
       return apiSuccess({
