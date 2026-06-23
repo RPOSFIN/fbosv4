@@ -27,7 +27,7 @@ export async function getResolvedTallyConfig(): Promise<ResolvedTallyConfig> {
     process.env.TALLY_HOST?.trim() ||
     process.env.TALLY_SERVER_URL?.trim() ||
     "";
-  const port = process.env.TALLY_PORT?.trim() || "9000";
+  const port = process.env.TALLY_PORT?.trim() || "9007";
   let dbHost = "";
   let dbCompany = "";
   const supabase = getAdminClient();

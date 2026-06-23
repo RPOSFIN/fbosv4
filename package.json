@@ -9,6 +9,10 @@
     "lint": "eslint",
     "db:verify": "node scripts/verify-database.mjs",
     "db:integrations": "node scripts/apply-integrations-migration.mjs",
+    "tally:audit": "node scripts/tally-audit.mjs",
+    "tally:test": "node scripts/test-tally-gateway.mjs",
+    "tally:webapp": "node scripts/test-webapp-tally.mjs",
+    "tally:connect": "node scripts/complete-tally-connect.mjs",
     "p0:sync": "node scripts/run-p0-closure.mjs",
     "p0:counts": "node scripts/run-p0-closure.mjs --counts",
     "validate": "npm run lint && npm run build && npm run db:verify"

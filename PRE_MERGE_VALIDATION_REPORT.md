@@ -1,9 +1,9 @@
 # FBOS V4 — Pre-Merge Validation Report
 
-**Date:** 2026-06-20  
-**Target branch:** `cursor/p0-closure-0d65`  
-**Merge target:** `main` (NOT merged — validation only)  
-**Commit validated:** `18b6d0a` — *Add pre-merge validation and branch mismatch reports (audit only, no merge)*  
+**Date:** 2026-06-20
+**Target branch:** `cursor/p0-closure-0d65`
+**Merge target:** `main` (NOT merged — validation only)
+**Commit validated:** `18b6d0a` — *Add pre-merge validation and branch mismatch reports (audit only, no merge)*
 **Validator environment:** Cloud agent workspace (no `.env.local`)
 
 ---

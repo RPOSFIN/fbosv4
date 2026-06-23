@@ -23,7 +23,7 @@ export function getTallyConfig(): ConnectorEnvConfig {
   const host =
     process.env.TALLY_HOST?.trim() ||
     process.env.TALLY_SERVER_URL?.trim();
-  const port = process.env.TALLY_PORT?.trim() || "9000";
+  const port = process.env.TALLY_PORT?.trim() || "9007";
   const company = process.env.TALLY_COMPANY_NAME?.trim();
   const isLocal =
     host === "localhost" || host === "127.0.0.1" || host === "::1";
