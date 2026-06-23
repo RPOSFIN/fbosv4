@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api/client";
+import { normalizeLeadStats } from "@/lib/leads/normalize-stats";
 
 type Lead = {
   id: string;
@@ -18,13 +19,6 @@ type LeadsPagePayload = {
   total?: number;
 };
 
-type LeadStatsPayload = {
-  total?: number;
-  won?: number;
-  active?: number;
-  lost?: number;
-};
-
 function unwrapLeadsPage(payload: unknown): { leads: Lead[]; total: number } {
   if (Array.isArray(payload)) {
     return { leads: payload, total: payload.length };
@@ -36,20 +30,6 @@ function unwrapLeadsPage(payload: unknown): { leads: Lead[]; total: number } {
     return { leads, total: inner.total ?? leads.length };
   }
   return { leads: [], total: 0 };
-}
-
-function unwrapStats(payload: unknown): { total: number; won: number; active: number; lost: number } {
-  if (payload && typeof payload === "object") {
-    const obj = payload as LeadStatsPayload & { data?: LeadStatsPayload };
-    const inner = obj.data ?? obj;
-    return {
-      total: inner.total ?? 0,
-      won: inner.won ?? 0,
-      active: inner.active ?? 0,
-      lost: inner.lost ?? 0,
-    };
-  }
-  return { total: 0, won: 0, active: 0, lost: 0 };
 }
 
 const modules = [
@@ -79,7 +59,7 @@ export default function SalesWorkbench() {
       try {
         const [response, statsResponse] = await Promise.all([
           apiFetch<LeadsPagePayload | Lead[]>("/api/leads?limit=50"),
-          apiFetch<LeadStatsPayload>("/api/leads/stats"),
+          apiFetch<unknown>("/api/leads/stats"),
         ]);
 
         console.log("RAW RESPONSE", response);
@@ -88,10 +68,15 @@ export default function SalesWorkbench() {
         if (!active) return;
 
         const page = unwrapLeadsPage(response);
-        const parsedStats = unwrapStats(statsResponse);
+        const parsedStats = normalizeLeadStats(statsResponse);
 
         setLeads(page.leads.slice(0, 20));
-        setStats(parsedStats);
+        setStats({
+          total: parsedStats?.total ?? 0,
+          won: parsedStats?.won ?? 0,
+          active: parsedStats?.active ?? 0,
+          lost: parsedStats?.lost ?? 0,
+        });
         setError(null);
       } catch (e) {
         if (active) {
