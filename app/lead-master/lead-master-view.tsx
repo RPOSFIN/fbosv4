@@ -8,6 +8,7 @@ import { hasPermission } from "@/lib/rbac/permissions";
 import { useAuth } from "@/hooks/use-auth";
 import type { FbosRole } from "@/lib/rbac/permissions";
 import { pushLeadToGoogle } from "@/lib/google-write";
+import { normalizeLeadStats, type NormalizedLeadStats } from "@/lib/leads/normalize-stats";
 
 type Lead = {
   id: string;
@@ -28,20 +29,32 @@ type LeadsResponse = {
   totalPages: number;
 };
 
-type LeadStats = {
-  total: number;
-  unique: number;
-  duplicates: number;
-  statusBreakdown: Record<string, number>;
-  topSources: Array<{ name: string; count: number }>;
-  recentLeads: Array<{
-    id: string;
-    company_name: string;
-    status: string;
-    source: string;
-    created_at: string;
-  }>;
-};
+type LeadStats = NormalizedLeadStats;
+
+function unwrapLeadsPage(payload: unknown): LeadsResponse {
+  if (Array.isArray(payload)) {
+    return {
+      leads: payload as Lead[],
+      total: payload.length,
+      page: 1,
+      limit: payload.length,
+      totalPages: 1,
+    };
+  }
+  if (payload && typeof payload === "object") {
+    const obj = payload as LeadsResponse & { data?: LeadsResponse };
+    const inner = obj.data ?? obj;
+    const leads = inner.leads ?? [];
+    return {
+      leads,
+      total: inner.total ?? leads.length,
+      page: inner.page ?? 1,
+      limit: inner.limit ?? leads.length,
+      totalPages: inner.totalPages ?? 1,
+    };
+  }
+  return { leads: [], total: 0, page: 1, limit: 25, totalPages: 0 };
+}
 
 type ClickUpTask = {
   id: string;
@@ -122,8 +135,9 @@ export default function LeadMasterView() {
 
   const loadStats = useCallback(async () => {
     try {
-      const data = await apiFetch<LeadStats>("/api/leads/stats");
-      setStats(data);
+      const statsResponse = await apiFetch<LeadStats>("/api/leads/stats");
+      console.log("RAW STATS", statsResponse);
+      setStats(normalizeLeadStats(statsResponse));
     } catch (e) {
       console.error(e);
     }
@@ -140,7 +154,9 @@ export default function LeadMasterView() {
       if (statusFilter) params.set("status", statusFilter);
       if (sourceFilter) params.set("source", sourceFilter);
 
-      const data = await apiFetch<LeadsResponse>(`/api/leads?${params}`);
+      const response = await apiFetch<LeadsResponse | Lead[]>(`/api/leads?${params}`);
+      console.log("RAW RESPONSE", response);
+      const data = unwrapLeadsPage(response);
       setLeads(data.leads);
       setTotal(data.total);
       setTotalPages(data.totalPages);
@@ -263,7 +279,9 @@ export default function LeadMasterView() {
   const aiSummary = useMemo(() => {
     if (!stats) return null;
     const topSource = stats.topSources[0];
-    const topStatus = Object.entries(stats.statusBreakdown).sort((a, b) => b[1] - a[1])[0];
+    const topStatus = Object.entries(stats.statusBreakdown)
+      .sort((a, b) => b[1] - a[1])[0];
+    const recent = stats.recentLeads.slice(0, 3);
     const lines = [
       `${stats.unique.toLocaleString()} unique leads in CRM${stats.duplicates > 0 ? ` (${stats.duplicates.toLocaleString()} duplicates detected)` : ""}.`,
       topSource
@@ -272,8 +290,8 @@ export default function LeadMasterView() {
       topStatus
         ? `Most common status: ${topStatus[0]} (${topStatus[1].toLocaleString()}).`
         : "",
-      stats.recentLeads.length
-        ? `Latest: ${stats.recentLeads.slice(0, 3).map((l) => l.company_name).join(", ")}.`
+      recent.length
+        ? `Latest: ${recent.map((l) => l.company_name).join(", ")}.`
         : "",
     ].filter(Boolean);
     return lines.join(" ");
