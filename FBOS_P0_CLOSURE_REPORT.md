@@ -1,7 +1,7 @@
 # FBOS V4 — P0 Closure Report
 
-**Date:** 2026-06-20  
-**Branch:** `cursor/p0-closure-0d65`  
+**Date:** 2026-06-20
+**Branch:** `cursor/p0-closure-0d65`
 **Supabase:** `fbosv4` (`tksfskkivoahggneptqk`)
 
 ---
@@ -18,7 +18,7 @@
 | **[PASS] ClickUp Sync** | ✅ | 0 rows | ⚠️ **PENDING** `.env.local` |
 | **[PASS] Google Sync** | ✅ | 0 rows | ⚠️ **PENDING** `.env.local` |
 
-**Code-level P0: CLOSED**  
+**Code-level P0: CLOSED**
 **Data-level P0: OPEN** — cloud agent has no `.env.local`; owner must run `npm run p0:sync` locally.
 
 ---

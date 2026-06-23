@@ -1,6 +1,6 @@
 /** Fallback when env is unset (local dev only). Prefer GOOGLE_WEBAPP_URL in .env.local */
 export const GOOGLE_WEBAPP_URL =
-  "https://script.google.com/macros/s/AKfycbyjpnsEUspB5UNosQskuvxWpppeutb1ZBXEXzI0VtjNhBpBObpI9dwSEvigF-VSS66wAw/exec";
+  "https://script.google.com/macros/s/AKfycbzqkpY-z-fuXhdHp6s1sn090ZuqWzU1x7CbGC1hciDKUPqvmQFHKhQ6HM9P4U1pBBa6iw/exec";
 
 function envTrim(...keys: string[]): string {
   for (const key of keys) {
@@ -51,12 +51,13 @@ export function getGSheetCsvUrlForGid(gid: string) {
     : "";
 }
 
-export function getGSheetFixSteps(_lastStatus?: number) {
+export function getGSheetFixSteps(lastStatus?: number) {
   return [
     "Verify Google Sheet ID",
     "Verify Sheet Sharing",
     "Verify Web App URL",
     "Verify Tab GID Mapping",
+    ...(lastStatus ? [`Last Google response status: ${lastStatus}`] : []),
   ];
 }
 

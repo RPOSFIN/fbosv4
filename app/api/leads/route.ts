@@ -5,6 +5,7 @@ import {
   getServerSupabase,
   writeActivityLog,
 } from "@/lib/rbac/api-auth";
+import { getAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(request: Request) {
   const auth = await authorize("leads", "read");
@@ -18,9 +19,40 @@ export async function GET(request: Request) {
   const source = url.searchParams.get("source")?.trim() || "";
   const paginated = url.searchParams.has("page") || url.searchParams.has("limit");
 
-  const supabase = await getServerSupabase();
+  const admin = getAdminClient();
+  if (!admin) {
+    const supabase = await getServerSupabase();
+    const { data, error } = await supabase.rpc("get_leads_page", {
+      p_page: page,
+      p_limit: limit,
+      p_search: search,
+      p_status: status,
+      p_source: source,
+    });
 
-  let query = supabase
+    if (error) return apiError(error.message, 500);
+    const result = data as {
+      leads?: unknown[];
+      total?: number;
+      page?: number;
+      limit?: number;
+      totalPages?: number;
+    };
+
+    if (paginated) {
+      return apiSuccess({
+        leads: result.leads || [],
+        total: result.total || 0,
+        page: result.page || page,
+        limit: result.limit || limit,
+        totalPages: result.totalPages || 0,
+      });
+    }
+
+    return apiSuccess(result.leads || []);
+  }
+
+  let query = admin
     .from("leads")
     .select("*", { count: "exact" })
     .order("created_at", { ascending: false });

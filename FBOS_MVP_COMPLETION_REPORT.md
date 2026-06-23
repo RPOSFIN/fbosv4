@@ -1,7 +1,7 @@
 # FBOS V4 — MVP Completion Report
 
-**Date:** 2026-06-20  
-**Branch:** `cursor/mvp-completion-0d65`  
+**Date:** 2026-06-20
+**Branch:** `cursor/mvp-completion-0d65`
 **Supabase project:** `fbosv4` (`tksfskkivoahggneptqk`)
 
 ---

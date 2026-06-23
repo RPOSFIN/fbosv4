@@ -3,10 +3,14 @@
 # Tally -> Google Apps Script (06_Finance_Sync)
 # ============================================
 
-# ---- AAPKI CONFIG ----
-$FBOS_URL = "https://script.google.com/macros/s/AKfycb.../exec"  #https://script.google.com/macros/s/AKfycbyHqBATM9INvCF-oXkk1slgJR6cox0nkxXv0zJSkEWdzy5snNeJIEFNOMJqQCjmqxjWJw/exec
-$SYNC_SECRET = ""  # Agar CONFIG tab mein secret hai toh yahan bhi
-$TALLY = "http://localhost:9007"
+# ---- CONFIG (env override supported on TS Plus server) ----
+$FBOS_URL = if ($env:GOOGLE_WEBAPP_URL) {
+  $env:GOOGLE_WEBAPP_URL
+} else {
+  "https://script.google.com/macros/s/AKfycbzqkpY-z-fuXhdHp6s1sn090ZuqWzU1x7CbGC1hciDKUPqvmQFHKhQ6HM9P4U1pBBa6iw/exec"
+}
+$SYNC_SECRET = if ($env:SHEET_SYNC_SECRET) { $env:SHEET_SYNC_SECRET } else { "" }
+$TALLY = if ($env:TALLY_ENDPOINT) { $env:TALLY_ENDPOINT } else { "http://127.0.0.1:9007" }
 
 # ============================================
 
@@ -119,11 +123,10 @@ Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host "  FBOS Tally Bridge (PowerShell)" -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 
-if ($FBOS_URL -like "*AKfycb...*" -or $FBOS_URL -like "*your-web-app*") {
-    Write-Host "`nERROR: Pehle FBOS_URL set karein is file mein!`n" -ForegroundColor Red
-    Write-Host "Line 9 par apni deployed Web App URL daalein.`n"
-    Read-Host "Enter dabaen band karne ke liye"
-    exit 1
+if ($FBOS_URL -like "*your-web-app*" -or $FBOS_URL -notlike "https://script.google.com/*") {
+  Write-Host "`nERROR: Valid GOOGLE_WEBAPP_URL set karein (env ya is file mein).`n" -ForegroundColor Red
+  Read-Host "Enter dabaen band karne ke liye"
+  exit 1
 }
 
 # 1. Fetch Ledgers

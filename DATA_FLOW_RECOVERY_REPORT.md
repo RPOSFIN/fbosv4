@@ -1,7 +1,7 @@
 # FBOS V4 — Data Flow Recovery Report
 
-**Date:** 2026-06-20  
-**Branch:** `cursor/data-flow-recovery-0d65`  
+**Date:** 2026-06-20
+**Branch:** `cursor/data-flow-recovery-0d65`
 **Build:** ✅ PASS | **db:verify:** ⚠️ Skipped in cloud (no `.env.local`)
 
 ---

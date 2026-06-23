@@ -50,7 +50,7 @@ export function getMaskedIntegrationConfig() {
       tally: {
         configured: tally.configured,
         host: process.env.TALLY_HOST || process.env.TALLY_SERVER_URL || "—",
-        port: process.env.TALLY_PORT?.trim() || "9000",
+        port: process.env.TALLY_PORT?.trim() || "9007",
         company: maskSecret(process.env.TALLY_COMPANY_NAME?.trim(), 6) || "—",
       },
     },
