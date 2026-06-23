@@ -321,6 +321,7 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
         status: teamsRes.status,
         body,
       });
+      console.log("ACTUAL CLICKUP API ERROR:", teamsRes.status, body);
       return {
         ok: false,
         demo: false,
@@ -357,6 +358,7 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
         status: spacesRes.status,
         body,
       });
+      console.log("ACTUAL CLICKUP API ERROR:", spacesRes.status, body);
       return {
         ok: false,
         demo: false,
@@ -399,6 +401,7 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
           status: listRes.status,
           body,
         });
+        console.log("ACTUAL CLICKUP API ERROR:", listRes.status, body);
         return {
           ok: false,
           demo: false,
@@ -524,6 +527,7 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
     };
   } catch (error) {
     logClickUpSyncError("syncClickUp fatal", { error });
+    console.log("ACTUAL CLICKUP API ERROR:", error);
     return {
       ok: false,
       demo: false,
