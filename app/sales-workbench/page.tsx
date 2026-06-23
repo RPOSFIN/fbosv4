@@ -54,33 +54,44 @@ export default function SalesWorkbench() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("WORKBENCH MOUNTED");
     let active = true;
     (async () => {
       try {
-        const [response, statsResponse] = await Promise.all([
+        const [leadsResponse, statsResponse] = await Promise.all([
           apiFetch<LeadsPagePayload | Lead[]>("/api/leads?limit=50"),
           apiFetch<unknown>("/api/leads/stats"),
         ]);
 
-        console.log("RAW RESPONSE", response);
+        console.log("LEADS RESPONSE", leadsResponse);
+        console.log("STATS RESPONSE", statsResponse);
+        console.log("RAW RESPONSE", leadsResponse);
         console.log("RAW STATS", statsResponse);
 
         if (!active) return;
 
-        const page = unwrapLeadsPage(response);
+        const page = unwrapLeadsPage(leadsResponse);
         const parsedStats = normalizeLeadStats(statsResponse);
-
-        setLeads(page.leads.slice(0, 20));
-        setStats({
+        const rows = page.leads.slice(0, 20);
+        const kpi = {
           total: parsedStats?.total ?? 0,
           won: parsedStats?.won ?? 0,
           active: parsedStats?.active ?? 0,
           lost: parsedStats?.lost ?? 0,
-        });
+        };
+
+        console.log("SETTING KPI", kpi);
+        console.log("SETTING LEADS", rows.length);
+
+        setLeads(rows);
+        setStats(kpi);
         setError(null);
       } catch (e) {
+        console.log("WORKBENCH FETCH ERROR", e);
         if (active) {
           setError(e instanceof Error ? e.message : "Failed to load leads");
+          console.log("SETTING KPI", { total: 0, won: 0, active: 0, lost: 0 });
+          console.log("SETTING LEADS", 0);
           setLeads([]);
           setStats({ total: 0, won: 0, active: 0, lost: 0 });
         }
