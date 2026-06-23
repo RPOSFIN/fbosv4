@@ -175,7 +175,10 @@ function mergeRecord(
 
   let status: IntegrationStatus = envStatus;
   if (dbStatus === "error") status = "error";
-  else if (dbStatus === "connected" || (env.configured && name === "gsheet")) {
+  else if (
+    dbStatus === "connected" ||
+    (env.configured && (name === "gsheet" || name === "clickup"))
+  ) {
     status = "connected";
   } else if (isDemo) {
     status = "connected";

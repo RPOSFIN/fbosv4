@@ -79,7 +79,14 @@ export default function SyncToolbar({ compact }: { compact?: boolean }) {
     }
     setItems((prev) => prev.map((p) => (p.key === key ? { ...p, syncing: true } : p)));
     try {
-      await fetch(endpoint, { method: "POST" });
+      const res = await fetch(endpoint, { method: "POST" });
+      const json = await res.json().catch(() => ({}));
+      const payload = json.data ?? json;
+      if (payload?.ok === true) {
+        setItems((prev) =>
+          prev.map((p) => (p.key === key ? { ...p, connected: true } : p))
+        );
+      }
     } catch {
       /* status refresh handles display */
     } finally {
