@@ -125,23 +125,67 @@ export async function syncClickUpDemo(): Promise<ClickUpSyncResult> {
 
 type ClickUpListRef = { id: string; name: string; space_id?: string };
 
+async function readClickUpErrorBody(res: Response): Promise<string> {
+  try {
+    return await res.text();
+  } catch {
+    return "";
+  }
+}
+
+function logClickUpSyncError(
+  label: string,
+  details: { status?: number; statusText?: string; url?: string; body?: string; error?: unknown }
+) {
+  console.error("[ClickUp Sync Error Debug]:", label, details);
+}
+
+async function clickUpFetch(
+  url: string,
+  token: string,
+  label: string
+): Promise<Response> {
+  try {
+    const res = await fetch(url, { headers: { Authorization: token } });
+    if (!res.ok) {
+      const body = await readClickUpErrorBody(res);
+      logClickUpSyncError(label, {
+        status: res.status,
+        statusText: res.statusText,
+        url,
+        body,
+      });
+    }
+    return res;
+  } catch (error) {
+    logClickUpSyncError(`${label} (network)`, { url, error });
+    throw error;
+  }
+}
+
 async function fetchClickUpListsFromFolder(
   token: string,
   folderId: string
 ): Promise<ClickUpListRef[]> {
-  const listsRes = await fetch(
-    `https://api.clickup.com/api/v2/folder/${folderId}/list?archived=false`,
-    { headers: { Authorization: token } }
-  );
-  if (!listsRes.ok) return [];
-  const listsData = (await listsRes.json()) as {
-    lists?: Array<{ id: string; name: string; space?: { id: string } }>;
-  };
-  return (listsData.lists || []).map((list) => ({
-    id: list.id,
-    name: list.name,
-    space_id: list.space?.id,
-  }));
+  try {
+    const listsRes = await clickUpFetch(
+      `https://api.clickup.com/api/v2/folder/${folderId}/list?archived=false`,
+      token,
+      "fetch folder lists"
+    );
+    if (!listsRes.ok) return [];
+    const listsData = (await listsRes.json()) as {
+      lists?: Array<{ id: string; name: string; space?: { id: string } }>;
+    };
+    return (listsData.lists || []).map((list) => ({
+      id: list.id,
+      name: list.name,
+      space_id: list.space?.id,
+    }));
+  } catch (error) {
+    logClickUpSyncError("fetchClickUpListsFromFolder", { error });
+    return [];
+  }
 }
 
 async function fetchClickUpTasksForList(
@@ -155,40 +199,45 @@ async function fetchClickUpTasksForList(
   storePayload: Parameters<typeof storeClickUpTasks>[0],
   allTasks: ClickUpLeadTask[]
 ): Promise<void> {
-  const tasksRes = await fetch(
-    `https://api.clickup.com/api/v2/list/${list.id}/task?archived=false&page=0&include_closed=true&subtasks=true`,
-    { headers: { Authorization: token } }
-  );
-  if (!tasksRes.ok) return;
+  try {
+    const tasksRes = await clickUpFetch(
+      `https://api.clickup.com/api/v2/list/${list.id}/task?archived=false&page=0&include_closed=true&subtasks=true`,
+      token,
+      `fetch tasks for list ${list.id}`
+    );
+    if (!tasksRes.ok) return;
 
-  const tasksData = (await tasksRes.json()) as {
-    tasks?: Array<{
-      id: string;
-      name: string;
-      status?: { status: string };
-      assignees?: Array<{ username?: string; email?: string }>;
-      priority?: { priority?: string };
-      due_date?: string | null;
-      date_created?: string;
-      custom_fields?: Array<{ name?: string; value?: unknown }>;
-    }>;
-  };
+    const tasksData = (await tasksRes.json()) as {
+      tasks?: Array<{
+        id: string;
+        name: string;
+        status?: { status: string };
+        assignees?: Array<{ username?: string; email?: string }>;
+        priority?: { priority?: string };
+        due_date?: string | null;
+        date_created?: string;
+        custom_fields?: Array<{ name?: string; value?: unknown }>;
+      }>;
+    };
 
-  for (const t of tasksData.tasks || []) {
-    const parsed = parseClickUpLeadTask(t);
-    allTasks.push(parsed);
-    storePayload.push({
-      id: t.id,
-      name: t.name,
-      status: t.status?.status,
-      team_id: ctx.teamId,
-      team_name: ctx.teamName,
-      space_id: list.space_id,
-      space_name: ctx.spaceName,
-      list_id: list.id,
-      list_name: list.name,
-      raw: t,
-    });
+    for (const t of tasksData.tasks || []) {
+      const parsed = parseClickUpLeadTask(t);
+      allTasks.push(parsed);
+      storePayload.push({
+        id: t.id,
+        name: t.name,
+        status: t.status?.status,
+        team_id: ctx.teamId,
+        team_name: ctx.teamName,
+        space_id: list.space_id,
+        space_name: ctx.spaceName,
+        list_id: list.id,
+        list_name: list.name,
+        raw: t,
+      });
+    }
+  } catch (error) {
+    logClickUpSyncError(`fetchClickUpTasksForList (${list.id})`, { error });
   }
 }
 
@@ -251,208 +300,234 @@ function parseClickUpLeadTask(t: {
 }
 
 export async function syncClickUp(): Promise<ClickUpSyncResult> {
-  const { configured } = getClickUpConfig();
-  if (!configured) {
-    return syncClickUpDemo();
-  }
-
-  const token = process.env.CLICKUP_API_TOKEN!.trim();
-  const teamId = process.env.CLICKUP_TEAM_ID?.trim();
-
-  const teamsRes = await fetch("https://api.clickup.com/api/v2/team", {
-    headers: { Authorization: token },
-  });
-
-  if (!teamsRes.ok) {
-    const body = await teamsRes.text();
-    return {
-      ok: false,
-      demo: false,
-      message: `ClickUp API error (${teamsRes.status}): ${body.slice(0, 200)}`,
-    };
-  }
-
-  const teamsData = (await teamsRes.json()) as {
-    teams?: Array<{ id: string; name: string }>;
-  };
-  const teams = teamsData.teams || [];
-  const resolvedTeamId = teamId || teams[0]?.id;
-
-  if (!resolvedTeamId) {
-    return {
-      ok: true,
-      demo: false,
-      teams,
-      message: "ClickUp connected — no teams found",
-    };
-  }
-
-  const teamName = teams.find((t) => t.id === resolvedTeamId)?.name;
-
-  const spacesRes = await fetch(
-    `https://api.clickup.com/api/v2/team/${resolvedTeamId}/space?archived=false`,
-    { headers: { Authorization: token } }
-  );
-
-  if (!spacesRes.ok) {
-    const body = await spacesRes.text();
-    return {
-      ok: false,
-      demo: false,
-      teams,
-      message: `ClickUp spaces error (${spacesRes.status}): ${body.slice(0, 200)}`,
-    };
-  }
-
-  const spacesData = (await spacesRes.json()) as {
-    spaces?: Array<{ id: string; name: string }>;
-  };
-  const allSpaces = spacesData.spaces || [];
-  const spaceIdFilter = process.env.CLICKUP_SPACE_ID?.trim();
-  const folderIdFilter = process.env.CLICKUP_FOLDER_ID?.trim();
-  const listIdFilter = process.env.CLICKUP_LIST_ID?.trim();
-
-  const spaces = spaceIdFilter
-    ? allSpaces.filter((s) => s.id === spaceIdFilter)
-    : allSpaces;
-
-  const allTasks: ClickUpLeadTask[] = [];
-  const storePayload: Parameters<typeof storeClickUpTasks>[0] = [];
-  const lists: ClickUpSyncResult["lists"] = [];
-
-  const taskCtx = {
-    teamId: resolvedTeamId,
-    teamName,
-  };
-
-  if (listIdFilter) {
-    const listRes = await fetch(
-      `https://api.clickup.com/api/v2/list/${listIdFilter}`,
-      { headers: { Authorization: token } }
-    );
-
-    if (!listRes.ok) {
-      const body = await listRes.text();
-      return {
-        ok: false,
-        demo: false,
-        teams,
-        spaces: spaces.map((s) => ({ id: s.id, name: s.name })),
-        message: `ClickUp list error (${listRes.status}): ${body.slice(0, 200)}`,
-      };
+  try {
+    const { configured } = getClickUpConfig();
+    if (!configured) {
+      return syncClickUpDemo();
     }
 
-    const listData = (await listRes.json()) as {
-      id: string;
-      name: string;
-      space?: { id: string; name: string };
-    };
+    const token = process.env.CLICKUP_API_TOKEN!.trim();
+    const teamId = process.env.CLICKUP_TEAM_ID?.trim();
 
-    const listRef: ClickUpListRef = {
-      id: listData.id,
-      name: listData.name,
-      space_id: listData.space?.id,
-    };
-
-    if (
-      spaceIdFilter &&
-      listRef.space_id &&
-      listRef.space_id !== spaceIdFilter
-    ) {
-      return {
-        ok: false,
-        demo: false,
-        teams,
-        message: "CLICKUP_LIST_ID is not in CLICKUP_SPACE_ID",
-      };
-    }
-
-    lists.push({
-      id: listRef.id,
-      name: listRef.name,
-      space_id: listRef.space_id,
-    });
-
-    await fetchClickUpTasksForList(
+    const teamsRes = await clickUpFetch(
+      "https://api.clickup.com/api/v2/team",
       token,
-      listRef,
-      {
-        ...taskCtx,
-        spaceName: listData.space?.name,
-      },
-      storePayload,
-      allTasks
+      "fetch teams"
     );
-  } else if (folderIdFilter) {
-    const folderLists = await fetchClickUpListsFromFolder(token, folderIdFilter);
-    const scopedLists = spaceIdFilter
-      ? folderLists.filter((l) => l.space_id === spaceIdFilter)
-      : folderLists;
 
-    for (const list of scopedLists) {
-      lists.push(list);
-      const spaceName = spaces.find((s) => s.id === list.space_id)?.name;
+    if (!teamsRes.ok) {
+      const body = await readClickUpErrorBody(teamsRes);
+      logClickUpSyncError("teams response", {
+        status: teamsRes.status,
+        body,
+      });
+      return {
+        ok: false,
+        demo: false,
+        message: `ClickUp API error (${teamsRes.status}): ${body.slice(0, 200)}`,
+      };
+    }
+
+    const teamsData = (await teamsRes.json()) as {
+      teams?: Array<{ id: string; name: string }>;
+    };
+    const teams = teamsData.teams || [];
+    const resolvedTeamId = teamId || teams[0]?.id;
+
+    if (!resolvedTeamId) {
+      return {
+        ok: true,
+        demo: false,
+        teams,
+        message: "ClickUp connected — no teams found",
+      };
+    }
+
+    const teamName = teams.find((t) => t.id === resolvedTeamId)?.name;
+
+    const spacesRes = await clickUpFetch(
+      `https://api.clickup.com/api/v2/team/${resolvedTeamId}/space?archived=false`,
+      token,
+      "fetch spaces"
+    );
+
+    if (!spacesRes.ok) {
+      const body = await readClickUpErrorBody(spacesRes);
+      logClickUpSyncError("spaces response", {
+        status: spacesRes.status,
+        body,
+      });
+      return {
+        ok: false,
+        demo: false,
+        teams,
+        message: `ClickUp spaces error (${spacesRes.status}): ${body.slice(0, 200)}`,
+      };
+    }
+
+    const spacesData = (await spacesRes.json()) as {
+      spaces?: Array<{ id: string; name: string }>;
+    };
+    const allSpaces = spacesData.spaces || [];
+    const spaceIdFilter = process.env.CLICKUP_SPACE_ID?.trim();
+    const folderIdFilter = process.env.CLICKUP_FOLDER_ID?.trim();
+    const listIdFilter = process.env.CLICKUP_LIST_ID?.trim();
+
+    const spaces = spaceIdFilter
+      ? allSpaces.filter((s) => s.id === spaceIdFilter)
+      : allSpaces;
+
+    const allTasks: ClickUpLeadTask[] = [];
+    const storePayload: Parameters<typeof storeClickUpTasks>[0] = [];
+    const lists: ClickUpSyncResult["lists"] = [];
+
+    const taskCtx = {
+      teamId: resolvedTeamId,
+      teamName,
+    };
+
+    if (listIdFilter) {
+      const listRes = await clickUpFetch(
+        `https://api.clickup.com/api/v2/list/${listIdFilter}`,
+        token,
+        "fetch list"
+      );
+
+      if (!listRes.ok) {
+        const body = await readClickUpErrorBody(listRes);
+        logClickUpSyncError("list response", {
+          status: listRes.status,
+          body,
+        });
+        return {
+          ok: false,
+          demo: false,
+          teams,
+          spaces: spaces.map((s) => ({ id: s.id, name: s.name })),
+          message: `ClickUp list error (${listRes.status}): ${body.slice(0, 200)}`,
+        };
+      }
+
+      const listData = (await listRes.json()) as {
+        id: string;
+        name: string;
+        space?: { id: string; name: string };
+      };
+
+      const listRef: ClickUpListRef = {
+        id: listData.id,
+        name: listData.name,
+        space_id: listData.space?.id,
+      };
+
+      if (
+        spaceIdFilter &&
+        listRef.space_id &&
+        listRef.space_id !== spaceIdFilter
+      ) {
+        return {
+          ok: false,
+          demo: false,
+          teams,
+          message: "CLICKUP_LIST_ID is not in CLICKUP_SPACE_ID",
+        };
+      }
+
+      lists.push({
+        id: listRef.id,
+        name: listRef.name,
+        space_id: listRef.space_id,
+      });
+
       await fetchClickUpTasksForList(
         token,
-        list,
-        { ...taskCtx, spaceName },
+        listRef,
+        {
+          ...taskCtx,
+          spaceName: listData.space?.name,
+        },
         storePayload,
         allTasks
       );
-    }
-  } else {
-    const spaceLimit = spaceIdFilter ? spaces.length : 3;
-    for (const space of spaces.slice(0, spaceLimit)) {
-      const listsRes = await fetch(
-        `https://api.clickup.com/api/v2/space/${space.id}/list?archived=false`,
-        { headers: { Authorization: token } }
-      );
+    } else if (folderIdFilter) {
+      const folderLists = await fetchClickUpListsFromFolder(token, folderIdFilter);
+      const scopedLists = spaceIdFilter
+        ? folderLists.filter((l) => l.space_id === spaceIdFilter)
+        : folderLists;
 
-      if (!listsRes.ok) continue;
-
-      const listsData = (await listsRes.json()) as {
-        lists?: Array<{ id: string; name: string }>;
-      };
-
-      const listSlice = spaceIdFilter ? listsData.lists || [] : (listsData.lists || []).slice(0, 2);
-
-      for (const list of listSlice) {
-        lists.push({ id: list.id, name: list.name, space_id: space.id });
+      for (const list of scopedLists) {
+        lists.push(list);
+        const spaceName = spaces.find((s) => s.id === list.space_id)?.name;
         await fetchClickUpTasksForList(
           token,
-          { id: list.id, name: list.name, space_id: space.id },
-          { ...taskCtx, spaceName: space.name },
+          list,
+          { ...taskCtx, spaceName },
           storePayload,
           allTasks
         );
       }
+    } else {
+      const spaceLimit = spaceIdFilter ? spaces.length : 3;
+      for (const space of spaces.slice(0, spaceLimit)) {
+        const listsRes = await clickUpFetch(
+          `https://api.clickup.com/api/v2/space/${space.id}/list?archived=false`,
+          token,
+          `fetch lists for space ${space.id}`
+        );
+
+        if (!listsRes.ok) continue;
+
+        const listsData = (await listsRes.json()) as {
+          lists?: Array<{ id: string; name: string }>;
+        };
+
+        const listSlice = spaceIdFilter ? listsData.lists || [] : (listsData.lists || []).slice(0, 2);
+
+        for (const list of listSlice) {
+          lists.push({ id: list.id, name: list.name, space_id: space.id });
+          await fetchClickUpTasksForList(
+            token,
+            { id: list.id, name: list.name, space_id: space.id },
+            { ...taskCtx, spaceName: space.name },
+            storePayload,
+            allTasks
+          );
+        }
+      }
     }
+
+    const tasksStored = await storeClickUpTasks(storePayload);
+    const leadResult = await syncClickUpTasksToLeads(allTasks);
+
+    const leadParts: string[] = [];
+    if (leadResult.leadsImported) leadParts.push(`${leadResult.leadsImported} inserted`);
+    if (leadResult.leadsUpdated) leadParts.push(`${leadResult.leadsUpdated} updated`);
+    if (leadResult.leadsSkipped) leadParts.push(`${leadResult.leadsSkipped} skipped`);
+    const leadMsg = leadParts.length ? ` — leads: ${leadParts.join(", ")}` : "";
+
+    return {
+      ok: true,
+      demo: false,
+      teams: teams.map((t) => ({ id: t.id, name: t.name })),
+      spaces: spaces.map((s) => ({ id: s.id, name: s.name })),
+      lists,
+      tasks: allTasks.slice(0, 20),
+      tasksStored,
+      leadsImported: leadResult.leadsImported,
+      leadsUpdated: leadResult.leadsUpdated,
+      leadsSkipped: leadResult.leadsSkipped,
+      inserted: leadResult.inserted,
+      updated: leadResult.updated,
+      skipped: leadResult.skipped,
+      leadsSynced: leadResult.leadsImported + leadResult.leadsUpdated,
+      message: `Synced ${teams.length} team(s), ${lists.length} list(s), ${allTasks.length} task(s)${tasksStored ? ` — ${tasksStored} stored` : ""}${leadMsg}`,
+    };
+  } catch (error) {
+    logClickUpSyncError("syncClickUp fatal", { error });
+    return {
+      ok: false,
+      demo: false,
+      message: error instanceof Error ? error.message : String(error),
+    };
   }
-
-  const tasksStored = await storeClickUpTasks(storePayload);
-  const leadResult = await syncClickUpTasksToLeads(allTasks);
-
-  const leadParts: string[] = [];
-  if (leadResult.leadsImported) leadParts.push(`${leadResult.leadsImported} inserted`);
-  if (leadResult.leadsUpdated) leadParts.push(`${leadResult.leadsUpdated} updated`);
-  if (leadResult.leadsSkipped) leadParts.push(`${leadResult.leadsSkipped} skipped`);
-  const leadMsg = leadParts.length ? ` — leads: ${leadParts.join(", ")}` : "";
-
-  return {
-    ok: true,
-    demo: false,
-    teams: teams.map((t) => ({ id: t.id, name: t.name })),
-    spaces: spaces.map((s) => ({ id: s.id, name: s.name })),
-    lists,
-    tasks: allTasks.slice(0, 20),
-    tasksStored,
-    leadsImported: leadResult.leadsImported,
-    leadsUpdated: leadResult.leadsUpdated,
-    leadsSkipped: leadResult.leadsSkipped,
-    inserted: leadResult.inserted,
-    updated: leadResult.updated,
-    skipped: leadResult.skipped,
-    leadsSynced: leadResult.leadsImported + leadResult.leadsUpdated,
-    message: `Synced ${teams.length} team(s), ${lists.length} list(s), ${allTasks.length} task(s)${tasksStored ? ` — ${tasksStored} stored` : ""}${leadMsg}`,
-  };
 }
