@@ -5,7 +5,7 @@ import {
   getServerSupabase,
   writeActivityLog,
 } from "@/lib/rbac/api-auth";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { fetchLeadsPage } from "@/lib/leads/fetch";
 
 export async function GET(request: Request) {
   const auth = await authorize("leads", "read");
@@ -19,72 +19,24 @@ export async function GET(request: Request) {
   const source = url.searchParams.get("source")?.trim() || "";
   const paginated = url.searchParams.has("page") || url.searchParams.has("limit");
 
-  const admin = getAdminClient();
-  if (!admin) {
-    const supabase = await getServerSupabase();
-    const { data, error } = await supabase.rpc("get_leads_page", {
-      p_page: page,
-      p_limit: limit,
-      p_search: search,
-      p_status: status,
-      p_source: source,
-    });
-
-    if (error) return apiError(error.message, 500);
-    const result = data as {
-      leads?: unknown[];
-      total?: number;
-      page?: number;
-      limit?: number;
-      totalPages?: number;
-    };
+  try {
+    const result = await fetchLeadsPage({ page, limit, search, status, source });
 
     if (paginated) {
       return apiSuccess({
-        leads: result.leads || [],
-        total: result.total || 0,
-        page: result.page || page,
-        limit: result.limit || limit,
-        totalPages: result.totalPages || 0,
+        leads: result.leads,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages,
       });
     }
 
-    return apiSuccess(result.leads || []);
+    return apiSuccess(result.leads);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to load leads";
+    return apiError(message, 500);
   }
-
-  let query = admin
-    .from("leads")
-    .select("*", { count: "exact" })
-    .order("created_at", { ascending: false });
-
-  if (search) {
-    query = query.or(
-      `company_name.ilike.%${search}%,contact_person.ilike.%${search}%,mobile.ilike.%${search}%`
-    );
-  }
-  if (status) query = query.eq("status", status);
-  if (source) query = query.eq("source", source);
-
-  if (paginated) {
-    const from = (page - 1) * limit;
-    query = query.range(from, from + limit - 1);
-  }
-
-  const { data, error, count } = await query;
-
-  if (error) return apiError(error.message, 500);
-
-  if (paginated) {
-    return apiSuccess({
-      leads: data || [],
-      total: count || 0,
-      page,
-      limit,
-      totalPages: Math.ceil((count || 0) / limit),
-    });
-  }
-
-  return apiSuccess(data || []);
 }
 
 export async function POST(request: Request) {

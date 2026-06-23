@@ -2,6 +2,7 @@ import { apiSuccess, authorize } from "@/lib/rbac/api-auth";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { countTodayFollowups } from "@/lib/followups/fetch";
 import { getDashboardStatus } from "@/lib/dashboard/status";
+import { fetchLeadSalesMetrics } from "@/lib/leads/fetch";
 
 function sumAmount(rows: { amount?: number | null; record_type?: string | null }[], type: string) {
   return rows
@@ -20,6 +21,8 @@ export async function GET() {
   const auth = await authorize("dashboard", "read");
   if ("error" in auth) return auth.error;
 
+  const salesMetrics = await fetchLeadSalesMetrics();
+
   const supabase = getAdminClient();
   if (!supabase) {
     const dashboard = await getDashboardStatus();
@@ -32,12 +35,12 @@ export async function GET() {
 
     return apiSuccess({
       sales: {
-        totalLeads: counts.leads,
-        won: 0,
-        active: counts.leads,
-        lost: 0,
+        totalLeads: salesMetrics.totalLeads,
+        won: salesMetrics.won,
+        active: salesMetrics.active,
+        lost: salesMetrics.lost,
         pendingFollowups: counts.followups,
-        dormantLeads: 0,
+        dormantLeads: salesMetrics.dormantLeads,
       },
       operations: {
         totalOrders: counts.jobs,
@@ -60,7 +63,7 @@ export async function GET() {
         queueCount: counts.finance_import_queue,
       },
       trends: {
-        salesTrend: 0,
+        salesTrend: Math.min(10, Math.round((salesMetrics.won / Math.max(salesMetrics.totalLeads, 1)) * 10)),
         collectionTrend: 0,
         profitTrend: 0,
         receivableTrend: 0,
@@ -76,12 +79,10 @@ export async function GET() {
   }
 
   const [
-    leadsRes,
     jobsRes,
     financeRes,
     followupsToday,
   ] = await Promise.all([
-    supabase.from("leads").select("status", { count: "exact" }),
     supabase.from("jobs").select("status, dispatch_status, invoice_status", { count: "exact" }),
     supabase
       .from("finance_import_queue")
@@ -90,13 +91,8 @@ export async function GET() {
     countTodayFollowups(supabase).catch(() => 0),
   ]);
 
-  const leads = leadsRes.data || [];
   const jobs = jobsRes.data || [];
   const finance = financeRes.data || [];
-
-  const won = leads.filter((l) => String(l.status || "").toUpperCase() === "WON").length;
-  const lost = leads.filter((l) => String(l.status || "").toUpperCase() === "LOST").length;
-  const active = leads.length - won - lost;
 
   const dispatched = jobs.filter((j) =>
     String(j.dispatch_status || j.status || "").toUpperCase().includes("DISPATCH")
@@ -118,14 +114,14 @@ export async function GET() {
     Math.max(
       0,
       Math.round(
-        (won / Math.max(leads.length, 1)) * 40 +
+        (salesMetrics.won / Math.max(salesMetrics.totalLeads, 1)) * 40 +
           (dispatched / Math.max(jobs.length, 1)) * 30 +
           (freeCash / Math.max(receivable, 1)) * 30
       )
     )
   );
 
-  const salesTrend = Math.min(10, Math.round((won / Math.max(leads.length, 1)) * 10));
+  const salesTrend = Math.min(10, Math.round((salesMetrics.won / Math.max(salesMetrics.totalLeads, 1)) * 10));
   const collectionTrend = Math.min(10, Math.round((freeCash / Math.max(receivable, 1)) * 10));
   const profitTrend = Math.min(10, Math.round(healthScore / 10));
   const receivableTrend = Math.min(10, Math.round((receivable > payable ? 6 : 3)));
@@ -136,12 +132,12 @@ export async function GET() {
 
   return apiSuccess({
     sales: {
-      totalLeads: leadsRes.count ?? leads.length,
-      won,
-      active,
-      lost,
+      totalLeads: salesMetrics.totalLeads,
+      won: salesMetrics.won,
+      active: salesMetrics.active,
+      lost: salesMetrics.lost,
       pendingFollowups: followupsToday,
-      dormantLeads: 0,
+      dormantLeads: salesMetrics.dormantLeads,
     },
     operations: {
       totalOrders: jobsRes.count ?? jobs.length,
