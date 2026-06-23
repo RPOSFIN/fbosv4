@@ -32,6 +32,9 @@ type LeadStats = {
   total: number;
   unique: number;
   duplicates: number;
+  won?: number;
+  lost?: number;
+  active?: number;
   statusBreakdown: Record<string, number>;
   topSources: Array<{ name: string; count: number }>;
   recentLeads: Array<{
@@ -42,6 +45,37 @@ type LeadStats = {
     created_at: string;
   }>;
 };
+
+function unwrapLeadsPage(payload: unknown): LeadsResponse {
+  if (Array.isArray(payload)) {
+    return {
+      leads: payload as Lead[],
+      total: payload.length,
+      page: 1,
+      limit: payload.length,
+      totalPages: 1,
+    };
+  }
+  if (payload && typeof payload === "object") {
+    const obj = payload as LeadsResponse & { data?: LeadsResponse };
+    const inner = obj.data ?? obj;
+    const leads = inner.leads ?? [];
+    return {
+      leads,
+      total: inner.total ?? leads.length,
+      page: inner.page ?? 1,
+      limit: inner.limit ?? leads.length,
+      totalPages: inner.totalPages ?? 1,
+    };
+  }
+  return { leads: [], total: 0, page: 1, limit: 25, totalPages: 0 };
+}
+
+function unwrapStats(payload: unknown): LeadStats | null {
+  if (!payload || typeof payload !== "object") return null;
+  const obj = payload as LeadStats & { data?: LeadStats };
+  return obj.data ?? obj;
+}
 
 type ClickUpTask = {
   id: string;
@@ -122,8 +156,9 @@ export default function LeadMasterView() {
 
   const loadStats = useCallback(async () => {
     try {
-      const data = await apiFetch<LeadStats>("/api/leads/stats");
-      setStats(data);
+      const statsResponse = await apiFetch<LeadStats>("/api/leads/stats");
+      console.log("RAW STATS", statsResponse);
+      setStats(unwrapStats(statsResponse));
     } catch (e) {
       console.error(e);
     }
@@ -140,7 +175,9 @@ export default function LeadMasterView() {
       if (statusFilter) params.set("status", statusFilter);
       if (sourceFilter) params.set("source", sourceFilter);
 
-      const data = await apiFetch<LeadsResponse>(`/api/leads?${params}`);
+      const response = await apiFetch<LeadsResponse | Lead[]>(`/api/leads?${params}`);
+      console.log("RAW RESPONSE", response);
+      const data = unwrapLeadsPage(response);
       setLeads(data.leads);
       setTotal(data.total);
       setTotalPages(data.totalPages);

@@ -1,39 +1,191 @@
-import Link from "next/link";
+"use client";
 
-export default function SalesWorkbench(){
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { apiFetch } from "@/lib/api/client";
+
+type Lead = {
+  id: string;
+  company_name?: string;
+  status?: string;
+  contact_person?: string;
+  mobile?: string;
+  source?: string;
+};
+
+type LeadsPagePayload = {
+  leads?: Lead[];
+  total?: number;
+};
+
+type LeadStatsPayload = {
+  total?: number;
+  won?: number;
+  active?: number;
+  lost?: number;
+};
+
+function unwrapLeadsPage(payload: unknown): { leads: Lead[]; total: number } {
+  if (Array.isArray(payload)) {
+    return { leads: payload, total: payload.length };
+  }
+  if (payload && typeof payload === "object") {
+    const obj = payload as LeadsPagePayload & { data?: LeadsPagePayload };
+    const inner = obj.data ?? obj;
+    const leads = inner.leads ?? [];
+    return { leads, total: inner.total ?? leads.length };
+  }
+  return { leads: [], total: 0 };
+}
+
+function unwrapStats(payload: unknown): { total: number; won: number; active: number; lost: number } {
+  if (payload && typeof payload === "object") {
+    const obj = payload as LeadStatsPayload & { data?: LeadStatsPayload };
+    const inner = obj.data ?? obj;
+    return {
+      total: inner.total ?? 0,
+      won: inner.won ?? 0,
+      active: inner.active ?? 0,
+      lost: inner.lost ?? 0,
+    };
+  }
+  return { total: 0, won: 0, active: 0, lost: 0 };
+}
 
 const modules = [
-["Lead Master","/lead-master"],
-["ClickUp Leads","/clickup-tasks"],
-["Import Engine","/imports"],
-["Sales Dashboard","/sales-dashboard"],
-["Sales Kanban","/sales-kanban"],
-["Today's Followup","/followups/today"],
-["Followups","/followups"],
-["Quotations","/quotations"],
-["Clients","/clients"],
-["Sales Reports","/sales-reports"],
-["Sales Targets","/sales-targets"],
-["Sales Activities","/sales-activities"]
+  ["Lead Master", "/lead-master"],
+  ["ClickUp Leads", "/clickup-tasks"],
+  ["Import Engine", "/imports"],
+  ["Sales Dashboard", "/sales-dashboard"],
+  ["Sales Kanban", "/sales-kanban"],
+  ["Today's Followup", "/followups/today"],
+  ["Followups", "/followups"],
+  ["Quotations", "/quotations"],
+  ["Clients", "/clients"],
+  ["Sales Reports", "/sales-reports"],
+  ["Sales Targets", "/sales-targets"],
+  ["Sales Activities", "/sales-activities"],
 ];
 
-return(
-<div className="p-8">
-<h1 className="text-3xl font-bold mb-6">Sales Workbench</h1>
+export default function SalesWorkbench() {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [stats, setStats] = useState({ total: 0, won: 0, active: 0, lost: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-<div className="grid grid-cols-5 gap-4">
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [response, statsResponse] = await Promise.all([
+          apiFetch<LeadsPagePayload | Lead[]>("/api/leads?limit=50"),
+          apiFetch<LeadStatsPayload>("/api/leads/stats"),
+        ]);
 
-{modules.map((m)=>(
-<Link
-key={m[1]}
-href={m[1]}
-className="border rounded-xl p-5 hover:border-cyan-400"
->
-{m[0]}
-</Link>
-))}
+        console.log("RAW RESPONSE", response);
+        console.log("RAW STATS", statsResponse);
 
-</div>
-</div>
-);
+        if (!active) return;
+
+        const page = unwrapLeadsPage(response);
+        const parsedStats = unwrapStats(statsResponse);
+
+        setLeads(page.leads.slice(0, 20));
+        setStats(parsedStats);
+        setError(null);
+      } catch (e) {
+        if (active) {
+          setError(e instanceof Error ? e.message : "Failed to load leads");
+          setLeads([]);
+          setStats({ total: 0, won: 0, active: 0, lost: 0 });
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return (
+    <div className="p-8">
+      <h1 className="text-3xl font-bold mb-2">Sales Workbench</h1>
+      <p className="text-sm text-slate-500 mb-6">Live data from /api/leads and /api/leads/stats</p>
+
+      {error && (
+        <p className="mb-4 rounded-lg border border-red-800/50 bg-red-950/20 px-4 py-2 text-sm text-red-200">
+          {error}
+        </p>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <Kpi label="Total Leads" value={loading ? "…" : stats.total} />
+        <Kpi label="Won" value={loading ? "…" : stats.won} />
+        <Kpi label="Active" value={loading ? "…" : stats.active} />
+        <Kpi label="Lost" value={loading ? "…" : stats.lost} />
+      </div>
+
+      <div className="border rounded-xl p-4 mb-8 bg-white shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold">Live Leads</h2>
+          <Link href="/lead-master" className="text-sm text-blue-600 hover:underline">
+            Open Lead Master →
+          </Link>
+        </div>
+        {loading ? (
+          <p className="text-sm text-slate-500">Loading leads…</p>
+        ) : leads.length === 0 ? (
+          <p className="text-sm text-slate-500">No leads found.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-slate-500 border-b">
+                  <th className="py-2 pr-4">Company</th>
+                  <th className="py-2 pr-4">Contact</th>
+                  <th className="py-2 pr-4">Mobile</th>
+                  <th className="py-2 pr-4">Status</th>
+                  <th className="py-2">Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leads.map((lead) => (
+                  <tr key={lead.id} className="border-b border-slate-100 last:border-0">
+                    <td className="py-2 pr-4 font-medium">{lead.company_name || "—"}</td>
+                    <td className="py-2 pr-4">{lead.contact_person || "—"}</td>
+                    <td className="py-2 pr-4">{lead.mobile || "—"}</td>
+                    <td className="py-2 pr-4">{lead.status || "NEW"}</td>
+                    <td className="py-2">{lead.source || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <h2 className="text-xl font-bold mb-4">Sales Modules</h2>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {modules.map(([label, href]) => (
+          <Link
+            key={href}
+            href={href}
+            className="border rounded-xl p-5 hover:border-cyan-400 bg-white shadow-sm"
+          >
+            {label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Kpi({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="border rounded-xl p-4 bg-white shadow-sm">
+      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-3xl font-bold mt-1">{value}</p>
+    </div>
+  );
 }
