@@ -17,12 +17,26 @@ export async function pushToGoogleSheet(payload: {
   }
 
   try {
-    const res = await fetch(url, {
+    const body = JSON.stringify(payload);
+    const headers = { "Content-Type": "application/json" };
+    let res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      headers,
+      body,
+      redirect: "manual",
       signal: AbortSignal.timeout(15000),
     });
+    if ([301, 302, 303, 307, 308].includes(res.status)) {
+      const location = res.headers.get("location");
+      if (location) {
+        res = await fetch(location, {
+          method: "POST",
+          headers,
+          body,
+          signal: AbortSignal.timeout(15000),
+        });
+      }
+    }
     const data = await res.json().catch(() => null);
     return {
       ok: res.ok,

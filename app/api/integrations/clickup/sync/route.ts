@@ -5,7 +5,7 @@ import {
   authorize,
   writeActivityLog,
 } from "@/lib/rbac/api-auth";
-import { syncClickUp } from "@/lib/integrations/clickup";
+import { runClickUpSync } from "@/lib/services/clickup-sync-service";
 import { loadIntegrationSyncData } from "@/lib/integrations/sync-data";
 import { upsertIntegrationRow } from "@/lib/integrations/status";
 
@@ -19,14 +19,15 @@ export async function POST() {
   if ("error" in auth) return auth.error;
 
   const { ctx } = auth;
-  const result = await syncClickUp();
+  const result = await runClickUpSync();
   const now = new Date().toISOString();
+  const connected = result.ok && !result.demo && Boolean(result.tasksStored || result.leadsSynced);
 
   await upsertIntegrationRow({
     connector_name: "clickup",
-    status: result.ok ? "connected" : "error",
-    last_sync_at: result.ok ? now : null,
-    error_message: result.ok ? null : result.message,
+    status: connected ? "connected" : result.ok ? "pending" : "error",
+    last_sync_at: connected ? now : null,
+    error_message: connected ? null : result.message,
     demo: result.demo,
     config: {
       demo: result.demo,
@@ -42,7 +43,7 @@ export async function POST() {
   await writeActivityLog({
     entity_type: "integration",
     entity_id: "clickup",
-    action: result.ok ? "sync_success" : "sync_failed",
+    action: connected ? "sync_success" : "sync_failed",
     user_id: ctx.userId,
     user_name: ctx.fullName || ctx.email,
     notes: result.message,
@@ -51,5 +52,5 @@ export async function POST() {
   if (!result.ok) return apiError(result.message, 502);
 
   const syncData = await loadIntegrationSyncData();
-  return apiSuccess({ ...result, syncData });
+  return apiSuccess({ ...result, connected, syncData });
 }

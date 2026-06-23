@@ -1,10 +1,5 @@
-import {
-  apiError,
-  apiSuccess,
-  authorize,
-  getServerSupabase,
-  writeActivityLog,
-} from "@/lib/rbac/api-auth";
+import { apiError, apiSuccess, authorize, getServerSupabase, writeActivityLog } from "@/lib/rbac/api-auth";
+import { getLeads } from "@/lib/services/lead-service";
 
 export async function GET(request: Request) {
   const auth = await authorize("leads", "read");
@@ -18,41 +13,24 @@ export async function GET(request: Request) {
   const source = url.searchParams.get("source")?.trim() || "";
   const paginated = url.searchParams.has("page") || url.searchParams.has("limit");
 
-  const supabase = await getServerSupabase();
+  try {
+    const result = await getLeads({ page, limit, search, status, source });
 
-  let query = supabase
-    .from("leads")
-    .select("*", { count: "exact" })
-    .order("created_at", { ascending: false });
+    if (paginated) {
+      return apiSuccess({
+        leads: result.leads,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages,
+      });
+    }
 
-  if (search) {
-    query = query.or(
-      `company_name.ilike.%${search}%,contact_person.ilike.%${search}%,mobile.ilike.%${search}%`
-    );
+    return apiSuccess(result.leads);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to load leads";
+    return apiError(message, 500);
   }
-  if (status) query = query.eq("status", status);
-  if (source) query = query.eq("source", source);
-
-  if (paginated) {
-    const from = (page - 1) * limit;
-    query = query.range(from, from + limit - 1);
-  }
-
-  const { data, error, count } = await query;
-
-  if (error) return apiError(error.message, 500);
-
-  if (paginated) {
-    return apiSuccess({
-      leads: data || [],
-      total: count || 0,
-      page,
-      limit,
-      totalPages: Math.ceil((count || 0) / limit),
-    });
-  }
-
-  return apiSuccess(data || []);
 }
 
 export async function POST(request: Request) {

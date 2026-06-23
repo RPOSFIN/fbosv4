@@ -1,8 +1,8 @@
 # FBOS V4 — Branch Mismatch Report
 
-**Date:** 2026-06-20  
-**Audit mode:** Read-only — no code or scripts modified  
-**Auditor workspace branch:** `cursor/p0-closure-0d65` @ `b35fad3`  
+**Date:** 2026-06-20
+**Audit mode:** Read-only — no code or scripts modified
+**Auditor workspace branch:** `cursor/p0-closure-0d65` @ `b35fad3`
 **Default branch:** `main` @ `a364445`
 
 ---

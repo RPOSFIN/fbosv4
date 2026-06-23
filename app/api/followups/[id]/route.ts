@@ -5,6 +5,10 @@ import {
   getServerSupabase,
   writeActivityLog,
 } from "@/lib/rbac/api-auth";
+import {
+  buildFollowupUpdatePayload,
+  updateFollowupRow,
+} from "@/lib/followups/write";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -17,17 +21,14 @@ export async function PATCH(request: Request, { params }: Params) {
   const body = await request.json();
   const supabase = await getServerSupabase();
 
-  const updates: Record<string, unknown> = { updated_by: ctx.userId };
-  if (body.status !== undefined) updates.status = body.status;
-  if (body.next_followup !== undefined) updates.next_followup = body.next_followup;
-  if (body.notes !== undefined) updates.notes = body.notes;
+  const updates = buildFollowupUpdatePayload({
+    status: body.status,
+    next_followup: body.next_followup,
+    notes: body.notes,
+    updated_by: ctx.userId,
+  });
 
-  const { data, error } = await supabase
-    .from("followups")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
+  const { data, error } = await updateFollowupRow(supabase, id, updates);
 
   if (error) return apiError(error.message, 500);
 

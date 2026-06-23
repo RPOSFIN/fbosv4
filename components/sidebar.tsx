@@ -13,7 +13,7 @@ const menu = [
   { name: "Master Dashboard", href: "/" },
   { name: "Sales OS", href: "/sales-workbench" },
   { name: "Operations OS", href: "/operations" },
-  { name: "Finance OS", href: "/finance" },
+  { name: "Finance (Full Matrix)", href: "/finance-dashboard" },
   { name: "Execution Hub", href: "/execution-board" },
   { name: "Internal Chat", href: "/chat-center" },
   { name: "Knowledge Center", href: "/knowledge-hub" },

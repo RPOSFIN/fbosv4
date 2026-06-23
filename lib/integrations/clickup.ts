@@ -1,7 +1,12 @@
 import { getClickUpConfig } from "@/lib/integrations/config";
-import { syncClickUpTasksToLeads, type ClickUpLeadTask } from "@/lib/integrations/clickup-leads";
+import {
+  mapClickUpStatusToLead,
+  syncClickUpTasksToLeads,
+  type ClickUpLeadTask,
+} from "@/lib/integrations/clickup-leads";
 import { CLICKUP_DEMO } from "@/lib/integrations/demo-data";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@supabase/supabase-js";
 
 export type ClickUpSyncResult = {
   ok: boolean;
@@ -83,6 +88,58 @@ async function storeClickUpTasks(
   }
 
   return inserted?.length || 0;
+}
+
+async function storeClickUpViaSecretRpc(
+  tasks: Parameters<typeof storeClickUpTasks>[0],
+  leadTasks: ClickUpLeadTask[]
+): Promise<{ tasksStored: number; leadsSynced: number }> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const anonKey =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
+  const secret = process.env.SHEET_SYNC_SECRET?.trim();
+  if (!url || !anonKey || !secret || !tasks.length) {
+    return { tasksStored: 0, leadsSynced: 0 };
+  }
+
+  const anon = createClient(url, anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data, error } = await anon.rpc("ingest_clickup_secret", {
+    p_secret: secret,
+    p_tasks: tasks.map((t) => ({
+      external_id: t.id,
+      name: t.name,
+      status: t.status || null,
+      team_id: t.team_id || null,
+      team_name: t.team_name || null,
+      space_id: t.space_id || null,
+      space_name: t.space_name || null,
+      list_id: t.list_id || null,
+      list_name: t.list_name || null,
+      raw: t.raw || {},
+    })),
+    p_leads: leadTasks.map((t) => ({
+      company_name: t.name,
+      mobile: t.mobile || null,
+      status: mapClickUpStatusToLead(t.status),
+      source: "ClickUp",
+      clickup_task_id: t.id,
+    })),
+  });
+
+  if (error) {
+    console.warn("[clickup] secret RPC:", error.message);
+    return { tasksStored: 0, leadsSynced: 0 };
+  }
+
+  const result = data as { tasksStored?: number; leadsSynced?: number } | null;
+  return {
+    tasksStored: Number(result?.tasksStored || 0),
+    leadsSynced: Number(result?.leadsSynced || 0),
+  };
 }
 
 export async function syncClickUpDemo(): Promise<ClickUpSyncResult> {
@@ -429,8 +486,15 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
     }
   }
 
-  const tasksStored = await storeClickUpTasks(storePayload);
+  let tasksStored = await storeClickUpTasks(storePayload);
   const leadResult = await syncClickUpTasksToLeads(allTasks);
+
+  let rpcLeadsSynced = 0;
+  if (!tasksStored && storePayload.length) {
+    const rpcResult = await storeClickUpViaSecretRpc(storePayload, allTasks);
+    tasksStored = rpcResult.tasksStored;
+    rpcLeadsSynced = rpcResult.leadsSynced;
+  }
 
   const leadParts: string[] = [];
   if (leadResult.leadsImported) leadParts.push(`${leadResult.leadsImported} inserted`);
@@ -452,7 +516,7 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
     inserted: leadResult.inserted,
     updated: leadResult.updated,
     skipped: leadResult.skipped,
-    leadsSynced: leadResult.leadsImported + leadResult.leadsUpdated,
-    message: `Synced ${teams.length} team(s), ${lists.length} list(s), ${allTasks.length} task(s)${tasksStored ? ` — ${tasksStored} stored` : ""}${leadMsg}`,
+    leadsSynced: leadResult.leadsImported + leadResult.leadsUpdated + rpcLeadsSynced,
+    message: `Synced ${teams.length} team(s), ${lists.length} list(s), ${allTasks.length} task(s)${tasksStored ? ` — ${tasksStored} stored` : ""}${rpcLeadsSynced ? ` — ${rpcLeadsSynced} leads synced` : ""}${leadMsg}`,
   };
 }
