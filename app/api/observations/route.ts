@@ -1,92 +1,55 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { NextRequest } from "next/server";
+import { apiError, apiSuccess, authorize } from "@/lib/rbac/api-auth";
+import {
+  addError,
+  addObservation,
+  listErrors,
+  listObservations,
+} from "@/lib/observations/store";
 
-export async function GET() {
-try {
-const supabase = await createSupabaseServerClient();
+export async function GET(request: NextRequest) {
+  const auth = await authorize("jobs", "read");
+  if ("error" in auth) return auth.error;
 
-```
-const { data, error } = await supabase
-  .from('observations')
-  .select('*')
-  .order('created_at', { ascending: false });
+  const type = request.nextUrl.searchParams.get("type");
+  if (type === "errors") {
+    return apiSuccess({ items: listErrors() });
+  }
 
-if (error) throw error;
-
-return NextResponse.json({
-  observations: data || [],
-});
-```
-
-} catch (error) {
-return NextResponse.json(
-{ error: String(error) },
-{ status: 500 }
-);
-}
+  return apiSuccess({ items: listObservations() });
 }
 
 export async function POST(request: NextRequest) {
-try {
-const body = await request.json();
+  const auth = await authorize("jobs", "create");
+  if ("error" in auth) return auth.error;
 
-```
-const supabase = await createSupabaseServerClient();
+  const body = await request.json().catch(() => ({}));
 
-const { data, error } = await supabase
-  .from('observations')
-  .insert(body)
-  .select()
-  .single();
+  if (body.kind === "error") {
+    const message = String(body.message || "").trim();
+    if (!message) return apiError("message required", 400);
 
-if (error) throw error;
+    const row = addError({
+      module: String(body.module || "compliance"),
+      message,
+      depends_on: Array.isArray(body.depends_on) ? body.depends_on : [],
+      severity:
+        body.severity === "low" || body.severity === "medium" || body.severity === "high"
+          ? body.severity
+          : "medium",
+    });
 
-return NextResponse.json(
-  { observation: data },
-  { status: 201 }
-);
-```
+    return apiSuccess({ item: row }, 201);
+  }
 
-} catch (error) {
-return NextResponse.json(
-{ error: String(error) },
-{ status: 500 }
-);
-}
-}
+  const text = String(body.text || "").trim();
+  if (!text) return apiError("text required", 400);
 
-export async function DELETE(request: NextRequest) {
-try {
-const { searchParams } = new URL(request.url);
+  const row = addObservation({
+    module: String(body.module || "compliance"),
+    text,
+    depends_on: Array.isArray(body.depends_on) ? body.depends_on : [],
+  });
 
-```
-const id = searchParams.get('id');
-
-if (!id) {
-  return NextResponse.json(
-    { error: 'ID required' },
-    { status: 400 }
-  );
-}
-
-const supabase = await createSupabaseServerClient();
-
-const { error } = await supabase
-  .from('observations')
-  .delete()
-  .eq('id', id);
-
-if (error) throw error;
-
-return NextResponse.json({
-  success: true,
-});
-```
-
-} catch (error) {
-return NextResponse.json(
-{ error: String(error) },
-{ status: 500 }
-);
-}
+  return apiSuccess({ item: row }, 201);
 }

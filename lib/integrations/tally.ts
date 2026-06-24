@@ -4,6 +4,7 @@ import { parseTallyDemoXml, TALLY_DEMO_XML } from "@/lib/integrations/demo-data"
 import {
   getResolvedTallyConfig,
   isLocalTallyHost,
+  allowLocalTally,
   tallyCloudFixSteps,
 } from "@/lib/integrations/tally-config";
 import { getAdminClient } from "@/lib/supabase/admin";
@@ -150,18 +151,17 @@ export async function syncTally(): Promise<TallySyncResult> {
     };
   }
 
-  if (isLocalTallyHost(host)) {
+  if (isLocalTallyHost(host) && !allowLocalTally()) {
     const demo = await syncTallyDemo();
     return {
       ...demo,
       ok: true,
       demo: true,
       endpoint,
-      message: `TALLY_HOST is localhost — Tally is on Cloud, not local. Set TALLY_HOST to your cloud server IP/hostname (gateway port ${port}). Current: localhost:${port}`,
+      message: `TALLY_HOST is localhost — set TALLY_ALLOW_LOCAL=true when Tally runs on this machine (port ${port}). Or use cloud hostname instead of localhost.`,
       fixSteps: [
-        `Remove TALLY_HOST=localhost from .env.local`,
-        `Set TALLY_HOST=your-tally-cloud-server-ip-or-hostname (port ${port} via TALLY_PORT)`,
-        "Or enter cloud hostname in Integration Hub → Tally card below",
+        `On cloud server with Tally open: TALLY_HOST=127.0.0.1 and TALLY_ALLOW_LOCAL=true`,
+        `Remote dev PC: use cloud hostname/IP, not localhost`,
         `Company: "${company || "not set"}" — must match Tally exactly`,
         ...tallyCloudFixSteps("your-cloud-server", port).slice(1),
       ],

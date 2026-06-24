@@ -14,6 +14,14 @@ export function isLocalTallyHost(host: string): boolean {
   return h === "localhost" || h === "127.0.0.1" || h === "::1";
 }
 
+/** When Tally runs on the same machine as FBOS (e.g. cloud server V: drive). */
+export function allowLocalTally(): boolean {
+  return (
+    process.env.TALLY_ALLOW_LOCAL === "true" ||
+    process.env.TALLY_USE_LOCALHOST === "true"
+  );
+}
+
 export type ResolvedTallyConfig = {
   host: string;
   port: string;
@@ -51,7 +59,7 @@ export async function getResolvedTallyConfig(): Promise<ResolvedTallyConfig> {
   let host = "";
   let hostSource: ResolvedTallyConfig["hostSource"] = "none";
 
-  if (envHost && !isLocalTallyHost(envHost)) {
+  if (envHost && (!isLocalTallyHost(envHost) || allowLocalTally())) {
     host = normalizeTallyHost(envHost);
     hostSource = "env";
   } else if (dbHost) {
@@ -69,6 +77,14 @@ export async function getResolvedTallyConfig(): Promise<ResolvedTallyConfig> {
     hostSource,
     isCloud: Boolean(host) && !isLocalTallyHost(host),
   };
+}
+
+export function resolveTallyEndpoint(): string | null {
+  const host = process.env.TALLY_HOST?.trim() || process.env.TALLY_SERVER_URL?.trim() || "";
+  const port = process.env.TALLY_PORT?.trim() || "9007";
+  if (!host) return null;
+  if (isLocalTallyHost(host) && !allowLocalTally()) return null;
+  return `http://${normalizeTallyHost(host)}:${port}`;
 }
 
 export function tallyCloudFixSteps(host: string, port: string): string[] {
