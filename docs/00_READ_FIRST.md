@@ -1,3 +1,0 @@
-# FBOS V4 - Read First
-
-This document is the mandatory entry point for all contributors and AI agents.
