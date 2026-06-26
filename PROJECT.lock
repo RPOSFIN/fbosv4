@@ -1,0 +1,28 @@
+# PROJECT.lock — FBOS V4 governance freeze
+#
+# Engineering memory is consolidated and FROZEN. The files below are the single
+# source of governance truth. Merge updates INTO them; never create duplicate
+# governance, status, backup, or handoff documents (see AI_RULES.md, rule 4).
+
+project: fbos-v1
+repo: RPOSFIN/fbosv4
+active_branch: cursor/data-population-0d65
+frozen_on: 2026-06-26
+governance: frozen
+
+canonical_files:
+  - README.md
+  - AI_RULES.md
+  - docs/00_READ_FIRST.md
+  - docs/01_ENGINEERING_MANIFEST.md
+  - docs/02_PROJECT_STATUS.md
+  - docs/03_HANDOFF.md
+
+archive:
+  obsolete_docs: docs/archive/
+  diagnostic_dumps: backups/
+
+rule: |
+  A new AI engineer must be able to resume using only the canonical_files,
+  with no previous chat history. If information is missing, add it to the
+  appropriate canonical file — do not create a new one.
