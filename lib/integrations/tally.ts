@@ -201,7 +201,19 @@ export async function syncTally(): Promise<TallySyncResult> {
   }
 
   try {
-    const xmlRequest = `<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>Ledgers</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>${company}</SVCURRENTCOMPANY></STATICVARIABLES></DESC></BODY></ENVELOPE>`;
+    // TallyPrime XML Export request. "Ledgers" is NOT a valid Tally report ID and
+    // returns <LINEERROR>Could not find Report 'Ledgers'...</LINEERROR>. "Day Book" is the
+    // official TallyPrime report that exports <VOUCHER> data (the finance parser consumes
+    // VOUCHER blocks), scoped to a date range with the XML export format.
+    const pad2 = (n: number) => String(n).padStart(2, "0");
+    const ymd = (d: Date) =>
+      `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}`;
+    const today = new Date();
+    const fromDate = ymd(
+      new Date(today.getFullYear() - 1, today.getMonth(), today.getDate())
+    );
+    const toDate = ymd(today);
+    const xmlRequest = `<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>Day Book</ID></HEADER><BODY><DESC><STATICVARIABLES><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT><SVCURRENTCOMPANY>${company}</SVCURRENTCOMPANY><SVFROMDATE>${fromDate}</SVFROMDATE><SVTODATE>${toDate}</SVTODATE></STATICVARIABLES></DESC></BODY></ENVELOPE>`;
 
     const res = await fetch(endpoint!, {
       method: "POST",
