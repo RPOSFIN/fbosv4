@@ -19,6 +19,7 @@ export type PermissionResource =
   | "quotations"
   | "clients"
   | "jobs"
+  | "call_coach"
   | "call_coach_notes"
   | "sops"
   | "checklists"
@@ -90,6 +91,12 @@ const MATRIX: Record<
     read: READ_ALL,
     create: OPS_WRITE,
     update: OPS_WRITE,
+    delete: ADMIN_ROLES,
+  },
+  call_coach: {
+    read: READ_ALL,
+    create: CALL_COACH_WRITE,
+    update: CALL_COACH_WRITE,
     delete: ADMIN_ROLES,
   },
   call_coach_notes: {
