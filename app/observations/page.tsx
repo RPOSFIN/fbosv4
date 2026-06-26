@@ -216,8 +216,4 @@ export default function ObservationPage() {
       )}
     </div>
   );
-}import { redirect } from "next/navigation";
-
-export default function ObservationsRedirect() {
-  redirect("/compliance");
 }
