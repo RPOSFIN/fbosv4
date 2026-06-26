@@ -18,6 +18,7 @@ const menu = [
 
 const tools = [
   { name: "Integrations", href: "/integrations", icon: "🔗" },
+  { name: "Engineering Center", href: "/engineering-center", icon: "🛠️" },
   { name: "Settings", href: "/fbos-settings", icon: "⚙️" },
 ];
 

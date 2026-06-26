@@ -16,6 +16,7 @@ const ROUTE_RESOURCE: Record<string, PermissionResource> = {
   "/ai": "dashboard",
   "/data": "dashboard",
   "/integrations": "integrations",
+  "/engineering-center": "dashboard",
   "/fbos-settings": "dashboard",
   "/admin": "profiles",
   "/ceo-command-center": "dashboard",

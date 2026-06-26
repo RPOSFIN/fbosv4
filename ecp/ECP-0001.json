@@ -1,0 +1,22 @@
+{
+  "id": "ECP-0001",
+  "type": "engineering-checkpoint",
+  "version": 1,
+  "createdAt": "2026-06-26T19:07:52.571Z",
+  "repository": "RPOSFIN/fbosv4",
+  "branch": "fbosv4-dev",
+  "commit": "5f2d1c7cfa8a494d7d3863aacc65c4c507e2152d",
+  "commitShort": "5f2d1c7",
+  "lastCommitMessage": "docs: archive legacy documentation and finalize engineering memory",
+  "gitClean": false,
+  "gitStatus": [
+    "M app/errors/page.tsx",
+    " M app/observations/page.tsx",
+    " M components/sidebar.tsx",
+    " M lib/rbac/route-access.ts",
+    "?? app/api/engineering/",
+    "?? app/engineering-center/",
+    "?? lib/engineering/"
+  ],
+  "sprint": "Sales Workbench Active"
+}
