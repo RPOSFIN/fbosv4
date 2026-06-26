@@ -18,7 +18,7 @@ let cachedDbShape: FollowupDbShape | null = null;
 
 /** Detect column names once per process (LIVE vs fbosv4). */
 export async function resolveFollowupDbShape(
-  supabase: { from: (table: string) => { select: (cols: string) => { limit: (n: number) => Promise<{ error: { message?: string } | null }> } } }
+  supabase: { from: (table: string) => { select: (cols: string) => { limit: (n: number) => PromiseLike<{ error: { message?: string } | null }> } } }
 ): Promise<FollowupDbShape> {
   if (cachedDbShape) return cachedDbShape;
 
