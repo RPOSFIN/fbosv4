@@ -1,8 +1,3 @@
-import { redirect } from "next/navigation";
-
-export default function ErrorsRedirect() {
-  redirect("/compliance");
-}
 "use client";
 
 import { useState, useRef } from 'react';
