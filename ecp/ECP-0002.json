@@ -1,0 +1,15 @@
+{
+  "id": "ECP-0002",
+  "type": "engineering-checkpoint",
+  "version": 2,
+  "createdAt": "2026-06-27T04:47:36.113Z",
+  "state": "ECP_CREATED",
+  "repository": "RPOSFIN/fbosv4",
+  "branch": "fbosv4-dev",
+  "commit": "572703c7e4fe516d5be94c430297aef66cad05c2",
+  "commitShort": "572703c",
+  "lastCommitMessage": "feat(engineering-os): move EngineeringOS into Integrations as collapsible developer panel; remove sidebar module",
+  "gitClean": true,
+  "gitStatus": [],
+  "sprint": "Sales Workbench Active"
+}

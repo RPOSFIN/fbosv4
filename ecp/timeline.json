@@ -16,5 +16,11 @@
     "type": "PROMOTED_TO_3R",
     "ecp": "ECP-0001",
     "detail": "Promoted to 3R as 3r-fbos4-2026-06-26-ecp-0001 (auto) at 3940600"
+  },
+  {
+    "ts": "2026-06-27T04:47:36.113Z",
+    "type": "ECP_CREATED",
+    "ecp": "ECP-0002",
+    "detail": "Checkpoint created at 572703c on fbosv4-dev"
   }
 ]
