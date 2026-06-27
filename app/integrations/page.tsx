@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import CommandHeader from "@/components/command-center/command-header";
 import { pageShell, panelPad, subheading, muted, body } from "@/components/command-center/theme";
+import EngineeringPanel from "@/components/engineering/engineering-panel";
 
 interface ClickUpTaskRow {
   id: string;
@@ -157,6 +158,11 @@ export default function IntegrationsPage() {
             Error: {error}
           </div>
         )}
+
+        {/* EngineeringOS — developer tool, collapsible (not a permanent business module) */}
+        <section>
+          <EngineeringPanel />
+        </section>
 
         <section>
           <h2 className={subheading}>Connectors</h2>
