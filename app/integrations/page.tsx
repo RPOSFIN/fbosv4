@@ -133,7 +133,11 @@ export default function IntegrationsPage() {
     return (
       <div className="min-h-screen">
         <CommandHeader title="Integrations" />
-        <div className={pageShell}>
+        <div className={`${pageShell} space-y-5`}>
+          {/* EngineeringOS stays visible even while integration data loads */}
+          <section>
+            <EngineeringPanel />
+          </section>
           <p className={muted}>Loading integration status…</p>
         </div>
       </div>
