@@ -1,0 +1,19 @@
+Repository:
+RPOSFIN/fbosv4
+
+Read in order:
+
+docs/AGENT_BOOTSTRAP.md
+docs/ENGINEERING_MANIFEST.md
+docs/3RCORE.md
+docs/ARCHITECTURE.md
+docs/PRODUCTION_STATUS.md
+docs/BLOCKERS.md
+docs/HANDOFF.md
+
+After reading, verify the repository and continue implementation from the latest checkpoint.
+
+Do not redesign.
+Do not restart.
+Do not create helper projects.
+Work only inside fbos-v1.

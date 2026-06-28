@@ -153,6 +153,59 @@ async function ensureSeedRows() {
   }
 }
 
+async function applyMigration004() {
+  const ref = new URL(url).hostname.split(".")[0];
+  const sql004 = readFileSync(join(root, "supabase/migrations/004_integration_tables.sql"), "utf8");
+  const sql = `${sql004}\nNOTIFY pgrst, 'reload schema';`;
+
+  const dbUrl =
+    process.env.DATABASE_URL ||
+    process.env.DIRECT_URL ||
+    process.env.SUPABASE_DB_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_URL_NON_POOLING;
+
+  if (dbUrl) {
+    try {
+      const pg = await import("pg");
+      const client = new pg.default.Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
+      await client.connect();
+      try {
+        await client.query("begin");
+        await client.query(sql);
+        await client.query("commit");
+        console.log("APPLIED 004_integration_tables.sql via DATABASE_URL");
+        return true;
+      } catch (e) {
+        try { await client.query("rollback"); } catch {}
+        console.log("FAIL  004 via DATABASE_URL:", e.message);
+      } finally {
+        await client.end();
+      }
+    } catch (e) {
+      console.log("FAIL  pg import:", e.message);
+    }
+  }
+
+  const token = process.env.SUPABASE_ACCESS_TOKEN?.trim();
+  if (token) {
+    const endpoint = `https://api.supabase.com/v1/projects/${ref}/database/query`;
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ query: sql }),
+    });
+    const text = await res.text();
+    if (res.ok) {
+      console.log("APPLIED 004_integration_tables.sql via SUPABASE_ACCESS_TOKEN");
+      return true;
+    }
+    console.log("FAIL  004 via management API:", res.status, text.slice(0, 200));
+  }
+
+  return false;
+}
+
 async function ensureSupplementalTables() {
   for (const table of ["clickup_tasks", "finance_import_queue"]) {
     const { error } = await supabase.from(table).select("*").limit(1);
@@ -188,6 +241,16 @@ async function main() {
   }
 
   await ensureSupplementalTables();
+
+  const { error: cuErr } = await supabase.from("clickup_tasks").select("*").limit(1);
+  if (cuErr?.code === "PGRST205" || cuErr?.message?.includes("Could not find")) {
+    const applied = await applyMigration004();
+    if (applied) {
+      await new Promise((r) => setTimeout(r, 2000));
+      await ensureSupplementalTables();
+    }
+  }
+
   console.log("---");
   console.log("Done. If tables missing, paste SQL from migrations/003 and 004 into Supabase SQL Editor.");
 }

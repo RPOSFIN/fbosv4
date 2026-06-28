@@ -2,8 +2,8 @@ import {
   apiError,
   apiSuccess,
   authorize,
-  getServerSupabase,
 } from "@/lib/rbac/api-auth";
+import { getAdminClient } from "@/lib/supabase/admin";
 
 const TABLE_MAP = {
   sops: "sops",
@@ -29,13 +29,24 @@ export async function GET(_request: Request, { params }: Params) {
   const auth = await authorize(resource, "read");
   if ("error" in auth) return auth.error;
 
-  const supabase = await getServerSupabase();
+  const supabase = getAdminClient();
+  if (!supabase) return apiSuccess([]);
   const { data, error } = await supabase
     .from(table)
     .select("*")
     .order("updated_at", { ascending: false });
 
-  if (error) return apiError(error.message, 500);
+  if (error) {
+    const msg = error.message || "";
+    if (
+      error.code === "PGRST205" ||
+      msg.includes("schema cache") ||
+      msg.includes("does not exist")
+    ) {
+      return apiSuccess([]);
+    }
+    return apiError(error.message, 500);
+  }
   return apiSuccess(data || []);
 }
 
@@ -54,7 +65,8 @@ export async function POST(request: Request, { params }: Params) {
 
   const { ctx } = auth;
   const body = await request.json();
-  const supabase = await getServerSupabase();
+  const supabase = getAdminClient();
+  if (!supabase) return apiError("Database not configured", 503);
 
   const { data, error } = await supabase
     .from(table)
@@ -84,7 +96,8 @@ export async function PATCH(request: Request, { params }: Params) {
   const id = body.id as string | undefined;
   if (!id) return apiError("id is required", 400);
 
-  const supabase = await getServerSupabase();
+  const supabase = getAdminClient();
+  if (!supabase) return apiError("Database not configured", 503);
   const updates = { ...body };
   delete updates.id;
   const { data, error } = await supabase

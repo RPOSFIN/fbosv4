@@ -1,23 +1,36 @@
-const hosts = ["wsipl-89-72"];
-const ports = ["9007", "10021"];
-const company = "Flexiflair Tech Pvt Ltd";
+import http from 'http';
+
+const host = "127.0.0.1"; // Is baar raw HTTP directly ise 100% bypass karega
+const port = 9007;
+const company = "Flexiflair Tech Private Limited";
 
 const xml = `<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>Ledgers</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>${company}</SVCURRENTCOMPANY></STATICVARIABLES></DESC></BODY></ENVELOPE>`;
 
-for (const host of hosts) {
-  for (const port of ports) {
-    const url = `http://${host}:${port}`;
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "text/xml" },
-        body: xml,
-        signal: AbortSignal.timeout(12000),
-      });
-      const body = (await res.text()).slice(0, 150);
-      console.log(`${url} → ${res.status} ${body.replace(/\n/g, " ")}`);
-    } catch (e) {
-      console.log(`${url} → ERR ${e.message}`);
-    }
+const options = {
+  hostname: host,
+  port: port,
+  path: '/',
+  method: 'POST',
+  headers: {
+    'Content-Type': 'text/xml',
+    'Content-Length': Buffer.byteLength(xml)
   }
-}
+};
+
+console.log(`Connecting to Tally at http://${host}:${port}...`);
+
+const req = http.request(options, (res) => {
+  let data = '';
+  res.on('data', (chunk) => { data += chunk; });
+  res.on('end', () => {
+    console.log(`SUCCESS! Status: ${res.statusCode}`);
+    console.log(`Response: ${data.slice(0, 200)}`);
+  });
+});
+
+req.on('error', (e) => {
+  console.log(`Tally Connection Failed: ${e.message}`);
+});
+
+req.write(xml);
+req.end();

@@ -1,0 +1,300 @@
+# FBOS V4 – ENGINEERING RULEBOOK (3Rcore+)
+
+## PURPOSE
+
+This is the permanent engineering rulebook.
+
+Every new engineer or AI agent must follow these rules before writing any code.
+
+========================================================
+
+1. SINGLE REPOSITORY RULE
+   ========================================================
+
+ONLY production repository:
+
+fbos-v1
+
+GitHub:
+
+RPOSFIN/fbosv4
+
+Never implement in:
+
+* helper repositories
+* Vite demos
+* sandbox projects
+* templates
+* playgrounds
+* temporary workspaces
+
+========================================================
+2. REPOSITORY VERIFICATION GATE
+===============================
+
+Before every engineering session, verify:
+
+pwd
+
+git rev-parse --show-toplevel
+
+git remote -v
+
+git branch --show-current
+
+git status
+
+If repository verification fails:
+
+STOP.
+
+========================================================
+3. DOCUMENTATION READ ORDER
+===========================
+
+Read:
+
+00_READ_FIRST.md
+
+↓
+
+02_AGENT_BOOTSTRAP.md
+
+↓
+
+01_ENGINEERING_MANIFEST.md
+
+↓
+
+03_PROJECT_STATUS.md
+
+↓
+
+06_BLOCKERS.md
+
+↓
+
+04_HANDOFF.md
+
+Only then begin implementation.
+
+========================================================
+4. APPROVED RUNTIME ARCHITECTURE
+================================
+
+UI
+
+↓
+
+API
+
+↓
+
+Service
+
+↓
+
+Repository
+
+↓
+
+Supabase
+
+Supabase is the ONLY runtime Single Source of Truth.
+
+========================================================
+5. INTEGRATION OWNERSHIP
+========================
+
+Supabase
+Production Database
+
+Apps Script
+Synchronization Only
+
+Google Sheets
+Reporting Only
+
+ClickUp
+Task Execution Only
+
+Tally
+Finance Integration Only
+
+FinanceOS
+Separate Production System
+
+========================================================
+6. IMPLEMENTATION RULE
+======================
+
+Never redesign architecture.
+
+Never rewrite compliant code.
+
+Only refactor non-compliant paths.
+
+========================================================
+7. BLOCKER POLICY
+=================
+
+Maximum:
+
+3 investigations.
+
+After Attempt 3:
+
+BLOCKED
+
+Attach evidence.
+
+Continue roadmap.
+
+========================================================
+8. EVIDENCE RULE
+================
+
+Nothing is accepted without evidence.
+
+Required evidence includes:
+
+git status
+
+git log
+
+dir
+
+build output
+
+runtime output
+
+Never simulate:
+
+* commits
+* push
+* build
+* runtime
+
+========================================================
+9. GIT WORKFLOW
+===============
+
+Git Commit
+
+↓
+
+Git Push
+
+↓
+
+Update Documentation
+
+↓
+
+Mini Handoff
+
+↓
+
+Continue
+
+Git Tags only for milestones.
+
+========================================================
+10. RECOVERY
+============
+
+Primary:
+
+Git History
+
+Git Tags
+
+Secondary:
+
+ZIP Backup
+
+Repomix:
+
+Repository index only.
+
+Generate only at milestones.
+
+========================================================
+11. DOCUMENTATION RESPONSIBILITIES
+==================================
+
+Rarely Updated:
+
+01_ENGINEERING_MANIFEST.md
+
+02_AGENT_BOOTSTRAP.md
+
+Updated Every Sprint:
+
+03_PROJECT_STATUS.md
+
+04_HANDOFF.md
+
+05_CHANGELOG.md
+
+06_BLOCKERS.md
+
+========================================================
+12. SESSION END CHECKLIST
+=========================
+
+Before stopping:
+
+Build
+
+Runtime Validation
+
+git status
+
+git log --oneline -1
+
+Update:
+
+03_PROJECT_STATUS.md
+
+04_HANDOFF.md
+
+05_CHANGELOG.md
+
+06_BLOCKERS.md
+
+Commit
+
+Push
+
+Mini Handoff
+
+========================================================
+13. FORBIDDEN
+=============
+
+No helper repositories.
+
+No sandbox implementation.
+
+No Vite demo implementation.
+
+No architecture redesign.
+
+No fake output.
+
+No fake commits.
+
+No fake push.
+
+No duplicated services.
+
+No duplicated repositories.
+
+No direct UI → Database access.
+
+========================================================
+14. SUCCESS
+===========
+
+A new engineer must be able to clone the repository, read the documentation, verify the repository, and continue implementation without reading previous chats.

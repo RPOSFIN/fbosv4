@@ -1,0 +1,28 @@
+{
+  "id": "ECP-0001",
+  "type": "engineering-checkpoint",
+  "version": 2,
+  "createdAt": "2026-06-26T19:41:01.674Z",
+  "state": "CLOSED",
+  "repository": "RPOSFIN/fbosv4",
+  "branch": "fbosv4-dev",
+  "commit": "394060074b30631851c17e1327577495465d9f90",
+  "commitShort": "3940600",
+  "lastCommitMessage": "feat(engineering-os): Engineering Center page + ECP v1 (local engineering checkpoints, no git automation)",
+  "gitClean": false,
+  "gitStatus": [
+    "M app/engineering-center/page.tsx",
+    " D ecp/ECP-0001.json",
+    " M lib/engineering/ecp.ts",
+    " M lib/followups/constants.ts",
+    " M lib/rbac/permissions.ts",
+    "?? app/api/engineering/automation/",
+    "?? app/api/engineering/promote/",
+    "?? app/api/engineering/restore/",
+    "?? app/api/engineering/verify/",
+    "?? lib/engineering/gates.ts",
+    "?? lib/engineering/promotion.ts",
+    "?? lib/engineering/types.ts"
+  ],
+  "sprint": "Sales Workbench Active"
+}

@@ -12,6 +12,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit") || "100")));
   const status = url.searchParams.get("status")?.trim() || "";
+  const recordType = url.searchParams.get("record_type")?.trim() || "";
 
   let query = supabase
     .from("finance_import_queue")
@@ -23,6 +24,7 @@ export async function GET(request: Request) {
     .limit(limit);
 
   if (status) query = query.eq("status", status);
+  if (recordType) query = query.ilike("record_type", recordType);
 
   const { data, error, count } = await query;
   if (error) return apiError(error.message, 500);

@@ -1,6 +1,7 @@
 import {
   isLocalTallyHost,
   normalizeTallyHost,
+  allowLocalTally,
 } from "@/lib/integrations/tally-config";
 
 export type TallyGatewayTestResult = {
@@ -29,13 +30,13 @@ export async function testTallyGateway(
     };
   }
 
-  if (isLocalTallyHost(normalized)) {
+  if (isLocalTallyHost(normalized) && !allowLocalTally()) {
     return {
       ok: false,
       endpoint,
       reachable: false,
       message:
-        "TALLY_HOST cannot be localhost — use your Tally Cloud server IP or hostname",
+        "TALLY_HOST is localhost — set TALLY_ALLOW_LOCAL=true when Tally runs on this same machine",
     };
   }
 

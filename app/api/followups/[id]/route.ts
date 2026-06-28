@@ -5,8 +5,15 @@ import {
   getServerSupabase,
   writeActivityLog,
 } from "@/lib/rbac/api-auth";
+import { resolveFollowupDbShape } from "@/lib/followups/constants";
+import { denormalizeFollowupForWrite } from "@/lib/followups/query";
+import { getAdminClient } from "@/lib/supabase/admin";
 
 type Params = { params: Promise<{ id: string }> };
+
+async function getFollowupsSupabase() {
+  return getAdminClient() ?? (await getServerSupabase());
+}
 
 export async function PATCH(request: Request, { params }: Params) {
   const auth = await authorize("followups", "update");
@@ -15,12 +22,13 @@ export async function PATCH(request: Request, { params }: Params) {
   const { ctx } = auth;
   const { id } = await params;
   const body = await request.json();
-  const supabase = await getServerSupabase();
+  const supabase = await getFollowupsSupabase();
+  const shape = await resolveFollowupDbShape(supabase);
 
-  const updates: Record<string, unknown> = { updated_by: ctx.userId };
-  if (body.status !== undefined) updates.status = body.status;
-  if (body.next_followup !== undefined) updates.next_followup = body.next_followup;
-  if (body.notes !== undefined) updates.notes = body.notes;
+  const updates = denormalizeFollowupForWrite(
+    { ...body, updated_by: ctx.userId },
+    shape
+  );
 
   const { data, error } = await supabase
     .from("followups")

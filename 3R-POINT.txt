@@ -1,0 +1,9 @@
+FBOS4 3R BACKUP POINT — 2026-06-23
+==================================
+Say "3R point" or "fbos4 3R" to restore this checkpoint.
+
+Tag:     3r-fbos4-2026-06-23
+Branch:  backup/fbos4-3r-2026-06-23
+Zip:     d:\all in one fbos files\BACKUPS\fbos4-3R-2026-06-23.zip
+Docs:    docs/BACKUP-3R-POINT-FBOS4.md
+Repo:    https://github.com/RPOSFIN/fbosv4.git
