@@ -39,6 +39,18 @@ type VerifyResult = {
   mode: string;
   message: string;
 };
+type FinanceHealth = {
+  available: boolean;
+  total: number;
+  pendingTally: number;
+  failedSync: number;
+  synced: number;
+  verified: number;
+  imported: number;
+  queueSize: number;
+  lastSyncAt: string | null;
+  healthScore: number;
+};
 
 const LIFECYCLE = [
   "ECP_CREATED", "DEVELOPMENT", "BUILD_PASS", "RUNTIME_PASS",
@@ -52,10 +64,16 @@ export default function EngineeringPanel({ defaultExpanded = false }: { defaultE
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [restoreTarget, setRestoreTarget] = useState("latest-3r");
+  const [fin, setFin] = useState<FinanceHealth | null>(null);
 
   const load = useCallback(async () => {
     try {
-      setInfo(await apiFetch<Info>("/api/engineering/info"));
+      const [i, f] = await Promise.all([
+        apiFetch<Info>("/api/engineering/info"),
+        apiFetch<FinanceHealth>("/api/finance/sync-health").catch(() => null),
+      ]);
+      setInfo(i);
+      if (f) setFin(f);
     } catch (e) {
       setMsg({ ok: false, text: e instanceof Error ? e.message : "Load failed" });
     }
@@ -90,6 +108,10 @@ export default function EngineeringPanel({ defaultExpanded = false }: { defaultE
   const toggleAutomation = () => run("automation", async () => {
     const r = await apiFetch<{ autoPromote: boolean }>("/api/engineering/automation", { method: "POST", body: JSON.stringify({ autoPromote: !info?.automationEnabled }) });
     setMsg({ ok: true, text: `Automation ${r.autoPromote ? "ENABLED" : "DISABLED"}` }); await load();
+  });
+  const reconcileFinance = () => run("reconcile-fin", async () => {
+    const r = await apiFetch<{ message: string }>("/api/finance/reconcile", { method: "POST" });
+    setMsg({ ok: true, text: r.message }); await load();
   });
 
   const gates = verify?.gates.gates ?? [];
@@ -202,6 +224,28 @@ export default function EngineeringPanel({ defaultExpanded = false }: { defaultE
               {msg.ok ? "✓ " : "✗ "}{msg.text}
             </div>
           )}
+
+          {/* Finance / Tally sync health — never hides pending or failed */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Finance / Tally Sync</h3>
+              <Btn onClick={reconcileFinance} busy={busy === "reconcile-fin"}>Reconcile Tally Finance</Btn>
+            </div>
+            {!fin || !fin.available ? (
+              <p className="text-slate-500 text-sm">finance_transactions not reachable (needs Supabase + migration 009).</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <Field label="Pending Tally" value={String(fin.pendingTally)} tone={fin.pendingTally > 0 ? "warn" : "ok"} />
+                <Field label="Failed Sync" value={String(fin.failedSync)} tone={fin.failedSync > 0 ? "warn" : "ok"} />
+                <Field label="Verified" value={String(fin.verified)} tone="ok" />
+                <Field label="Imported" value={String(fin.imported)} />
+                <Field label="Queue Size" value={String(fin.queueSize)} />
+                <Field label="Total Tx" value={String(fin.total)} />
+                <Field label="Health Score" value={`${fin.healthScore}%`} tone={fin.healthScore >= 90 ? "ok" : "warn"} />
+                <Field label="Last Sync" value={fin.lastSyncAt ? new Date(fin.lastSyncAt).toLocaleString() : "—"} />
+              </div>
+            )}
+          </div>
 
           <div>
             <h3 className="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide">Engineering Timeline</h3>
