@@ -22,5 +22,23 @@
     "type": "ECP_CREATED",
     "ecp": "ECP-0002",
     "detail": "Checkpoint created at 572703c on fbosv4-dev"
+  },
+  {
+    "ts": "2026-06-28T14:04:07.209Z",
+    "type": "ECP_CREATED",
+    "ecp": "ECP-0003",
+    "detail": "Checkpoint created at c738a2c on fbosv4-dev"
+  },
+  {
+    "ts": "2026-06-28T14:04:12.897Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0003",
+    "detail": "All gates PASS"
+  },
+  {
+    "ts": "2026-06-28T14:04:13.122Z",
+    "type": "PROMOTED_TO_3R",
+    "ecp": "ECP-0003",
+    "detail": "Promoted to 3R as 3r-fbos4-2026-06-28-ecp-0003 (auto) at c738a2c"
   }
 ]

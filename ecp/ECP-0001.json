@@ -3,7 +3,7 @@
   "type": "engineering-checkpoint",
   "version": 2,
   "createdAt": "2026-06-26T19:41:01.674Z",
-  "state": "PROMOTED_TO_3R",
+  "state": "CLOSED",
   "repository": "RPOSFIN/fbosv4",
   "branch": "fbosv4-dev",
   "commit": "394060074b30631851c17e1327577495465d9f90",

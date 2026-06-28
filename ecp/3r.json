@@ -1,9 +1,9 @@
 {
-  "tag": "3r-fbos4-2026-06-26-ecp-0001",
-  "ecp": "ECP-0001",
-  "commit": "394060074b30631851c17e1327577495465d9f90",
-  "commitShort": "3940600",
+  "tag": "3r-fbos4-2026-06-28-ecp-0003",
+  "ecp": "ECP-0003",
+  "commit": "c738a2c48588bf1c7d515cf05fdd02f15d8fc054",
+  "commitShort": "c738a2c",
   "branch": "fbosv4-dev",
-  "promotedAt": "2026-06-26T19:41:22.427Z",
+  "promotedAt": "2026-06-28T14:04:13.122Z",
   "mode": "auto"
 }

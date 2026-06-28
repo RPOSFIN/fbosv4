@@ -1,0 +1,15 @@
+{
+  "id": "ECP-0003",
+  "type": "engineering-checkpoint",
+  "version": 2,
+  "createdAt": "2026-06-28T14:04:07.209Z",
+  "state": "PROMOTED_TO_3R",
+  "repository": "RPOSFIN/fbosv4",
+  "branch": "fbosv4-dev",
+  "commit": "c738a2c48588bf1c7d515cf05fdd02f15d8fc054",
+  "commitShort": "c738a2c",
+  "lastCommitMessage": "feat(engineering-os): Finance/Tally Sync health + Reconcile button in EngineeringOS panel",
+  "gitClean": true,
+  "gitStatus": [],
+  "sprint": "Sales Workbench Active"
+}

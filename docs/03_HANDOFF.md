@@ -7,5 +7,5 @@
 
 ## Latest 3R (EngineeringOS)
 <!-- 3R:LATEST -->
-**Latest 3R: 3r-fbos4-2026-06-26-ecp-0001 — ECP-0001 — fbosv4-dev @ 3940600 — 2026-06-26T19:41:22.427Z (auto)**
+**Latest 3R: 3r-fbos4-2026-06-28-ecp-0003 — ECP-0003 — fbosv4-dev @ c738a2c — 2026-06-28T14:04:13.122Z (auto)**
 <!-- /3R:LATEST -->
