@@ -1,48 +1,19 @@
-/** EngineeringOS Phase 2 — shared types for the Recovery Engine. */
+// lib/engineering/types.ts
 
-export const ENG_STATES = [
-  "ECP_CREATED",
-  "DEVELOPMENT",
-  "BUILD_PASS",
-  "RUNTIME_PASS",
-  "VERIFICATION_PASS",
-  "READY_FOR_3R",
-  "PROMOTED_TO_3R",
-  "CLOSED",
-] as const;
+export type EngState =
+  | "ECP_CREATED"
+  | "DEVELOPMENT"
+  | "BUILD_PASS"
+  | "RUNTIME_PASS"
+  | "VERIFICATION_PASS"
+  | "READY_FOR_3R"
+  | "PROMOTED_TO_3R"
+  | "CLOSED";
 
-export type EngState = (typeof ENG_STATES)[number];
-
-export type GateName =
-  | "build"
-  | "runtime"
-  | "api"
-  | "database"
-  | "route"
-  | "console";
-
-export type GateStatus = "PASS" | "FAIL";
-
-export type GateResult = {
-  name: GateName;
-  status: GateStatus;
-  detail: string;
-};
-
-export type GitState = {
-  repository: string;
-  branch: string;
-  commit: string;
-  commitShort: string;
-  lastCommitMessage: string;
-  gitClean: boolean;
-  gitStatus: string[];
-};
-
-export type EcpRecord = {
+export interface EcpRecord {
   id: string;
   type: "engineering-checkpoint";
-  version: 2;
+  version: number;
   createdAt: string;
   state: EngState;
   repository: string;
@@ -53,9 +24,9 @@ export type EcpRecord = {
   gitClean: boolean;
   gitStatus: string[];
   sprint: string;
-};
+}
 
-export type ThreeRPointer = {
+export interface ThreeRPointer {
   tag: string;
   ecp: string;
   commit: string;
@@ -63,22 +34,69 @@ export type ThreeRPointer = {
   branch: string;
   promotedAt: string;
   mode: "auto" | "manual";
-};
+}
 
-export type TimelineEvent = {
+export interface TimelineEvent {
   ts: string;
+
   type:
     | "ECP_CREATED"
     | "VERIFIED"
     | "PROMOTION_BLOCKED"
     | "PROMOTED_TO_3R"
     | "RESTORE";
-  ecp?: string;
-  detail: string;
-};
 
-export type VerificationResult = {
+  detail: string;
+
+  ecp?: string;
+}
+
+/* -------------------------------------------------- */
+/* Verification */
+/* -------------------------------------------------- */
+
+export interface GateResult {
+  name: string;
+  status: "PASS" | "FAIL";
+  detail: string;
+}
+
+export interface VerificationResult {
   gates: GateResult[];
   allPass: boolean;
-  failed: GateName[];
-};
+  failed: string[];
+}
+
+/* -------------------------------------------------- */
+/* Dashboard */
+/* -------------------------------------------------- */
+
+export interface EngineeringInfo {
+  repository: string;
+  branch: string;
+  commit: string;
+  commitShort: string;
+  lastCommitMessage: string;
+  gitClean: boolean;
+  gitStatus: string[];
+  sprint: string;
+
+  latestEcp: EcpRecord | null;
+
+  latest3R: string;
+  latest3RSource: string;
+  latest3RPointer: ThreeRPointer | null;
+
+  automationEnabled: boolean;
+
+  timeline: TimelineEvent[];
+
+  ecps: Array<{
+    id: string;
+    state: EngState;
+    createdAt: string;
+    commitShort: string;
+  }>;
+}
+
+export {};

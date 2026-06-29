@@ -80,12 +80,22 @@ function SidebarLink({
       href={href}
       className={
         active
-          ? "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] bg-blue-600 text-white font-semibold shadow-sm"
-          : "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] text-slate-700 hover:bg-slate-100 font-medium"
+          ? "flex items-center justify-between rounded-lg px-3 py-2.5 text-[15px] bg-blue-600 text-white font-semibold shadow-sm"
+          : "flex items-center justify-between rounded-lg px-3 py-2.5 text-[15px] text-slate-700 hover:bg-slate-100 font-medium"
       }
     >
-      <span className="text-base">{icon}</span>
-      {name}
+      <div className="flex items-center gap-2.5">
+        <span className="text-base">{icon}</span>
+        {name}
+      </div>
+      
+      {/* EngineeringOS Indicator Dot - Sirf Integrations link par dikhega */}
+      {name === "Integrations" && (
+        <div className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+        </div>
+      )}
     </Link>
   );
 }
