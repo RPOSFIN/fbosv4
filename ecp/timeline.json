@@ -40,5 +40,11 @@
     "type": "PROMOTED_TO_3R",
     "ecp": "ECP-0003",
     "detail": "Promoted to 3R as 3r-fbos4-2026-06-28-ecp-0003 (auto) at c738a2c"
+  },
+  {
+    "ts": "2026-06-29T23:54:35.991Z",
+    "type": "ECP_CREATED",
+    "ecp": "ECP-0004",
+    "detail": "Checkpoint created at 7de6192 on fbosv4-recovery"
   }
 ]

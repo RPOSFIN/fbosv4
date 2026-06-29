@@ -1,0 +1,17 @@
+{
+  "id": "ECP-0004",
+  "type": "engineering-checkpoint",
+  "version": 2,
+  "createdAt": "2026-06-29T23:54:35.991Z",
+  "state": "ECP_CREATED",
+  "repository": "RPOSFIN/fbosv4",
+  "branch": "fbosv4-recovery",
+  "commit": "7de619253f7ac33b9ba5ed43ef68dfecb8e11674",
+  "commitShort": "7de6192",
+  "lastCommitMessage": "refactor(engineering): restore engineering exports and sidebar integration",
+  "gitClean": false,
+  "gitStatus": [
+    "M components/engineering/engineering-panel.tsx"
+  ],
+  "sprint": "Sales Workbench Active"
+}
