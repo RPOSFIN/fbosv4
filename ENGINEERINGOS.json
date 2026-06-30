@@ -1,0 +1,29 @@
+{
+  "project": "FBOS V4",
+  "projectId": "FBOS-ENGINEERINGOS",
+  "version": "2.0",
+  "architecture": "Next.js App Router",
+  "rootLayout": "app",
+  "workspaceSignature": "FBOS-ENGINEERINGOS-2026",
+  "allowSrcFolder": false,
+  "expectedRootFolders": [
+    "app",
+    "components",
+    "lib",
+    "hooks",
+    "public",
+    "scripts",
+    "supabase",
+    "ecp",
+    "docs"
+  ],
+  "engineeringCore": {
+    "ecp": "lib/engineering/ecp.ts",
+    "gates": "lib/engineering/gates.ts",
+    "promotion": "lib/engineering/promotion.ts"
+  },
+  "onRepositoryMismatch": {
+    "action": "STOP",
+    "message": "Wrong repository attached. Do not generate code."
+  }
+}

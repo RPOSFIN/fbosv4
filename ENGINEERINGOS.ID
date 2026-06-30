@@ -1,0 +1,67 @@
+==================================================
+FBOS ENGINEERINGOS IDENTITY
+==================================================
+
+PROJECT=FBOS V4
+
+PROJECT_ID=FBOS-ENGINEERINGOS
+
+VERSION=2.0
+
+ARCHITECTURE=NEXTJS_APP_ROUTER
+
+ROOT_STRUCTURE=APP_ROUTER
+
+WORKSPACE_SIGNATURE=FBOS-ENGINEERINGOS-2026
+
+DO_NOT_CREATE_SRC=true
+
+DO_NOT_CREATE_VITE=true
+
+ENGINEERING_CORE=lib/engineering
+
+START_FILE=ENGINEERINGOS.ID
+
+==================================================
+
+EXPECTED ROOT FOLDERS
+
+app/
+components/
+lib/
+hooks/
+public/
+scripts/
+supabase/
+ecp/
+docs/
+
+==================================================
+
+EXPECTED ENGINEERING FILES
+
+lib/engineering/ecp.ts
+
+lib/engineering/gates.ts
+
+lib/engineering/promotion.ts
+
+==================================================
+
+IF THESE FILES CANNOT BE FOUND
+
+STOP.
+
+Report:
+
+Wrong repository attached.
+
+Do not create src.
+
+Do not create Vite.
+
+Do not create React starter.
+
+Do not generate code.
+
+==================================================
