@@ -46,5 +46,11 @@
     "type": "ECP_CREATED",
     "ecp": "ECP-0004",
     "detail": "Checkpoint created at 7de6192 on fbosv4-recovery"
+  },
+  {
+    "ts": "2026-07-01T23:07:27.490Z",
+    "type": "ECP_CREATED",
+    "ecp": "ECP-0005",
+    "detail": "Checkpoint created at 1888bbe on fbosv4-recovery"
   }
 ]

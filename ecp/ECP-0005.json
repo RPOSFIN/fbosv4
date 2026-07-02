@@ -1,0 +1,24 @@
+{
+  "id": "ECP-0005",
+  "type": "engineering-checkpoint",
+  "version": 2,
+  "createdAt": "2026-07-01T23:07:27.490Z",
+  "state": "ECP_CREATED",
+  "repository": "RPOSFIN/fbosv4",
+  "branch": "fbosv4-recovery",
+  "commit": "1888bbe00a0f959f02beba8269e0533250fce5f6",
+  "commitShort": "1888bbe",
+  "lastCommitMessage": "EngineeringOS: Bootstrap document structure",
+  "gitClean": false,
+  "gitStatus": [
+    "M components/engineering/engineering-panel.tsx",
+    " M eslint.config.mjs",
+    "?? AI_BOOTSTRAP.md",
+    "?? architecture-tree.txt",
+    "?? arena-home.html",
+    "?? embed.html",
+    "?? repo-tree.txt",
+    "?? triggercmd-test.txt"
+  ],
+  "sprint": "Sales Workbench Active"
+}
