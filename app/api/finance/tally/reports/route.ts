@@ -1,5 +1,5 @@
 import { apiError, apiSuccess, authorize } from "@/lib/rbac/api-auth";
-import { getCanonicalTallyReport } from "@/lib/tally/canonical/queries";
+import { getCommercialTallyReport } from "@/lib/tally/canonical/commercial-sales";
 import { listTallyReportDefinitions } from "@/lib/tally/reports/definitions";
 
 export const runtime = "nodejs";
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   if ("error" in auth) return auth.error;
 
   const url = new URL(request.url);
-  const result = await getCanonicalTallyReport({
+  const result = await getCommercialTallyReport({
     from: url.searchParams.get("from"),
     to: url.searchParams.get("to"),
     report: url.searchParams.get("report"),
