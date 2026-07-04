@@ -3,6 +3,14 @@
  * Connects to Tally via HTTP XML interface
  */
 
+import {
+  DEFAULT_TALLY_COMPANY_NAME,
+  DEFAULT_TALLY_PORT,
+  getResolvedTallyConfig,
+  normalizeTallyHost,
+  type ResolvedTallyConfig,
+} from "@/lib/integrations/tally-config";
+
 export interface TallyConfig {
   host: string;
   port: number;
@@ -31,24 +39,37 @@ export interface TallyResponse {
   error?: string;
 }
 
-function getTallyConfig(): TallyConfig | null {
-  const host = process.env.TALLY_HOST;
-  const port = process.env.TALLY_PORT;
-  const companyName = process.env.TALLY_COMPANY_NAME;
+function configFromResolved(resolved: ResolvedTallyConfig): TallyConfig | null {
+  if (!resolved.host) return null;
+  return {
+    host: normalizeTallyHost(resolved.host),
+    port: parseInt(resolved.port || DEFAULT_TALLY_PORT, 10),
+    companyName: resolved.company || DEFAULT_TALLY_COMPANY_NAME,
+  };
+}
 
-  if (!host || !port || !companyName) {
+function getTallyConfig(): TallyConfig | null {
+  const host = process.env.TALLY_HOST?.trim() || process.env.TALLY_SERVER_URL?.trim() || "";
+  const port = process.env.TALLY_PORT?.trim() || DEFAULT_TALLY_PORT;
+  const companyName =
+    process.env.TALLY_COMPANY_NAME?.trim() || DEFAULT_TALLY_COMPANY_NAME;
+
+  if (!host) {
     return null;
   }
 
   return {
-    host,
+    host: normalizeTallyHost(host),
     port: parseInt(port, 10),
     companyName,
   };
 }
 
-function getTallyUrl(): string | null {
-  const config = getTallyConfig();
+async function getResolvedClientConfig(): Promise<TallyConfig | null> {
+  return configFromResolved(await getResolvedTallyConfig());
+}
+
+function getTallyUrl(config = getTallyConfig()): string | null {
   if (!config) return null;
   return `http://${config.host}:${config.port}`;
 }
@@ -56,10 +77,13 @@ function getTallyUrl(): string | null {
 /**
  * Send XML request to Tally
  */
-export async function sendTallyRequest(xml: string): Promise<TallyResponse> {
-  const url = getTallyUrl();
+export async function sendTallyRequest(
+  xml: string,
+  config = getTallyConfig()
+): Promise<TallyResponse> {
+  const url = getTallyUrl(config);
   if (!url) {
-    return { success: false, error: 'Tally not configured' };
+    return { success: false, error: "Tally not configured" };
   }
 
   try {
@@ -67,8 +91,8 @@ export async function sendTallyRequest(xml: string): Promise<TallyResponse> {
     const timeout = setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/xml' },
+      method: "POST",
+      headers: { "Content-Type": "application/xml" },
       body: xml,
       signal: controller.signal,
     });
@@ -89,7 +113,11 @@ export async function sendTallyRequest(xml: string): Promise<TallyResponse> {
 /**
  * Test Tally connection
  */
-export async function testTallyConnection(): Promise<TallyResponse> {
+export async function testTallyConnection(
+  config = getTallyConfig()
+): Promise<TallyResponse> {
+  if (!config) return { success: false, error: "Tally not configured" };
+
   const xml = `
     <ENVELOPE>
       <HEADER>
@@ -99,7 +127,7 @@ export async function testTallyConnection(): Promise<TallyResponse> {
         <EXPORTDATA>
           <REQUESTDESC>
             <STATICVARIABLES>
-              <SVCURRENTCOMPANY>${escapeXml(process.env.TALLY_COMPANY_NAME || '')}</SVCURRENTCOMPANY>
+              <SVCURRENTCOMPANY>${escapeXml(config.companyName)}</SVCURRENTCOMPANY>
             </STATICVARIABLES>
             <REPORTNAME>List of Accounts</REPORTNAME>
             <SVGREPORTNAME>List of Accounts</SVGREPORTNAME>
@@ -109,13 +137,17 @@ export async function testTallyConnection(): Promise<TallyResponse> {
     </ENVELOPE>
   `;
 
-  return sendTallyRequest(xml);
+  return sendTallyRequest(xml, config);
 }
 
 /**
  * Get company info from Tally
  */
-export async function getTallyCompanyInfo(): Promise<TallyResponse> {
+export async function getTallyCompanyInfo(
+  config = getTallyConfig()
+): Promise<TallyResponse> {
+  if (!config) return { success: false, error: "Tally not configured" };
+
   const xml = `
     <ENVELOPE>
       <HEADER>
@@ -125,7 +157,7 @@ export async function getTallyCompanyInfo(): Promise<TallyResponse> {
         <EXPORTDATA>
           <REQUESTDESC>
             <STATICVARIABLES>
-              <SVCURRENTCOMPANY>${escapeXml(process.env.TALLY_COMPANY_NAME || '')}</SVCURRENTCOMPANY>
+              <SVCURRENTCOMPANY>${escapeXml(config.companyName)}</SVCURRENTCOMPANY>
             </STATICVARIABLES>
             <REPORTNAME>Balance Sheet</REPORTNAME>
           </REQUESTDESC>
@@ -134,15 +166,16 @@ export async function getTallyCompanyInfo(): Promise<TallyResponse> {
     </ENVELOPE>
   `;
 
-  return sendTallyRequest(xml);
+  return sendTallyRequest(xml, config);
 }
 
 /**
  * Get list of ledgers from Tally
  */
-export async function getTallyLedgers(): Promise<TallyResponse> {
-  const config = getTallyConfig();
-  if (!config) return { success: false, error: 'Tally not configured' };
+export async function getTallyLedgers(
+  config = getTallyConfig()
+): Promise<TallyResponse> {
+  if (!config) return { success: false, error: "Tally not configured" };
 
   const xml = `
     <ENVELOPE>
@@ -162,15 +195,17 @@ export async function getTallyLedgers(): Promise<TallyResponse> {
     </ENVELOPE>
   `;
 
-  return sendTallyRequest(xml);
+  return sendTallyRequest(xml, config);
 }
 
 /**
  * Push voucher to Tally
  */
-export async function pushVoucherToTally(voucher: TallyVoucher): Promise<TallyResponse> {
-  const config = getTallyConfig();
-  if (!config) return { success: false, error: 'Tally not configured' };
+export async function pushVoucherToTally(
+  voucher: TallyVoucher,
+  config = getTallyConfig()
+): Promise<TallyResponse> {
+  if (!config) return { success: false, error: "Tally not configured" };
 
   const xml = `
     <ENVELOPE>
@@ -181,6 +216,9 @@ export async function pushVoucherToTally(voucher: TallyVoucher): Promise<TallyRe
         <IMPORTDATA>
           <REQUESTDESC>
             <REPORTNAME>All Masters</REPORTNAME>
+            <STATICVARIABLES>
+              <SVCURRENTCOMPANY>${escapeXml(config.companyName)}</SVCURRENTCOMPANY>
+            </STATICVARIABLES>
           </REQUESTDESC>
           <REQUESTDATA>
             <TALLYMESSAGE xmlns:UDF="TallyUDF">
@@ -188,7 +226,7 @@ export async function pushVoucherToTally(voucher: TallyVoucher): Promise<TallyRe
                 <DATE>${escapeXml(voucher.date)}</DATE>
                 <VOUCHERTYPENAME>${escapeXml(voucher.voucherType)}</VOUCHERTYPENAME>
                 <REFERENCE>${escapeXml(voucher.voucherNo)}</REFERENCE>
-                <NARRATION>${escapeXml(voucher.narration || '')}</NARRATION>
+                <NARRATION>${escapeXml(voucher.narration || "")}</NARRATION>
                 <ALLLEDGERENTRIES.LIST>
                   <LEDGERNAME>${escapeXml(voucher.ledgerName)}</LEDGERNAME>
                   <AMOUNT>${voucher.amount}</AMOUNT>
@@ -201,16 +239,16 @@ export async function pushVoucherToTally(voucher: TallyVoucher): Promise<TallyRe
     </ENVELOPE>
   `;
 
-  return sendTallyRequest(xml);
+  return sendTallyRequest(xml, config);
 }
 
 function escapeXml(str: string): string {
   return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
 
 export const tallyClient = {
@@ -219,5 +257,6 @@ export const tallyClient = {
   getLedgers: getTallyLedgers,
   pushVoucher: pushVoucherToTally,
   getConfig: getTallyConfig,
+  getResolvedConfig: getResolvedClientConfig,
   getUrl: getTallyUrl,
 };
