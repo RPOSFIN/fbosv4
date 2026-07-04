@@ -1,6 +1,11 @@
 import { pushTallyRecordsToSheet } from "@/lib/google-write";
 import { getTallyConfig } from "@/lib/integrations/config";
-import { parseTallyDemoXml, TALLY_DEMO_XML } from "@/lib/integrations/demo-data";
+import {
+  parseTallyDemoXml,
+  parseTallyXml,
+  TALLY_DEMO_XML,
+  type TallyFinanceRecord,
+} from "@/lib/integrations/demo-data";
 import {
   getResolvedTallyConfig,
   isLocalTallyHost,
@@ -15,6 +20,7 @@ export type TallySyncResult = {
   endpoint?: string;
   message: string;
   recordsQueued?: number;
+  parsedCount?: number;
   preview?: Record<string, unknown>;
   fixSteps?: string[];
 };
@@ -22,17 +28,32 @@ export type TallySyncResult = {
 /** @deprecated Use TallySyncResult */
 export type TallyImportResult = TallySyncResult;
 
-async function queueFinanceRecords(
-  records: Array<{
-    company?: string;
-    record_type: string;
-    description?: string;
-    amount: number;
-    voucher_date?: string | null;
-    source: "demo" | "tally" | "xml";
-    raw_xml?: string;
-  }>
-): Promise<number> {
+function normalizeFinanceRecord(record: TallyFinanceRecord): TallyFinanceRecord {
+  const amount = Number.isFinite(record.amount) ? record.amount : 0;
+  const debit = record.debit ?? (amount < 0 ? Math.abs(amount) : 0);
+  const credit = record.credit ?? (amount > 0 ? amount : 0);
+  const voucherType = record.voucher_type || record.record_type || "ledger";
+  const description =
+    record.description ||
+    record.narration ||
+    record.reference ||
+    record.voucher_no ||
+    record.party_name ||
+    record.ledger_name ||
+    voucherType;
+
+  return {
+    ...record,
+    record_type: (record.record_type || voucherType || "ledger").toLowerCase(),
+    description,
+    amount,
+    debit,
+    credit,
+    voucher_type: voucherType,
+  };
+}
+
+async function queueFinanceRecords(records: TallyFinanceRecord[]): Promise<number> {
   const supabase = getAdminClient();
   if (!supabase || !records.length) return 0;
 
@@ -42,16 +63,28 @@ async function queueFinanceRecords(
 
   if (tableErr) return 0;
 
-  const payload = records.map((r) => ({
-    company: r.company || null,
-    record_type: r.record_type,
-    description: r.description || null,
-    amount: r.amount,
-    voucher_date: r.voucher_date || null,
-    status: "queued" as const,
-    source: r.source,
-    raw_xml: r.raw_xml || null,
-  }));
+  const payload = records.map((record) => {
+    const r = normalizeFinanceRecord(record);
+    return {
+      company: r.company || null,
+      record_type: r.record_type,
+      description: r.description || null,
+      amount: r.amount,
+      voucher_date: r.voucher_date || null,
+      status: "queued" as const,
+      source: r.source || "tally",
+      raw_xml: r.raw_xml || null,
+      voucher_no: r.voucher_no || null,
+      voucher_type: r.voucher_type || null,
+      ledger_name: r.ledger_name || null,
+      party_name: r.party_name || null,
+      debit: r.debit || 0,
+      credit: r.credit || 0,
+      reference: r.reference || null,
+      narration: r.narration || null,
+      gst_no: r.gst_no || null,
+    };
+  });
 
   const { data, error } = await supabase
     .from("finance_import_queue")
@@ -63,17 +96,26 @@ async function queueFinanceRecords(
   const { data: logged, error: logErr } = await supabase
     .from("activity_logs")
     .insert(
-      records.map((r) => ({
-        entity_type: "finance_import",
-        action: "queued",
-        notes: JSON.stringify({
-          company: r.company,
-          record_type: r.record_type,
-          description: r.description,
-          amount: r.amount,
-          source: r.source,
-        }),
-      }))
+      records.map((record) => {
+        const r = normalizeFinanceRecord(record);
+        return {
+          entity_type: "finance_import",
+          action: "queued",
+          notes: JSON.stringify({
+            company: r.company,
+            record_type: r.record_type,
+            description: r.description,
+            amount: r.amount,
+            voucher_no: r.voucher_no,
+            voucher_type: r.voucher_type,
+            ledger_name: r.ledger_name,
+            party_name: r.party_name,
+            debit: r.debit,
+            credit: r.credit,
+            source: r.source,
+          }),
+        };
+      })
     )
     .select("id");
 
@@ -103,30 +145,29 @@ async function syncTallyDemo(): Promise<TallySyncResult> {
   const xml = process.env.TALLY_DEMO_XML?.trim() || TALLY_DEMO_XML;
   const company =
     process.env.TALLY_COMPANY_NAME?.trim() || "Flexiflair Demo Co";
-  const vouchers = parseTallyDemoXml(xml);
-
-  const recordsQueued = await queueFinanceRecords(
-    vouchers.map((v) => ({
-      company,
-      record_type: v.record_type,
-      description: v.description,
-      amount: v.amount,
-      voucher_date: v.voucher_date,
-      source: "demo" as const,
-      raw_xml: xml.slice(0, 500),
-    }))
+  const vouchers = parseTallyDemoXml(xml).map((record) =>
+    normalizeFinanceRecord({
+      ...record,
+      company: record.company || company,
+      source: "demo",
+      raw_xml: record.raw_xml || xml.slice(0, 500),
+    })
   );
+
+  const recordsQueued = await queueFinanceRecords(vouchers);
 
   return {
     ok: true,
     demo: true,
     message: `Demo mode — ${vouchers.length} finance record(s) parsed${recordsQueued ? `, ${recordsQueued} queued` : ""}`,
+    parsedCount: vouchers.length,
     recordsQueued: recordsQueued || vouchers.length,
     preview: {
       company,
       action: "sync_ledgers_demo",
+      source: "demo",
       records: vouchers.length,
-      sample: vouchers.slice(0, 2),
+      sample: vouchers.slice(0, 2).map(({ raw_xml, ...record }) => record),
     },
   };
 }
@@ -211,20 +252,14 @@ export async function syncTally(): Promise<TallySyncResult> {
     });
 
     const xml = await res.text();
-    const vouchers = parseTallyDemoXml(xml);
+    const vouchers = parseTallyXml(xml, {
+      company,
+      source: "tally",
+      rawXmlLimit: 2000,
+    }).map(normalizeFinanceRecord);
 
     if (vouchers.length > 0) {
-      const recordsQueued = await queueFinanceRecords(
-        vouchers.map((v) => ({
-          company,
-          record_type: v.record_type,
-          description: v.description,
-          amount: v.amount,
-          voucher_date: v.voucher_date,
-          source: "tally" as const,
-          raw_xml: xml.slice(0, 2000),
-        }))
-      );
+      const recordsQueued = await queueFinanceRecords(vouchers);
 
       const sheetPush = await pushTallyRecordsToSheet(
         vouchers.map((v) => ({
@@ -240,13 +275,16 @@ export async function syncTally(): Promise<TallySyncResult> {
         ok: true,
         demo: false,
         endpoint,
-        message: `Tally cloud sync — ${vouchers.length} record(s) from ${endpoint}${recordsQueued ? `, ${recordsQueued} queued` : ""}${sheetPush.ok ? " · pushed to GSheet" : ""}`,
+        message: `Tally cloud sync — ${vouchers.length} record(s) parsed from ${endpoint}${recordsQueued ? `, ${recordsQueued} queued` : ""}${sheetPush.ok ? " · pushed to GSheet" : ""}`,
+        parsedCount: vouchers.length,
         recordsQueued,
         preview: {
           company,
           records: vouchers.length,
+          source: "tally",
           hostSource,
           sheetWrite: sheetPush.message,
+          sample: vouchers.slice(0, 2).map(({ raw_xml, ...record }) => record),
         },
       };
     }
@@ -277,6 +315,9 @@ export async function syncTally(): Promise<TallySyncResult> {
       record_type: "ledger",
       description: `Tally cloud gateway reachable at ${endpoint} — awaiting full XML export for "${company}"`,
       amount: 0,
+      debit: 0,
+      credit: 0,
+      voucher_date: null,
       source: "tally",
     },
   ]);
@@ -286,12 +327,14 @@ export async function syncTally(): Promise<TallySyncResult> {
     demo: false,
     endpoint,
     message: `Tally cloud configured — gateway OK at ${endpoint}, sync queued for "${company}"`,
+    parsedCount: 0,
     recordsQueued: recordsQueued || 1,
     preview: {
       company,
       action: "sync_ledgers_stub",
       endpoint,
       hostSource,
+      source: "tally",
     },
   };
 }
