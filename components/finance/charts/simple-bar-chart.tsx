@@ -26,30 +26,33 @@ function fmt(value: number) {
 export default function SimpleBarChart({
   title,
   data,
+  compact = false,
 }: {
   title: string;
   data: BarDatum[];
+  compact?: boolean;
 }) {
   const max = Math.max(...data.map((item) => Math.abs(item.value)), 1);
+  const visible = compact ? data.slice(0, 6) : data;
 
   return (
-    <section className="border border-slate-200 bg-white rounded-lg p-4 min-h-[220px]">
-      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">{title}</h3>
-      <div className="mt-4 space-y-3">
-        {data.length === 0 ? (
+    <section className={`border border-slate-200 bg-white rounded-lg ${compact ? "p-3 min-h-[118px]" : "p-4 min-h-[220px]"}`}>
+      <h3 className={`${compact ? "text-[11px]" : "text-sm"} font-bold text-slate-900 uppercase tracking-wide`}>{title}</h3>
+      <div className={`${compact ? "mt-2 space-y-1.5" : "mt-4 space-y-3"}`}>
+        {visible.length === 0 ? (
           <p className="text-sm text-slate-500">No canonical rows</p>
         ) : (
-          data.map((item) => {
+          visible.map((item) => {
             const width = `${Math.max(4, Math.round((Math.abs(item.value) / max) * 100))}%`;
             return (
-              <div key={item.label} className="grid grid-cols-[minmax(92px,150px)_1fr_minmax(56px,80px)] items-center gap-3">
-                <span className="truncate text-sm font-medium text-slate-600" title={item.label}>
+              <div key={item.label} className={`${compact ? "grid-cols-[70px_1fr_52px] gap-2" : "grid-cols-[minmax(92px,150px)_1fr_minmax(56px,80px)] gap-3"} grid items-center`}>
+                <span className={`${compact ? "text-[11px]" : "text-sm"} truncate font-medium text-slate-600`} title={item.label}>
                   {item.label}
                 </span>
-                <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
+                <div className={`${compact ? "h-2" : "h-3"} rounded-full bg-slate-100 overflow-hidden`}>
                   <div className={`h-full rounded-full ${TONES[item.tone || "blue"]}`} style={{ width }} />
                 </div>
-                <span className="text-right text-sm font-semibold text-slate-900">{fmt(item.value)}</span>
+                <span className={`${compact ? "text-[11px]" : "text-sm"} text-right font-semibold text-slate-900`}>{fmt(item.value)}</span>
               </div>
             );
           })
