@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { tallyClient } from "@/lib/integrations/tally-client";
 import { getResolvedTallyConfig } from "@/lib/integrations/tally-config";
 
+function previewPayload(data: unknown): string | null {
+  if (typeof data !== "string") return null;
+  return data.replace(/\s+/g, " ").trim().slice(0, 500);
+}
+
 export async function GET() {
   try {
     const resolved = await getResolvedTallyConfig();
@@ -41,6 +46,10 @@ export async function GET() {
       connection: {
         success: result.success,
         error: result.error,
+        endpoint: result.endpoint,
+        durationMs: result.durationMs,
+        status: result.status,
+        dataPreview: previewPayload(result.data),
       },
       timestamp: new Date().toISOString(),
     });
