@@ -7,14 +7,15 @@ export async function GET() {
     const status = await tallyAdapter.getStatus();
 
     let liveTest = null;
-    if (status.mode === "active") {
-      const config = await tallyClient.getResolvedConfig();
-      const result = config
-        ? await tallyClient.testConnection(config)
-        : { success: false, error: "Tally not configured" };
+    const config = await tallyClient.getResolvedConfig();
+    if (config) {
+      const result = await tallyClient.testConnection(config);
       liveTest = {
         success: result.success,
         error: result.error,
+        endpoint: result.endpoint,
+        durationMs: result.durationMs,
+        status: result.status,
       };
     }
 
