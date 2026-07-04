@@ -22,10 +22,10 @@ export type FinanceSyncHealth = {
   failedSync: number;
   synced: number;
   verified: number;
-  imported: number; // verified + synced
+  imported: number;
   queueSize: number;
   lastSyncAt: string | null;
-  healthScore: number; // 0..100 = verified / total
+  healthScore: number;
 };
 
 type TxRow = {
@@ -34,14 +34,30 @@ type TxRow = {
   amount: number | null;
   reference_no: string | null;
   tally_sync_at: string | null;
+  voucher_no?: string | null;
+  ledger_name?: string | null;
+  party_name?: string | null;
+  finance_import_queue_id?: string | null;
 };
+
+function hasRealReference(r: TxRow): boolean {
+  const reference = (r.reference_no || "").trim();
+  if (!reference || reference.startsWith("TALLY-AUTO-")) return false;
+  return Boolean(
+    reference ||
+      (r.voucher_no || "").trim() ||
+      (r.ledger_name || "").trim() ||
+      (r.party_name || "").trim() ||
+      r.finance_import_queue_id
+  );
+}
 
 function isValidTally(r: TxRow): boolean {
   return (
     (r.source || "").toLowerCase() === "tally" &&
     r.amount !== null &&
     r.amount !== undefined &&
-    (r.reference_no || "").trim() !== ""
+    hasRealReference(r)
   );
 }
 
@@ -49,6 +65,7 @@ async function countStatus(supabase: SupabaseClient, status: string): Promise<nu
   const { count } = await supabase
     .from("finance_transactions")
     .select("id", { count: "exact", head: true })
+    .eq("source", "tally")
     .eq("sync_status", status);
   return count ?? 0;
 }
@@ -61,7 +78,10 @@ export async function getFinanceSyncHealth(): Promise<FinanceSyncHealth> {
   };
   if (!supabase) return empty;
 
-  const probe = await supabase.from("finance_transactions").select("id", { count: "exact", head: true });
+  const probe = await supabase
+    .from("finance_transactions")
+    .select("id", { count: "exact", head: true })
+    .eq("source", "tally");
   if (probe.error) return empty;
 
   const byStatus: Record<string, number> = {};
@@ -70,11 +90,14 @@ export async function getFinanceSyncHealth(): Promise<FinanceSyncHealth> {
 
   const { count: queueSize } = await supabase
     .from("finance_import_queue")
-    .select("id", { count: "exact", head: true });
+    .select("id", { count: "exact", head: true })
+    .eq("source", "tally")
+    .neq("status", "failed");
 
   const { data: lastRow } = await supabase
     .from("finance_transactions")
     .select("tally_sync_at")
+    .eq("source", "tally")
     .not("tally_sync_at", "is", null)
     .order("tally_sync_at", { ascending: false })
     .limit(1);
@@ -106,14 +129,7 @@ async function logBatch(
 ): Promise<string | null> {
   const { data } = await supabase
     .from("finance_sync_log")
-    .insert({
-      action,
-      from_status: fromStatus,
-      to_status: toStatus,
-      affected_count: affected.length,
-      affected,
-      detail,
-    })
+    .insert({ action, from_status: fromStatus, to_status: toStatus, affected_count: affected.length, affected, detail })
     .select("batch_id")
     .single();
   return data?.batch_id ?? null;
@@ -131,69 +147,54 @@ export type ReconcileResult = {
   message: string;
 };
 
-/**
- * Reconcile finance_transactions through the full lifecycle. Idempotent and
- * logged. dryRun reports what would change without mutating.
- */
 export async function reconcileFinance(opts: { dryRun?: boolean } = {}): Promise<ReconcileResult> {
   const supabase = getAdminClient();
   if (!supabase) {
-    return {
-      ok: false, syncedFromPending: 0, failed: 0, verified: 0, duplicates: 0,
-      orphans: 0, missingInTransactions: 0, batches: [],
-      message: "Supabase admin client unavailable (no SERVICE_ROLE key)",
-    };
+    return { ok: false, syncedFromPending: 0, failed: 0, verified: 0, duplicates: 0, orphans: 0, missingInTransactions: 0, batches: [], message: "Supabase admin client unavailable (no SERVICE_ROLE key)" };
   }
   const dryRun = !!opts.dryRun;
   const batches: string[] = [];
 
-  // Step 1 — pending_tally → synced (valid) / failed (incomplete)
   const { data: pending } = await supabase
     .from("finance_transactions")
-    .select("id, source, amount, reference_no, tally_sync_at")
+    .select("id, source, amount, reference_no, tally_sync_at, voucher_no, ledger_name, party_name, finance_import_queue_id")
+    .eq("source", "tally")
     .eq("sync_status", "pending_tally");
-  const valid = (pending || []).filter(isValidTally);
+  const valid = (pending || []).filter((r) => isValidTally(r as TxRow));
   const invalid = (pending || []).filter((r) => !isValidTally(r as TxRow));
 
   if (!dryRun && valid.length) {
     await supabase
       .from("finance_transactions")
-      .update({ sync_status: "synced", tally_sync_at: new Date().toISOString() })
+      .update({ sync_status: "synced", tally_sync_at: new Date().toISOString(), sync_note: "validated Tally transaction" })
       .in("id", valid.map((r) => r.id));
-    const b = await logBatch(supabase, "reconcile", "pending_tally", "synced",
-      valid.map((r) => ({ id: r.id as string, from_status: "pending_tally" })),
-      `${valid.length} valid Tally row(s) advanced pending_tally → synced`);
+    const b = await logBatch(supabase, "reconcile", "pending_tally", "synced", valid.map((r) => ({ id: r.id as string, from_status: "pending_tally" })), `${valid.length} valid Tally row(s) advanced pending_tally → synced`);
     if (b) batches.push(b);
   }
   if (!dryRun && invalid.length) {
     await supabase
       .from("finance_transactions")
-      .update({ sync_status: "failed", sync_note: "incomplete: missing amount/reference_no" })
+      .update({ sync_status: "failed", sync_note: "incomplete: missing amount or real Tally reference" })
       .in("id", invalid.map((r) => r.id));
-    const b = await logBatch(supabase, "reconcile", "pending_tally", "failed",
-      invalid.map((r) => ({ id: r.id as string, from_status: "pending_tally" })),
-      `${invalid.length} incomplete row(s) flagged failed`);
+    const b = await logBatch(supabase, "reconcile", "pending_tally", "failed", invalid.map((r) => ({ id: r.id as string, from_status: "pending_tally" })), `${invalid.length} incomplete row(s) flagged failed`);
     if (b) batches.push(b);
   }
 
-  // Step 2 — synced → verified (complete + timestamped)
   const { data: synced } = await supabase
     .from("finance_transactions")
-    .select("id, source, amount, reference_no, tally_sync_at")
+    .select("id, source, amount, reference_no, tally_sync_at, voucher_no, ledger_name, party_name, finance_import_queue_id")
+    .eq("source", "tally")
     .eq("sync_status", "synced");
   const verifiable = (synced || []).filter((r) => isValidTally(r as TxRow) && !!r.tally_sync_at);
   if (!dryRun && verifiable.length) {
     await supabase
       .from("finance_transactions")
-      .update({ sync_status: "verified" })
+      .update({ sync_status: "verified", sync_note: "verified Tally transaction" })
       .in("id", verifiable.map((r) => r.id));
-    const b = await logBatch(supabase, "reconcile", "synced", "verified",
-      verifiable.map((r) => ({ id: r.id as string, from_status: "synced" })),
-      `${verifiable.length} row(s) advanced synced → verified`);
+    const b = await logBatch(supabase, "reconcile", "synced", "verified", verifiable.map((r) => ({ id: r.id as string, from_status: "synced" })), `${verifiable.length} row(s) advanced synced → verified`);
     if (b) batches.push(b);
   }
 
-  // Step 3 — anomaly detection (report only)
   const anomalies = await detectAnomalies(supabase);
 
   return {
@@ -215,16 +216,18 @@ async function detectAnomalies(supabase: SupabaseClient) {
   const { data: txs } = await supabase
     .from("finance_transactions")
     .select("reference_no")
+    .eq("source", "tally")
     .limit(5000);
   const { data: queue } = await supabase
     .from("finance_import_queue")
-    .select("voucher_no, reference")
+    .select("voucher_no, reference, ledger_name, party_name")
+    .eq("source", "tally")
     .limit(5000);
 
   const txRefs = (txs || []).map((t) => (t.reference_no || "").trim()).filter(Boolean);
   const queueRefs = new Set(
     (queue || [])
-      .flatMap((q) => [q.voucher_no, q.reference])
+      .flatMap((q) => [q.voucher_no, q.reference, q.ledger_name, q.party_name])
       .map((v) => (v || "").trim())
       .filter(Boolean)
   );
@@ -241,7 +244,6 @@ async function detectAnomalies(supabase: SupabaseClient) {
 
 export type RollbackResult = { ok: boolean; reverted: number; message: string };
 
-/** Safely revert a reconciliation batch using the finance_sync_log snapshot. */
 export async function rollbackBatch(batchId: string): Promise<RollbackResult> {
   const supabase = getAdminClient();
   if (!supabase) return { ok: false, reverted: 0, message: "Supabase admin client unavailable" };
@@ -252,9 +254,7 @@ export async function rollbackBatch(batchId: string): Promise<RollbackResult> {
     .eq("batch_id", batchId)
     .eq("action", "reconcile");
 
-  if (!logs || logs.length === 0) {
-    return { ok: false, reverted: 0, message: `No reconcile batch found for ${batchId}` };
-  }
+  if (!logs || logs.length === 0) return { ok: false, reverted: 0, message: `No reconcile batch found for ${batchId}` };
 
   let reverted = 0;
   for (const log of logs) {
@@ -267,12 +267,7 @@ export async function rollbackBatch(batchId: string): Promise<RollbackResult> {
     }
   }
 
-  await supabase.from("finance_sync_log").insert({
-    batch_id: batchId,
-    action: "rollback",
-    affected_count: reverted,
-    detail: `Rolled back ${reverted} row(s) from batch ${batchId}`,
-  });
+  await supabase.from("finance_sync_log").insert({ batch_id: batchId, action: "rollback", affected_count: reverted, detail: `Rolled back ${reverted} row(s) from batch ${batchId}` });
 
   return { ok: true, reverted, message: `Rolled back ${reverted} row(s)` };
 }
