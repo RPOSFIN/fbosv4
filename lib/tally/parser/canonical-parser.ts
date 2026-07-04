@@ -171,15 +171,17 @@ function parseVouchers(
     ];
     const firstLine = parsedLines.find((line) => line.ledger_name);
     const directAmount = parseAmount(readFirstTag(block, ["AMOUNT"]));
-    const amount = parsedLines.length
-      ? parsedLines.reduce((sum, line) => sum + line.amount, 0)
-      : directAmount;
     const debitTotal = parsedLines.length
       ? parsedLines.reduce((sum, line) => sum + line.debit, 0)
-      : debitFor(amount);
+      : debitFor(directAmount);
     const creditTotal = parsedLines.length
       ? parsedLines.reduce((sum, line) => sum + line.credit, 0)
-      : creditFor(amount);
+      : creditFor(directAmount);
+    // Tally vouchers are double-entry; summing signed ledger lines often nets to zero.
+    // Canonical amount must represent economic voucher value, so use the larger side.
+    const amount = parsedLines.length
+      ? Math.max(Math.abs(directAmount), debitTotal, creditTotal)
+      : directAmount;
 
     const voucher: CanonicalVoucher = {
       company,
@@ -199,7 +201,7 @@ function parseVouchers(
       source_report: report,
       raw_payload: {
         raw_xml: block.slice(0, 8000),
-        parser: "canonical_tly04_v1",
+        parser: "canonical_tly04_v2_balanced_amount",
       },
     };
 
