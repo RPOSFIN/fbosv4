@@ -12,9 +12,11 @@ export async function GET() {
   const { data, error } = await supabase
     .from("finance_import_queue")
     .select(
-      "amount, record_type, party_name, voucher_date, voucher_no, description"
+      "amount, record_type, party_name, voucher_date, voucher_no, description, source, status, debit, credit, ledger_name, reference, narration, gst_no"
     )
-    .limit(2000);
+    .eq("source", "tally")
+    .neq("status", "failed")
+    .limit(5000);
 
   if (error) return apiError(error.message, 500);
 
