@@ -1,19 +1,25 @@
 export type CanonicalVoucherMetricRow = {
   id?: string;
+  voucher_no?: string | null;
   voucher_type?: string | null;
   voucher_date?: string | null;
   party_name?: string | null;
   ledger_name?: string | null;
+  reference?: string | null;
+  narration?: string | null;
   amount?: number | string | null;
   debit_total?: number | string | null;
   credit_total?: number | string | null;
 };
 
 export type CanonicalLineMetricRow = {
+  voucher_no?: string | null;
   voucher_type?: string | null;
   voucher_date?: string | null;
   party_name?: string | null;
   ledger_name?: string | null;
+  reference?: string | null;
+  narration?: string | null;
   amount?: number | string | null;
   debit?: number | string | null;
   credit?: number | string | null;
@@ -59,6 +65,31 @@ function hasVoucherType(row: { voucher_type?: string | null }, type: string): bo
   return (row.voucher_type || "").toLowerCase().includes(type.toLowerCase());
 }
 
+function voucherText(row: {
+  voucher_no?: string | null;
+  reference?: string | null;
+  narration?: string | null;
+  voucher_type?: string | null;
+}): string {
+  return [row.voucher_no, row.reference, row.narration, row.voucher_type]
+    .filter(Boolean)
+    .join(" ")
+    .toUpperCase();
+}
+
+export function isProformaVoucher(row: {
+  voucher_no?: string | null;
+  reference?: string | null;
+  narration?: string | null;
+  voucher_type?: string | null;
+}): boolean {
+  return voucherText(row).includes("PROFORMA");
+}
+
+export function isRealSalesVoucher(row: CanonicalVoucherMetricRow): boolean {
+  return hasVoucherType(row, "sales") && !isProformaVoucher(row) && absAmount(row) > 0;
+}
+
 function isBankOrCashLedger(ledgerName: string | null | undefined): boolean {
   const text = (ledgerName || "").toLowerCase();
   return (
@@ -78,7 +109,10 @@ function monthKey(date: string | null | undefined): string | null {
 
 function sumByType(rows: CanonicalVoucherMetricRow[], type: string): number {
   return rows
-    .filter((row) => hasVoucherType(row, type))
+    .filter((row) => {
+      if (type.toLowerCase() === "sales") return isRealSalesVoucher(row);
+      return hasVoucherType(row, type);
+    })
     .reduce((sum, row) => sum + absAmount(row), 0);
 }
 
@@ -116,8 +150,10 @@ export function buildCanonicalFinanceSummary(
     gross_profit,
     net_profit: gross_profit,
     cashflow,
-    formula_version: "tly04_v1",
+    formula_version: "tly04_v2_excludes_proforma_sales",
     caveats: {
+      sales:
+        "Sales excludes proforma vouchers and zero-value proforma rows. Proforma invoices are not commercial sales.",
       receivables:
         "Uses sales minus receipts unless a Tally outstanding receivables report is synced.",
       payables:
@@ -156,7 +192,7 @@ export function buildTimeSeries(rows: CanonicalVoucherMetricRow[]) {
         profit: 0,
       };
     const value = absAmount(row);
-    if (hasVoucherType(row, "sales")) current.sales += value;
+    if (isRealSalesVoucher(row)) current.sales += value;
     if (hasVoucherType(row, "purchase")) current.purchases += value;
     if (hasVoucherType(row, "receipt")) current.receipts += value;
     if (hasVoucherType(row, "payment")) current.payments += value;
