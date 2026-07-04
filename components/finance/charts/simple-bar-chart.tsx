@@ -26,7 +26,7 @@ function fmt(value: number) {
 export default function SimpleBarChart({
   title,
   data,
-  compact = false,
+  compact = true,
 }: {
   title: string;
   data: BarDatum[];
