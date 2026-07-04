@@ -12,17 +12,23 @@ export type TallyAdapterStatus = {
   port: number | null;
   company: string | null;
   available: boolean;
+  source?: "env" | "db" | "none";
+  reason?: string;
 };
 
 export async function getTallyAdapterStatus(): Promise<TallyAdapterStatus> {
-  const config = tallyClient.getConfig();
+  const resolved = await getResolvedTallyConfig();
+  const config = await tallyClient.getResolvedConfig();
+
   if (!config) {
     return {
       mode: "unconfigured",
       host: null,
       port: null,
-      company: null,
+      company: resolved.company || null,
       available: false,
+      source: resolved.hostSource,
+      reason: "Tally host is not configured",
     };
   }
 
@@ -33,10 +39,12 @@ export async function getTallyAdapterStatus(): Promise<TallyAdapterStatus> {
       port: config.port,
       company: config.companyName,
       available: false,
+      source: resolved.hostSource,
+      reason: "Local Tally host is blocked unless TALLY_ALLOW_LOCAL=true",
     };
   }
 
-  const test = await tallyClient.testConnection();
+  const test = await tallyClient.testConnection(config);
   if (test.success) {
     return {
       mode: "active",
@@ -44,6 +52,7 @@ export async function getTallyAdapterStatus(): Promise<TallyAdapterStatus> {
       port: config.port,
       company: config.companyName,
       available: true,
+      source: resolved.hostSource,
     };
   }
 
@@ -53,6 +62,8 @@ export async function getTallyAdapterStatus(): Promise<TallyAdapterStatus> {
     port: config.port,
     company: config.companyName,
     available: false,
+    source: resolved.hostSource,
+    reason: test.error || "Tally gateway test failed",
   };
 }
 
@@ -64,7 +75,7 @@ export async function syncTallyPending() {
     failed: result.ok ? 0 : 1,
     demo: result.demo,
     message: result.message,
-    endpoint: result.endpoint ?? `http://${resolved.host}:${resolved.port}`,
+    endpoint: result.endpoint ?? (resolved.host ? `http://${resolved.host}:${resolved.port}` : null),
   };
 }
 
