@@ -1,15 +1,17 @@
-import { NextResponse } from 'next/server';
-import { tallyAdapter } from '@/lib/integrations/tally-adapter';
-import { tallyClient } from '@/lib/integrations/tally-client';
+import { NextResponse } from "next/server";
+import { tallyAdapter } from "@/lib/integrations/tally-adapter";
+import { tallyClient } from "@/lib/integrations/tally-client";
 
 export async function GET() {
   try {
     const status = await tallyAdapter.getStatus();
-    
-    // If active, also test connection live
+
     let liveTest = null;
-    if (status.mode === 'active') {
-      const result = await tallyClient.testConnection();
+    if (status.mode === "active") {
+      const config = await tallyClient.getResolvedConfig();
+      const result = config
+        ? await tallyClient.testConnection(config)
+        : { success: false, error: "Tally not configured" };
       liveTest = {
         success: result.success,
         error: result.error,
@@ -17,7 +19,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      ok: true,
+      ok: status.mode === "active",
       status,
       liveTest,
       timestamp: new Date().toISOString(),
