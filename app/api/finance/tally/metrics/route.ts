@@ -1,5 +1,5 @@
 import { apiError, apiSuccess, authorize } from "@/lib/rbac/api-auth";
-import { getCanonicalTallyMetrics } from "@/lib/tally/canonical/queries";
+import { getCommercialTallyMetrics } from "@/lib/tally/canonical/commercial-sales";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   if ("error" in auth) return auth.error;
 
   const url = new URL(request.url);
-  const result = await getCanonicalTallyMetrics({
+  const result = await getCommercialTallyMetrics({
     from: url.searchParams.get("from"),
     to: url.searchParams.get("to"),
   });
