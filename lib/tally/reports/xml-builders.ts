@@ -30,6 +30,7 @@ function staticVariables(input: TallyXmlRequestInput): string {
   <SVFROMDATE TYPE="Date">${tallyDate(input.from)}</SVFROMDATE>
   <SVTODATE TYPE="Date">${tallyDate(input.to)}</SVTODATE>
   <EXPLODEFLAG>Yes</EXPLODEFLAG>
+  <SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>
   ${ledgerName ? `<LEDGERNAME>${escapeXml(ledgerName)}</LEDGERNAME>` : ""}
 </STATICVARIABLES>`;
 }
@@ -92,6 +93,8 @@ function reportExport(input: TallyXmlRequestInput): string {
   <HEADER>
     <VERSION>1</VERSION>
     <TALLYREQUEST>Export Data</TALLYREQUEST>
+    <TYPE>Data</TYPE>
+    <ID>${escapeXml(definition.tallyReportName)}</ID>
   </HEADER>
   <BODY>
     <EXPORTDATA>
