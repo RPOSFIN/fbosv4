@@ -1,29 +1,42 @@
-import { NextResponse } from 'next/server';
-import { tallyClient } from '@/lib/integrations/tally-client';
+import { NextResponse } from "next/server";
+import { tallyClient } from "@/lib/integrations/tally-client";
+import { getResolvedTallyConfig } from "@/lib/integrations/tally-config";
 
 export async function GET() {
   try {
-    const config = tallyClient.getConfig();
+    const resolved = await getResolvedTallyConfig();
+    const config = await tallyClient.getResolvedConfig();
+
     if (!config) {
       return NextResponse.json({
         ok: false,
-        error: 'Tally not configured',
+        mode: "unconfigured",
+        error: "Tally host is not configured",
+        config: {
+          host: null,
+          port: Number(resolved.port),
+          company: resolved.company || null,
+          source: resolved.hostSource,
+        },
         missing: {
-          TALLY_HOST: !process.env.TALLY_HOST,
+          TALLY_HOST: !process.env.TALLY_HOST && !process.env.TALLY_SERVER_URL,
           TALLY_PORT: !process.env.TALLY_PORT,
           TALLY_COMPANY_NAME: !process.env.TALLY_COMPANY_NAME,
         },
+        timestamp: new Date().toISOString(),
       });
     }
 
-    const result = await tallyClient.testConnection();
-    
+    const result = await tallyClient.testConnection(config);
+
     return NextResponse.json({
       ok: result.success,
+      mode: result.success ? "active" : "bypass",
       config: {
         host: config.host,
         port: config.port,
         company: config.companyName,
+        source: resolved.hostSource,
       },
       connection: {
         success: result.success,
