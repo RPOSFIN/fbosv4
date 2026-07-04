@@ -8,6 +8,7 @@ export function normalizeTallyHost(host: string): string {
 }
 
 export const DEFAULT_TALLY_COMPANY_NAME = "Flexiflair Tech Private Limited";
+export const DEFAULT_TALLY_PORT = "9000";
 
 export function isLocalTallyHost(host: string): boolean {
   const h = normalizeTallyHost(host).toLowerCase();
@@ -35,7 +36,7 @@ export async function getResolvedTallyConfig(): Promise<ResolvedTallyConfig> {
     process.env.TALLY_HOST?.trim() ||
     process.env.TALLY_SERVER_URL?.trim() ||
     "";
-  const port = process.env.TALLY_PORT?.trim() || "9000";
+  const port = process.env.TALLY_PORT?.trim() || DEFAULT_TALLY_PORT;
   let dbHost = "";
   let dbCompany = "";
   const supabase = getAdminClient();
@@ -81,7 +82,7 @@ export async function getResolvedTallyConfig(): Promise<ResolvedTallyConfig> {
 
 export function resolveTallyEndpoint(): string | null {
   const host = process.env.TALLY_HOST?.trim() || process.env.TALLY_SERVER_URL?.trim() || "";
-  const port = process.env.TALLY_PORT?.trim() || "9007";
+  const port = process.env.TALLY_PORT?.trim() || DEFAULT_TALLY_PORT;
   if (!host) return null;
   if (isLocalTallyHost(host) && !allowLocalTally()) return null;
   return `http://${normalizeTallyHost(host)}:${port}`;
