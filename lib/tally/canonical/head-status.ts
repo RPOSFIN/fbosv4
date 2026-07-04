@@ -1,4 +1,5 @@
 import { getAdminClient } from "@/lib/supabase/admin";
+import { buildDerivedBalanceSheet } from "@/lib/tally/canonical/balance-sheet";
 
 export type TallyHeadStatus = {
   key: string;
@@ -38,6 +39,8 @@ export async function getTallyHeadStatus(): Promise<TallyHeadStatus[]> {
     .select("id", { count: "exact", head: true })
     .or("ledger_name.ilike.%bank%,ledger_name.ilike.%cash%,ledger_name.ilike.%hdfc%,ledger_name.ilike.%icici%,ledger_name.ilike.%axis%,ledger_name.ilike.%sbi%,ledger_name.ilike.%kotak%");
 
+  const balanceSheet = await buildDerivedBalanceSheet();
+
   return HEADS.map((head) => {
     const report = reports?.find((r) => r.report_type === head.key);
     if (report && Number(report.row_count || 0) > 0) {
@@ -45,6 +48,9 @@ export async function getTallyHeadStatus(): Promise<TallyHeadStatus[]> {
     }
     if (head.key === "ledger" && (ledgerCount || 0) > 0) {
       return { ...head, status: "synced", row_count: ledgerCount || 0, source: "tally_ledgers", note: "Ledger masters with DR/CR balances are available" };
+    }
+    if (head.key === "balance_sheet" && balanceSheet.status === "derived" && balanceSheet.row_count > 0) {
+      return { ...head, status: "derived", row_count: balanceSheet.row_count, source: "tally_ledgers", note: "Derived from synced ledger groups; structured Tally Balance Sheet report parser is still pending" };
     }
     if ((head.key === "receivables" || head.key === "payables") && (partyCount || 0) > 0) {
       return { ...head, status: "derived", row_count: partyCount || 0, source: "tally_parties", note: "Derived from party/ledger balances until outstanding report parses" };
