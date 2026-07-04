@@ -37,6 +37,9 @@ export interface TallyResponse {
   success: boolean;
   data?: any;
   error?: string;
+  status?: number;
+  endpoint?: string;
+  durationMs?: number;
 }
 
 function configFromResolved(resolved: ResolvedTallyConfig): TallyConfig | null {
@@ -54,9 +57,7 @@ function getTallyConfig(): TallyConfig | null {
   const companyName =
     process.env.TALLY_COMPANY_NAME?.trim() || DEFAULT_TALLY_COMPANY_NAME;
 
-  if (!host) {
-    return null;
-  }
+  if (!host) return null;
 
   return {
     host: normalizeTallyHost(host),
@@ -74,6 +75,23 @@ function getTallyUrl(config = getTallyConfig()): string | null {
   return `http://${config.host}:${config.port}`;
 }
 
+function getTallyTimeoutMs(): number {
+  const raw = process.env.TALLY_TIMEOUT_MS?.trim();
+  const parsed = raw ? Number.parseInt(raw, 10) : 30000;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 30000;
+}
+
+function describeTallyError(err: unknown, url: string, timeoutMs: number): string {
+  if (err instanceof DOMException && err.name === "AbortError") {
+    return `Tally request timed out after ${timeoutMs}ms at ${url}`;
+  }
+  if (err instanceof Error && err.name === "AbortError") {
+    return `Tally request timed out after ${timeoutMs}ms at ${url}`;
+  }
+  if (err instanceof Error) return `${err.name}: ${err.message}`;
+  return String(err);
+}
+
 /**
  * Send XML request to Tally
  */
@@ -82,31 +100,51 @@ export async function sendTallyRequest(
   config = getTallyConfig()
 ): Promise<TallyResponse> {
   const url = getTallyUrl(config);
-  if (!url) {
-    return { success: false, error: "Tally not configured" };
-  }
+  if (!url) return { success: false, error: "Tally not configured" };
+
+  const started = Date.now();
+  const timeoutMs = getTallyTimeoutMs();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-
     const response = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/xml" },
+      headers: { "Content-Type": "text/xml" },
       body: xml,
       signal: controller.signal,
     });
 
-    clearTimeout(timeout);
+    const text = await response.text();
+    const durationMs = Date.now() - started;
 
     if (!response.ok) {
-      return { success: false, error: `HTTP ${response.status}` };
+      return {
+        success: false,
+        error: `HTTP ${response.status}`,
+        status: response.status,
+        endpoint: url,
+        durationMs,
+        data: text,
+      };
     }
 
-    const text = await response.text();
-    return { success: true, data: text };
+    return {
+      success: true,
+      data: text,
+      status: response.status,
+      endpoint: url,
+      durationMs,
+    };
   } catch (err) {
-    return { success: false, error: String(err) };
+    return {
+      success: false,
+      error: describeTallyError(err, url, timeoutMs),
+      endpoint: url,
+      durationMs: Date.now() - started,
+    };
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -121,18 +159,25 @@ export async function testTallyConnection(
   const xml = `
     <ENVELOPE>
       <HEADER>
-        <TALLYREQUEST>Export Data</TALLYREQUEST>
+        <VERSION>1</VERSION>
+        <TALLYREQUEST>Export</TALLYREQUEST>
+        <TYPE>Collection</TYPE>
+        <ID>Company</ID>
       </HEADER>
       <BODY>
-        <EXPORTDATA>
-          <REQUESTDESC>
-            <STATICVARIABLES>
-              <SVCURRENTCOMPANY>${escapeXml(config.companyName)}</SVCURRENTCOMPANY>
-            </STATICVARIABLES>
-            <REPORTNAME>List of Accounts</REPORTNAME>
-            <SVGREPORTNAME>List of Accounts</SVGREPORTNAME>
-          </REQUESTDESC>
-        </EXPORTDATA>
+        <DESC>
+          <STATICVARIABLES>
+            <SVCURRENTCOMPANY>${escapeXml(config.companyName)}</SVCURRENTCOMPANY>
+          </STATICVARIABLES>
+          <TDL>
+            <TDLMESSAGE>
+              <COLLECTION NAME="Company" ISMODIFY="No">
+                <TYPE>Company</TYPE>
+                <FETCH>Name</FETCH>
+              </COLLECTION>
+            </TDLMESSAGE>
+          </TDL>
+        </DESC>
       </BODY>
     </ENVELOPE>
   `;
