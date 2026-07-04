@@ -1,9 +1,7 @@
 import { pushTallyRecordsToSheet } from "@/lib/google-write";
 import { getTallyConfig } from "@/lib/integrations/config";
 import {
-  parseTallyDemoXml,
   parseTallyXml,
-  TALLY_DEMO_XML,
   type TallyFinanceRecord,
 } from "@/lib/integrations/demo-data";
 import {
@@ -141,34 +139,71 @@ async function checkTallyGateway(endpoint: string): Promise<boolean> {
   }
 }
 
-async function syncTallyDemo(): Promise<TallySyncResult> {
-  const xml = process.env.TALLY_DEMO_XML?.trim() || TALLY_DEMO_XML;
-  const company =
-    process.env.TALLY_COMPANY_NAME?.trim() || "Flexiflair Demo Co";
-  const vouchers = parseTallyDemoXml(xml).map((record) =>
-    normalizeFinanceRecord({
-      ...record,
-      company: record.company || company,
-      source: "demo",
-      raw_xml: record.raw_xml || xml.slice(0, 500),
-    })
-  );
+function tallyDate(value: Date): string {
+  const yyyy = value.getFullYear();
+  const mm = String(value.getMonth() + 1).padStart(2, "0");
+  const dd = String(value.getDate()).padStart(2, "0");
+  return `${yyyy}${mm}${dd}`;
+}
 
-  const recordsQueued = await queueFinanceRecords(vouchers);
+function getTallyFromDate(): string {
+  return process.env.TALLY_FROM_DATE?.trim() || "20240401";
+}
 
+function getTallyToDate(): string {
+  return process.env.TALLY_TO_DATE?.trim() || tallyDate(new Date());
+}
+
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+function buildSalesVoucherRequest(company: string, fromDate: string, toDate: string): string {
+  const currentCompany = escapeXml(company);
+  return `<ENVELOPE>
+  <HEADER>
+    <VERSION>1</VERSION>
+    <TALLYREQUEST>Export</TALLYREQUEST>
+    <TYPE>Collection</TYPE>
+    <ID>FBOSSalesVouchers</ID>
+  </HEADER>
+  <BODY>
+    <DESC>
+      <STATICVARIABLES>
+        <SVCURRENTCOMPANY>${currentCompany}</SVCURRENTCOMPANY>
+        <SVFROMDATE TYPE="Date">${fromDate}</SVFROMDATE>
+        <SVTODATE TYPE="Date">${toDate}</SVTODATE>
+        <EXPLODEFLAG>Yes</EXPLODEFLAG>
+      </STATICVARIABLES>
+      <TDL>
+        <TDLMESSAGE>
+          <COLLECTION NAME="FBOSSalesVouchers" ISMODIFY="No">
+            <TYPE>Voucher</TYPE>
+            <FETCH>DATE,VOUCHERTYPENAME,VOUCHERNUMBER,REFERENCE,PARTYLEDGERNAME,PARTYGSTIN,NARRATION,ALLLEDGERENTRIES.LIST,LEDGERNAME,AMOUNT</FETCH>
+            <FILTERS>FBOSOnlySales</FILTERS>
+          </COLLECTION>
+          <SYSTEM TYPE="Formulae" NAME="FBOSOnlySales">$VOUCHERTYPENAME = "Sales"</SYSTEM>
+        </TDLMESSAGE>
+      </TDL>
+    </DESC>
+  </BODY>
+</ENVELOPE>`;
+}
+
+function noDemoResult(message: string, endpoint?: string, fixSteps?: string[]): TallySyncResult {
   return {
-    ok: true,
-    demo: true,
-    message: `Demo mode — ${vouchers.length} finance record(s) parsed${recordsQueued ? `, ${recordsQueued} queued` : ""}`,
-    parsedCount: vouchers.length,
-    recordsQueued: recordsQueued || vouchers.length,
-    preview: {
-      company,
-      action: "sync_ledgers_demo",
-      source: "demo",
-      records: vouchers.length,
-      sample: vouchers.slice(0, 2).map(({ raw_xml, ...record }) => record),
-    },
+    ok: false,
+    demo: false,
+    endpoint,
+    message,
+    parsedCount: 0,
+    recordsQueued: 0,
+    fixSteps,
   };
 }
 
@@ -178,85 +213,73 @@ export async function syncTally(): Promise<TallySyncResult> {
   const endpoint = host ? `http://${host}:${port}` : undefined;
 
   if (!host) {
-    const demo = await syncTallyDemo();
-    return {
-      ...demo,
-      ok: true,
-      demo: true,
-      message: `Tally cloud host not set — enter IP/hostname below and click Save & Test (port ${port}, company: ${company || "not set"})`,
-      fixSteps: [
-        "Integration Hub → Tally card → enter Cloud Host → Save & Test",
+    return noDemoResult(
+      `Tally host not set — live sync cannot run (port ${port}, company: ${company || "not set"})`,
+      endpoint,
+      [
+        "Integration Hub → Tally card → enter host → Save & Test",
         `Port ${port} (TALLY_PORT) · Company: ${company || "set TALLY_COMPANY_NAME"}`,
-        "Ensure Tally Cloud XML gateway is enabled on that port",
-      ],
-    };
+        "Ensure Tally XML gateway is enabled on that port",
+      ]
+    );
   }
 
   if (isLocalTallyHost(host) && !allowLocalTally()) {
-    const demo = await syncTallyDemo();
-    return {
-      ...demo,
-      ok: true,
-      demo: true,
+    return noDemoResult(
+      `TALLY_HOST is localhost — set TALLY_ALLOW_LOCAL=true only when Tally runs on this machine (port ${port}).`,
       endpoint,
-      message: `TALLY_HOST is localhost — set TALLY_ALLOW_LOCAL=true when Tally runs on this machine (port ${port}). Or use cloud hostname instead of localhost.`,
-      fixSteps: [
-        `On cloud server with Tally open: TALLY_HOST=127.0.0.1 and TALLY_ALLOW_LOCAL=true`,
-        `Remote dev PC: use cloud hostname/IP, not localhost`,
+      [
+        `On the Tally machine: TALLY_HOST=127.0.0.1 and TALLY_ALLOW_LOCAL=true`,
+        `Remote dev PC: use server hostname/IP, not localhost`,
         `Company: "${company || "not set"}" — must match Tally exactly`,
-        ...tallyCloudFixSteps("your-cloud-server", port).slice(1),
-      ],
-    };
+        ...tallyCloudFixSteps("your-server", port).slice(1),
+      ]
+    );
   }
 
   if (!company) {
     const reachable = endpoint ? await checkTallyGateway(endpoint) : false;
-
-    if (!reachable) {
-      const demo = await syncTallyDemo();
-      return {
-        ...demo,
-        ok: true,
-        demo: true,
-        endpoint,
-        message: `Tally cloud gateway unreachable at ${endpoint} — showing demo data. Verify XML gateway on port ${port} is open on your cloud server.`,
-        fixSteps: tallyCloudFixSteps(host, port),
-      };
-    }
-
-    const demo = await syncTallyDemo();
-    return {
-      ...demo,
+    return noDemoResult(
+      reachable
+        ? `TALLY_COMPANY_NAME missing — gateway reachable at ${endpoint}, but company is required for live sales invoice sync.`
+        : `Tally gateway unreachable at ${endpoint} and company is missing.`,
       endpoint,
-      message: `TALLY_COMPANY_NAME missing — cloud gateway reachable at ${endpoint}. ${demo.message}. Add company name for live sync.`,
-      fixSteps: [
+      [
         "In Tally: F3 → Company Info → copy exact company name",
         "Set TALLY_COMPANY_NAME=Your Exact Company Name in .env.local",
-      ],
-    };
+      ]
+    );
   }
 
   const { configured } = getTallyConfig();
   if (!configured && hostSource === "none") {
-    return syncTallyDemo();
+    return noDemoResult("Tally config is incomplete — live sync cannot run.", endpoint);
   }
 
   try {
-    const xmlRequest = `<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>Ledgers</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>${company}</SVCURRENTCOMPANY></STATICVARIABLES></DESC></BODY></ENVELOPE>`;
+    const fromDate = getTallyFromDate();
+    const toDate = getTallyToDate();
+    const xmlRequest = buildSalesVoucherRequest(company, fromDate, toDate);
 
     const res = await fetch(endpoint!, {
       method: "POST",
       headers: { "Content-Type": "text/xml" },
       body: xmlRequest,
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(Number(process.env.TALLY_TIMEOUT_MS || 60000)),
     });
 
     const xml = await res.text();
+    if (!res.ok) {
+      return noDemoResult(`Tally sales invoice request failed with HTTP ${res.status}`, endpoint);
+    }
+
     const vouchers = parseTallyXml(xml, {
       company,
       source: "tally",
-      rawXmlLimit: 2000,
-    }).map(normalizeFinanceRecord);
+      rawXmlLimit: 4000,
+    })
+      .map((record) => normalizeFinanceRecord({ ...record, record_type: record.record_type || "sales" }))
+      .filter((record) => (record.voucher_type || record.record_type || "").toLowerCase().includes("sales"));
 
     if (vouchers.length > 0) {
       const recordsQueued = await queueFinanceRecords(vouchers);
@@ -275,68 +298,39 @@ export async function syncTally(): Promise<TallySyncResult> {
         ok: true,
         demo: false,
         endpoint,
-        message: `Tally cloud sync — ${vouchers.length} record(s) parsed from ${endpoint}${recordsQueued ? `, ${recordsQueued} queued` : ""}${sheetPush.ok ? " · pushed to GSheet" : ""}`,
+        message: `Tally live sales invoice sync — ${vouchers.length} invoice voucher(s) parsed from ${fromDate} to ${toDate}${recordsQueued ? `, ${recordsQueued} queued` : ""}${sheetPush.ok ? " · pushed to GSheet" : ""}`,
         parsedCount: vouchers.length,
         recordsQueued,
         preview: {
           company,
           records: vouchers.length,
           source: "tally",
+          voucherType: "Sales",
+          fromDate,
+          toDate,
           hostSource,
           sheetWrite: sheetPush.message,
           sample: vouchers.slice(0, 2).map(({ raw_xml, ...record }) => record),
         },
       };
     }
-  } catch {
-    // fall through
-  }
 
-  const reachable = endpoint ? await checkTallyGateway(endpoint) : false;
-  if (!reachable) {
-    const demo = await syncTallyDemo();
-    return {
-      ...demo,
-      ok: true,
-      demo: true,
+    return noDemoResult(
+      `Tally returned 0 Sales voucher(s) for ${company} from ${fromDate} to ${toDate}. No demo/stub rows were queued.`,
       endpoint,
-      message: `Cannot reach Tally cloud gateway at ${endpoint} — demo data shown. Check cloud server firewall and XML gateway on port ${port}.`,
-      fixSteps: [
-        `Verify Tally Cloud XML gateway at ${host}:${port}`,
-        `Confirm company name "${company}" matches Tally exactly`,
-        "Ensure cloud server allows inbound connections on the gateway port",
-      ],
-    };
-  }
-
-  const recordsQueued = await queueFinanceRecords([
-    {
-      company,
-      record_type: "ledger",
-      description: `Tally cloud gateway reachable at ${endpoint} — awaiting full XML export for "${company}"`,
-      amount: 0,
-      debit: 0,
-      credit: 0,
-      voucher_date: null,
-      source: "tally",
-    },
-  ]);
-
-  return {
-    ok: true,
-    demo: false,
-    endpoint,
-    message: `Tally cloud configured — gateway OK at ${endpoint}, sync queued for "${company}"`,
-    parsedCount: 0,
-    recordsQueued: recordsQueued || 1,
-    preview: {
-      company,
-      action: "sync_ledgers_stub",
+      [
+        "Confirm Sales vouchers exist in Tally for the same date range",
+        "Confirm Tally XML gateway allows Voucher collection export",
+        "Open /api/tally/test to verify gateway response diagnostics",
+      ]
+    );
+  } catch (err) {
+    return noDemoResult(
+      err instanceof Error ? `Tally live sales invoice sync failed: ${err.message}` : "Tally live sales invoice sync failed",
       endpoint,
-      hostSource,
-      source: "tally",
-    },
-  };
+      tallyCloudFixSteps(host, port)
+    );
+  }
 }
 
 /** @deprecated Use syncTally */
