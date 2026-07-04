@@ -18,7 +18,7 @@ function filterRows<T extends CanonicalVoucherMetricRow>(query: TallyReportQuery
 }
 
 export async function getCommercialTallyReport(query: TallyReportQuery) {
-  const result = await getCanonicalTallyReport(query);
+  const result = (await getCanonicalTallyReport(query)) as any;
   if (!result.ok || !isSalesQuery(query)) return result;
   const rawRows = (result.rows || []) as CanonicalVoucherMetricRow[];
   const rows = filterRows(query, rawRows);
@@ -33,7 +33,7 @@ export async function getCommercialTallyReport(query: TallyReportQuery) {
 }
 
 export async function getCommercialTallyVouchers(query: TallyReportQuery) {
-  const result = await getCanonicalVouchers(query);
+  const result = (await getCanonicalVouchers(query)) as any;
   if (!result.ok || !isSalesQuery(query)) return result;
   const rawRows = (result.rows || []) as CanonicalVoucherMetricRow[];
   const rows = filterRows(query, rawRows);
@@ -50,7 +50,7 @@ export async function getCommercialTallyVouchers(query: TallyReportQuery) {
 }
 
 export async function getCommercialTallyMetrics(query: TallyReportQuery) {
-  const result = await getCanonicalTallyMetrics(query);
+  const result = (await getCanonicalTallyMetrics(query)) as any;
   if (!result.ok) return result;
   return {
     ...result,
