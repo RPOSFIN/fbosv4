@@ -1,22 +1,24 @@
-import { NextResponse } from 'next/server';
-import { tallyAdapter } from '@/lib/integrations/tally-adapter';
+import { NextResponse } from "next/server";
+import { tallyAdapter } from "@/lib/integrations/tally-adapter";
 
 export async function POST() {
   try {
     const status = await tallyAdapter.getStatus();
-    
-    if (status.mode !== 'active') {
+
+    if (status.mode !== "active") {
       return NextResponse.json({
         ok: false,
         error: `Tally not available. Current mode: ${status.mode}`,
         status,
+        timestamp: new Date().toISOString(),
       });
     }
 
     const result = await tallyAdapter.syncPending();
-    
+
     return NextResponse.json({
-      ok: true,
+      ok: !result.demo && result.failed === 0,
+      status,
       ...result,
       timestamp: new Date().toISOString(),
     });
