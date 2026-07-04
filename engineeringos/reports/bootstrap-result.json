@@ -1,0 +1,89 @@
+{
+  "status": "PASS",
+  "state": "READY",
+  "startedAt": "2026-07-04T12:59:59.755Z",
+  "completedAt": "2026-07-04T12:59:59.762Z",
+  "repoRoot": "D:\\all in one fbos files\\FBOSV01\\FBOS_V01\\fbos-v1",
+  "engineeringOSRoot": "D:\\all in one fbos files\\FBOSV01\\FBOS_V01\\fbos-v1\\engineeringos",
+  "config": {
+    "name": "FBOS V4",
+    "version": "2.0",
+    "environment": "unknown",
+    "repoRoot": "D:\\all in one fbos files\\FBOSV01\\FBOS_V01\\fbos-v1",
+    "engineeringOSRoot": "D:\\all in one fbos files\\FBOSV01\\FBOS_V01\\fbos-v1\\engineeringos",
+    "kernelRoot": "D:\\all in one fbos files\\FBOSV01\\FBOS_V01\\fbos-v1\\engineeringos\\kernel",
+    "reportsRoot": "D:\\all in one fbos files\\FBOSV01\\FBOS_V01\\fbos-v1\\engineeringos\\reports",
+    "requiredKernelFiles": [
+      "bootstrap.ts",
+      "logger.ts",
+      "config.ts",
+      "index.ts",
+      "runtime.ts",
+      "context-loader.ts",
+      "resume-engine.ts",
+      "validation-engine.ts",
+      "task-engine.ts",
+      "repository-integration.ts",
+      "supabase-integration.ts",
+      "dashboard-data.ts",
+      "automation-engine.ts",
+      "production-package.ts"
+    ],
+    "requiredPackageScripts": [
+      "build",
+      "db:verify",
+      "engineeringos:validate",
+      "engineeringos:resume",
+      "engineeringos:dashboard",
+      "engineeringos:package"
+    ]
+  },
+  "checks": [
+    {
+      "name": "repoRoot",
+      "status": "PASS",
+      "detail": "Repository root exists."
+    },
+    {
+      "name": "packageJson",
+      "status": "PASS",
+      "detail": "package.json is required at repository root."
+    },
+    {
+      "name": "engineeringOSRoot",
+      "status": "PASS",
+      "detail": "engineeringos folder is required."
+    },
+    {
+      "name": "kernelRoot",
+      "status": "PASS",
+      "detail": "engineeringos/kernel folder is required."
+    },
+    {
+      "name": "identity",
+      "status": "PASS",
+      "detail": "EngineeringOS identity files are required."
+    },
+    {
+      "name": "kernel:bootstrap.ts",
+      "status": "PASS",
+      "detail": "bootstrap.ts must exist in engineeringos/kernel."
+    },
+    {
+      "name": "kernel:logger.ts",
+      "status": "PASS",
+      "detail": "logger.ts must exist in engineeringos/kernel."
+    },
+    {
+      "name": "kernel:config.ts",
+      "status": "PASS",
+      "detail": "config.ts must exist in engineeringos/kernel."
+    },
+    {
+      "name": "kernel:index.ts",
+      "status": "PASS",
+      "detail": "index.ts must exist in engineeringos/kernel."
+    }
+  ],
+  "errors": []
+}

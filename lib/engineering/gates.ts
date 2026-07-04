@@ -11,16 +11,53 @@ const REPO_ROOT = process.cwd();
 /** Critical routes the route gate checks (stable routes only). */
 const CRITICAL_ROUTES = ["/engineering-center", "/compliance", "/lead-master"];
 
-async function buildGate(): Promise<GateResult> {
-  const tsc = join(REPO_ROOT, "node_modules", ".bin", "tsc");
-  if (!existsSync(tsc)) {
-    return { name: "build", status: "FAIL", detail: "tsc not found (run npm install)" };
+function typecheckCommand(): { command: string; args: string[]; detail: string; shell?: boolean } | null {
+  const bin = join(REPO_ROOT, "node_modules", ".bin");
+
+  if (process.platform === "win32") {
+    return {
+      command: "npx.cmd",
+      args: ["--no-install", "tsc", "--noEmit"],
+      detail: "npx.cmd --no-install tsc --noEmit",
+      shell: true,
+    };
   }
+
+  const tsc = join(bin, "tsc");
+  if (existsSync(tsc)) {
+    return {
+      command: tsc,
+      args: ["--noEmit"],
+      detail: "tsc --noEmit",
+    };
+  }
+
+  return {
+    command: "npx",
+    args: ["--no-install", "tsc", "--noEmit"],
+    detail: "npx --no-install tsc --noEmit",
+  };
+}
+
+async function buildGate(): Promise<GateResult> {
+  const typecheck = typecheckCommand();
+  if (!typecheck) {
+    return { name: "build", status: "FAIL", detail: "TypeScript compiler not found (run npm install)" };
+  }
+
   try {
-    await execFileAsync(tsc, ["--noEmit"], { cwd: REPO_ROOT, timeout: 180_000 });
-    return { name: "build", status: "PASS", detail: "tsc --noEmit: 0 errors" };
+    await execFileAsync(typecheck.command, typecheck.args, {
+      cwd: REPO_ROOT,
+      shell: typecheck.shell,
+      timeout: 180_000,
+    });
+    return { name: "build", status: "PASS", detail: `${typecheck.detail}: 0 errors` };
   } catch (e) {
-    const out = (e as { stdout?: string }).stdout || (e as Error).message || "";
+    const out =
+      (e as { stdout?: string; stderr?: string }).stdout ||
+      (e as { stderr?: string }).stderr ||
+      (e as Error).message ||
+      "";
     const first = out.split("\n").find((l) => /error TS/.test(l)) || "type-check failed";
     return { name: "build", status: "FAIL", detail: first.trim().slice(0, 200) };
   }

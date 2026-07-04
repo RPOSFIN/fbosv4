@@ -1,0 +1,54 @@
+{
+  "status": {
+    "generatedAt": "2026-07-04T13:00:02.275Z",
+    "state": "CONFIGURED",
+    "credentialsRequired": false,
+    "liveConnectionAttempted": false,
+    "migrationsAttempted": false,
+    "variables": [
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_URL",
+        "present": true,
+        "sources": [
+          ".env.local"
+        ]
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "present": true,
+        "sources": [
+          ".env.local"
+        ]
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+        "present": false,
+        "sources": []
+      },
+      {
+        "name": "SUPABASE_URL",
+        "present": false,
+        "sources": []
+      },
+      {
+        "name": "SUPABASE_ANON_KEY",
+        "present": false,
+        "sources": []
+      },
+      {
+        "name": "SUPABASE_SERVICE_ROLE_KEY",
+        "present": true,
+        "sources": [
+          ".env.local"
+        ]
+      }
+    ],
+    "message": "Supabase environment keys are present. No live connection was attempted."
+  },
+  "stub": {
+    "generatedAt": "2026-07-04T13:00:02.275Z",
+    "action": "NO_OP",
+    "state": "CONFIGURED",
+    "message": "Supabase handoff sync stub completed without credentials, migrations, or database writes."
+  }
+}

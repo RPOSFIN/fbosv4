@@ -52,5 +52,207 @@
     "type": "ECP_CREATED",
     "ecp": "ECP-0005",
     "detail": "Checkpoint created at 1888bbe on fbosv4-recovery"
+  },
+  {
+    "ts": "2026-07-02T07:32:57.694Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0005",
+    "detail": "Gates FAIL: build"
+  },
+  {
+    "ts": "2026-07-02T07:32:57.696Z",
+    "type": "PROMOTION_BLOCKED",
+    "ecp": "ECP-0005",
+    "detail": "Safety hold — failing gate(s): build"
+  },
+  {
+    "ts": "2026-07-02T07:34:47.037Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0005",
+    "detail": "Gates FAIL: build"
+  },
+  {
+    "ts": "2026-07-02T07:34:47.038Z",
+    "type": "PROMOTION_BLOCKED",
+    "ecp": "ECP-0005",
+    "detail": "Safety hold — failing gate(s): build"
+  },
+  {
+    "ts": "2026-07-02T08:24:17.107Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0005",
+    "detail": "Gates FAIL: build"
+  },
+  {
+    "ts": "2026-07-02T08:24:17.109Z",
+    "type": "PROMOTION_BLOCKED",
+    "ecp": "ECP-0005",
+    "detail": "Safety hold — failing gate(s): build"
+  },
+  {
+    "ts": "2026-07-02T08:24:27.786Z",
+    "type": "ECP_CREATED",
+    "ecp": "ECP-0006",
+    "detail": "Checkpoint created at 3244096 on fbosv4-recovery"
+  },
+  {
+    "ts": "2026-07-02T08:27:11.763Z",
+    "type": "RESTORE",
+    "detail": "Recovery branch recovery/ecp-0005-831694 created at 1888bbe (target: ECP-0005)"
+  },
+  {
+    "ts": "2026-07-02T08:35:12.793Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0006",
+    "detail": "Gates FAIL: build"
+  },
+  {
+    "ts": "2026-07-02T08:35:12.795Z",
+    "type": "PROMOTION_BLOCKED",
+    "ecp": "ECP-0006",
+    "detail": "Safety hold — failing gate(s): build"
+  },
+  {
+    "ts": "2026-07-02T11:08:38.651Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0006",
+    "detail": "Gates FAIL: build"
+  },
+  {
+    "ts": "2026-07-02T11:08:38.653Z",
+    "type": "PROMOTION_BLOCKED",
+    "ecp": "ECP-0006",
+    "detail": "Safety hold — failing gate(s): build"
+  },
+  {
+    "ts": "2026-07-02T11:15:09.308Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0006",
+    "detail": "Gates FAIL: build"
+  },
+  {
+    "ts": "2026-07-02T11:15:09.311Z",
+    "type": "PROMOTION_BLOCKED",
+    "ecp": "ECP-0006",
+    "detail": "Safety hold — failing gate(s): build"
+  },
+  {
+    "ts": "2026-07-02T11:21:38.515Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0006",
+    "detail": "Gates FAIL: build"
+  },
+  {
+    "ts": "2026-07-02T11:21:38.517Z",
+    "type": "PROMOTION_BLOCKED",
+    "ecp": "ECP-0006",
+    "detail": "Safety hold — failing gate(s): build"
+  },
+  {
+    "ts": "2026-07-02T11:45:35.486Z",
+    "type": "PROMOTION_BLOCKED",
+    "ecp": "ECP-0006",
+    "detail": "Manual promotion refused — failing gate(s): build"
+  },
+  {
+    "ts": "2026-07-02T11:46:25.247Z",
+    "type": "PROMOTION_BLOCKED",
+    "ecp": "ECP-0006",
+    "detail": "Manual promotion refused — failing gate(s): build"
+  },
+  {
+    "ts": "2026-07-02T20:39:59.738Z",
+    "type": "RESTORE",
+    "detail": "Recovery branch recovery/3r-fbos4-2026-06-28-ecp-0003-799670 created at c738a2c (target: 3r-fbos4-2026-06-28-ecp-0003)"
+  },
+  {
+    "ts": "2026-07-04T12:59:01.471Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0006",
+    "detail": "All final gates PASS - EngineeringOS E02-E12 final acceptance verified; ready for 3R"
+  },
+  {
+    "ts": "2026-07-04T13:04:19.666Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0006",
+    "detail": "Gates FAIL: build"
+  },
+  {
+    "ts": "2026-07-04T13:04:19.666Z",
+    "type": "PROMOTION_BLOCKED",
+    "ecp": "ECP-0006",
+    "detail": "Safety hold — failing gate(s): build"
+  },
+  {
+    "ts": "2026-07-04T13:04:52.748Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0006",
+    "detail": "Gates FAIL: build"
+  },
+  {
+    "ts": "2026-07-04T13:04:52.749Z",
+    "type": "PROMOTION_BLOCKED",
+    "ecp": "ECP-0006",
+    "detail": "Safety hold — failing gate(s): build"
+  },
+  {
+    "ts": "2026-07-04T13:11:25.715Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0006",
+    "detail": "Gates FAIL: build"
+  },
+  {
+    "ts": "2026-07-04T13:11:25.716Z",
+    "type": "PROMOTION_BLOCKED",
+    "ecp": "ECP-0006",
+    "detail": "Safety hold — failing gate(s): build"
+  },
+  {
+    "ts": "2026-07-04T13:19:36.170Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0006",
+    "detail": "Gates FAIL: build"
+  },
+  {
+    "ts": "2026-07-04T13:19:36.171Z",
+    "type": "PROMOTION_BLOCKED",
+    "ecp": "ECP-0006",
+    "detail": "Safety hold — failing gate(s): build"
+  },
+  {
+    "ts": "2026-07-04T13:27:53.353Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0006",
+    "detail": "All gates PASS"
+  },
+  {
+    "ts": "2026-07-04T13:27:53.824Z",
+    "type": "PROMOTED_TO_3R",
+    "ecp": "ECP-0006",
+    "detail": "Promoted to 3R as 3r-fbos4-2026-07-04-ecp-0006 (auto) at 3244096"
+  },
+  {
+    "ts": "2026-07-04T13:37:40.599Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0006",
+    "detail": "All gates PASS"
+  },
+  {
+    "ts": "2026-07-04T13:37:41.261Z",
+    "type": "PROMOTED_TO_3R",
+    "ecp": "ECP-0006",
+    "detail": "Promoted to 3R as 3r-fbos4-2026-07-04-ecp-0006 (auto) at 3244096"
+  },
+  {
+    "ts": "2026-07-04T13:52:37.844Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0006",
+    "detail": "All gates PASS"
+  },
+  {
+    "ts": "2026-07-04T13:52:38.339Z",
+    "type": "PROMOTED_TO_3R",
+    "ecp": "ECP-0006",
+    "detail": "Promoted to 3R as 3r-fbos4-2026-07-04-ecp-0006-8339 (auto) at 3244096"
   }
 ]

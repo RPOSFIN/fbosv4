@@ -3,7 +3,7 @@
   "type": "engineering-checkpoint",
   "version": 2,
   "createdAt": "2026-07-01T23:07:27.490Z",
-  "state": "ECP_CREATED",
+  "state": "DEVELOPMENT",
   "repository": "RPOSFIN/fbosv4",
   "branch": "fbosv4-recovery",
   "commit": "1888bbe00a0f959f02beba8269e0533250fce5f6",

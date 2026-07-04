@@ -1,0 +1,47 @@
+{
+  "generatedAt": "2026-07-04T13:00:01.644Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "repoRoot",
+      "status": "PASS",
+      "detail": "D:\\all in one fbos files\\FBOSV01\\FBOS_V01\\fbos-v1"
+    },
+    {
+      "name": "packageJson",
+      "status": "PASS",
+      "detail": "package.json must exist."
+    },
+    {
+      "name": "engineeringOSRoot",
+      "status": "PASS",
+      "detail": "engineeringos must exist."
+    },
+    {
+      "name": "ecpTimeline",
+      "status": "PASS",
+      "detail": "ecp/timeline.json exists."
+    },
+    {
+      "name": "kernelFiles",
+      "status": "PASS",
+      "detail": "Required kernel files exist."
+    },
+    {
+      "name": "typescriptParse",
+      "status": "PASS",
+      "detail": "17 kernel TypeScript files parsed."
+    },
+    {
+      "name": "packageScripts",
+      "status": "PASS",
+      "detail": "Required npm scripts are present."
+    },
+    {
+      "name": "packageJsonParse",
+      "status": "PASS",
+      "detail": "package.json parses as JSON."
+    }
+  ],
+  "missingItems": []
+}

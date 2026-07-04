@@ -1,9 +1,9 @@
 {
-  "tag": "3r-fbos4-2026-06-28-ecp-0003",
-  "ecp": "ECP-0003",
-  "commit": "c738a2c48588bf1c7d515cf05fdd02f15d8fc054",
-  "commitShort": "c738a2c",
-  "branch": "fbosv4-dev",
-  "promotedAt": "2026-06-28T14:04:13.122Z",
+  "tag": "3r-fbos4-2026-07-04-ecp-0006-8339",
+  "ecp": "ECP-0006",
+  "commit": "32440962ac933c462d80894cb007b2aae8d8cb84",
+  "commitShort": "3244096",
+  "branch": "fbosv4-recovery",
+  "promotedAt": "2026-07-04T13:52:38.339Z",
   "mode": "auto"
 }

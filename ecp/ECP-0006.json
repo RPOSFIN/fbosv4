@@ -1,0 +1,56 @@
+{
+  "id": "ECP-0006",
+  "type": "engineering-checkpoint",
+  "version": 2,
+  "createdAt": "2026-07-02T08:24:27.786Z",
+  "state": "PROMOTED_TO_3R",
+  "repository": "RPOSFIN/fbosv4",
+  "branch": "fbosv4-recovery",
+  "commit": "32440962ac933c462d80894cb007b2aae8d8cb84",
+  "commitShort": "3244096",
+  "lastCommitMessage": "EngineeringOS S2: Foundation Complete",
+  "gitClean": false,
+  "gitStatus": [
+    " M ecp/ECP-0005.json",
+    " M ecp/timeline.json",
+    " M package.json",
+    " M tsconfig.json",
+    "?? AI_BOOTSTRAP.md",
+    "?? architecture-tree.txt",
+    "?? arena-home.html",
+    "?? ecp/ECP-0006.json",
+    "?? embed.html",
+    "?? engineeringos-installer.ps1",
+    "?? engineeringos-tree.txt",
+    "?? engineeringos/engineeringos/",
+    "?? engineeringos/kernel/",
+    "?? engineeringos/reports/",
+    "?? engineeringos_repair_backup_20260704_161402/",
+    "?? repo-tree.txt",
+    "?? triggercmd-test.txt"
+  ],
+  "sprint": "EngineeringOS E02-E12 Final Acceptance",
+  "verifiedAt": "2026-07-04T12:59:01.471Z",
+  "readyFor3R": true,
+  "finalAcceptance": {
+    "status": "VERIFIED",
+    "mode": "final-acceptance-freeze",
+    "verifiedAt": "2026-07-04T12:59:01.471Z",
+    "gates": {
+      "engineeringosValidate": "PASS",
+      "engineeringosResume": "PASS",
+      "engineeringosDashboard": "PASS",
+      "engineeringosPackage": "PASS",
+      "typecheck": "PASS",
+      "build": "PASS",
+      "dbVerify": "PASS"
+    },
+    "readyFor3R": true,
+    "promotedTo3R": false,
+    "notes": [
+      "Final acceptance did not modify app architecture or business modules.",
+      "Build and database verification required outbound network access.",
+      "Existing 3R pointer is preserved; ECP-0006 is marked ready for 3R."
+    ]
+  }
+}

@@ -1,0 +1,573 @@
+{
+  "generatedAt": "2026-07-04T13:00:01.207Z",
+  "branch": "fbosv4-recovery",
+  "gitClean": false,
+  "gitStatus": [
+    "M ecp/ECP-0005.json",
+    " M ecp/timeline.json",
+    " M package.json",
+    " M tsconfig.json",
+    "?? AI_BOOTSTRAP.md",
+    "?? architecture-tree.txt",
+    "?? arena-home.html",
+    "?? ecp/ECP-0006.json",
+    "?? embed.html",
+    "?? engineeringos-installer.ps1",
+    "?? engineeringos-tree.txt",
+    "?? engineeringos/engineeringos/",
+    "?? engineeringos/kernel/",
+    "?? engineeringos/reports/",
+    "?? engineeringos_repair_backup_20260704_161402/",
+    "?? repo-tree.txt",
+    "?? triggercmd-test.txt"
+  ],
+  "latestCheckpoint": {
+    "id": "ECP-0006",
+    "type": "engineering-checkpoint",
+    "version": 2,
+    "createdAt": "2026-07-02T08:24:27.786Z",
+    "state": "READY_FOR_3R",
+    "repository": "RPOSFIN/fbosv4",
+    "branch": "fbosv4-recovery",
+    "commit": "32440962ac933c462d80894cb007b2aae8d8cb84",
+    "commitShort": "3244096",
+    "lastCommitMessage": "EngineeringOS S2: Foundation Complete",
+    "gitClean": false,
+    "gitStatus": [
+      " M ecp/ECP-0005.json",
+      " M ecp/timeline.json",
+      " M package.json",
+      " M tsconfig.json",
+      "?? AI_BOOTSTRAP.md",
+      "?? architecture-tree.txt",
+      "?? arena-home.html",
+      "?? ecp/ECP-0006.json",
+      "?? embed.html",
+      "?? engineeringos-installer.ps1",
+      "?? engineeringos-tree.txt",
+      "?? engineeringos/engineeringos/",
+      "?? engineeringos/kernel/",
+      "?? engineeringos/reports/",
+      "?? engineeringos_repair_backup_20260704_161402/",
+      "?? repo-tree.txt",
+      "?? triggercmd-test.txt"
+    ],
+    "sprint": "EngineeringOS E02-E12 Final Acceptance",
+    "verifiedAt": "2026-07-04T12:59:01.471Z",
+    "readyFor3R": true,
+    "finalAcceptance": {
+      "status": "VERIFIED",
+      "mode": "final-acceptance-freeze",
+      "verifiedAt": "2026-07-04T12:59:01.471Z",
+      "gates": {
+        "engineeringosValidate": "PASS",
+        "engineeringosResume": "PASS",
+        "engineeringosDashboard": "PASS",
+        "engineeringosPackage": "PASS",
+        "typecheck": "PASS",
+        "build": "PASS",
+        "dbVerify": "PASS"
+      },
+      "readyFor3R": true,
+      "promotedTo3R": false,
+      "notes": [
+        "Final acceptance did not modify app architecture or business modules.",
+        "Build and database verification required outbound network access.",
+        "Existing 3R pointer is preserved; ECP-0006 is marked ready for 3R."
+      ]
+    }
+  },
+  "latestSprintStatus": "EngineeringOS E02-E12 Final Acceptance (READY_FOR_3R)",
+  "moduleContext": {
+    "docsLoaded": 28,
+    "ecpRecords": 6,
+    "timelineEvents": 29,
+    "requiredFoldersPresent": true
+  },
+  "context": {
+    "generatedAt": "2026-07-04T13:00:00.034Z",
+    "repoRoot": "D:\\all in one fbos files\\FBOSV01\\FBOS_V01\\fbos-v1",
+    "structure": {
+      "requiredRootFolders": [
+        {
+          "path": "app",
+          "exists": true
+        },
+        {
+          "path": "components",
+          "exists": true
+        },
+        {
+          "path": "lib",
+          "exists": true
+        },
+        {
+          "path": "hooks",
+          "exists": true
+        },
+        {
+          "path": "supabase",
+          "exists": true
+        },
+        {
+          "path": "ecp",
+          "exists": true
+        },
+        {
+          "path": "engineeringos",
+          "exists": true
+        }
+      ],
+      "importantFiles": [
+        {
+          "path": "AGENTS.md",
+          "exists": true,
+          "size": 5570,
+          "modifiedAt": "2026-06-30T13:16:26.243Z"
+        },
+        {
+          "path": "ENGINEERINGOS.ID",
+          "exists": true,
+          "size": 1049,
+          "modifiedAt": "2026-06-30T10:06:03.748Z"
+        },
+        {
+          "path": "ENGINEERINGOS.json",
+          "exists": true,
+          "size": 679,
+          "modifiedAt": "2026-06-30T10:07:00.305Z"
+        },
+        {
+          "path": "AI_CAPABILITY_MATRIX.md",
+          "exists": true,
+          "size": 1224,
+          "modifiedAt": "2026-06-30T11:06:23.831Z"
+        },
+        {
+          "path": "ENGINEERING_CONSTITUTION.md",
+          "exists": true,
+          "size": 1593,
+          "modifiedAt": "2026-06-30T11:06:46.778Z"
+        },
+        {
+          "path": "package.json",
+          "exists": true,
+          "size": 1915,
+          "modifiedAt": "2026-07-04T12:52:47.691Z"
+        }
+      ]
+    },
+    "docs": [
+      {
+        "path": "engineeringos/phase-0/ACTORS.md",
+        "title": "engineeringos/phase-0/ACTORS.md",
+        "bytes": 36,
+        "content": "﻿# ACTORS\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-0/CONSTITUTION_FREEZE.md",
+        "title": "engineeringos/phase-0/CONSTITUTION_FREEZE.md",
+        "bytes": 49,
+        "content": "﻿# CONSTITUTION_FREEZE\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-0/PRINCIPLES.md",
+        "title": "engineeringos/phase-0/PRINCIPLES.md",
+        "bytes": 40,
+        "content": "﻿# PRINCIPLES\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-0/SCOPE.md",
+        "title": "engineeringos/phase-0/SCOPE.md",
+        "bytes": 35,
+        "content": "﻿# SCOPE\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-0/VISION.md",
+        "title": "EngineeringOS V1",
+        "bytes": 37,
+        "content": "# EngineeringOS V1\r\n\r\nContent Pending"
+      },
+      {
+        "path": "engineeringos/phase-1/ARCHITECTURE.md",
+        "title": "engineeringos/phase-1/ARCHITECTURE.md",
+        "bytes": 42,
+        "content": "﻿# ARCHITECTURE\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-1/ARCHITECTURE_FREEZE.md",
+        "title": "engineeringos/phase-1/ARCHITECTURE_FREEZE.md",
+        "bytes": 49,
+        "content": "﻿# ARCHITECTURE_FREEZE\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-1/DEPENDENCY_MODEL.md",
+        "title": "engineeringos/phase-1/DEPENDENCY_MODEL.md",
+        "bytes": 46,
+        "content": "﻿# DEPENDENCY_MODEL\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-1/DIRECTORY_PHILOSOPHY.md",
+        "title": "engineeringos/phase-1/DIRECTORY_PHILOSOPHY.md",
+        "bytes": 50,
+        "content": "﻿# DIRECTORY_PHILOSOPHY\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-1/EXECUTION_FLOW.md",
+        "title": "engineeringos/phase-1/EXECUTION_FLOW.md",
+        "bytes": 44,
+        "content": "﻿# EXECUTION_FLOW\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-2/AGENT_LIFECYCLE.md",
+        "title": "engineeringos/phase-2/AGENT_LIFECYCLE.md",
+        "bytes": 45,
+        "content": "﻿# AGENT_LIFECYCLE\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-2/BOOTSTRAP.md",
+        "title": "engineeringos/phase-2/BOOTSTRAP.md",
+        "bytes": 39,
+        "content": "﻿# BOOTSTRAP\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-2/CAPABILITY_DISCOVERY.md",
+        "title": "engineeringos/phase-2/CAPABILITY_DISCOVERY.md",
+        "bytes": 50,
+        "content": "﻿# CAPABILITY_DISCOVERY\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-2/CAPABILITY_NEGOTIATION.md",
+        "title": "engineeringos/phase-2/CAPABILITY_NEGOTIATION.md",
+        "bytes": 52,
+        "content": "﻿# CAPABILITY_NEGOTIATION\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-2/RESUME_MODEL.md",
+        "title": "engineeringos/phase-2/RESUME_MODEL.md",
+        "bytes": 42,
+        "content": "﻿# RESUME_MODEL\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-2/RUNTIME_BOUNDARIES.md",
+        "title": "engineeringos/phase-2/RUNTIME_BOUNDARIES.md",
+        "bytes": 48,
+        "content": "﻿# RUNTIME_BOUNDARIES\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-2/RUNTIME_FREEZE.md",
+        "title": "engineeringos/phase-2/RUNTIME_FREEZE.md",
+        "bytes": 44,
+        "content": "﻿# RUNTIME_FREEZE\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-2/RUNTIME_PHILOSOPHY.md",
+        "title": "engineeringos/phase-2/RUNTIME_PHILOSOPHY.md",
+        "bytes": 48,
+        "content": "﻿# RUNTIME_PHILOSOPHY\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-2/STATE_MODEL.md",
+        "title": "engineeringos/phase-2/STATE_MODEL.md",
+        "bytes": 41,
+        "content": "﻿# STATE_MODEL\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-3/AMENDMENT_MODEL.md",
+        "title": "engineeringos/phase-3/AMENDMENT_MODEL.md",
+        "bytes": 45,
+        "content": "﻿# AMENDMENT_MODEL\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-3/APPROVAL_MODEL.md",
+        "title": "engineeringos/phase-3/APPROVAL_MODEL.md",
+        "bytes": 44,
+        "content": "﻿# APPROVAL_MODEL\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-3/DECISION_MODEL.md",
+        "title": "engineeringos/phase-3/DECISION_MODEL.md",
+        "bytes": 44,
+        "content": "﻿# DECISION_MODEL\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-3/GOVERNANCE_BOUNDARIES.md",
+        "title": "engineeringos/phase-3/GOVERNANCE_BOUNDARIES.md",
+        "bytes": 51,
+        "content": "﻿# GOVERNANCE_BOUNDARIES\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-3/GOVERNANCE_FREEZE.md",
+        "title": "engineeringos/phase-3/GOVERNANCE_FREEZE.md",
+        "bytes": 47,
+        "content": "﻿# GOVERNANCE_FREEZE\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-3/GOVERNANCE_PHILOSOPHY.md",
+        "title": "engineeringos/phase-3/GOVERNANCE_PHILOSOPHY.md",
+        "bytes": 51,
+        "content": "﻿# GOVERNANCE_PHILOSOPHY\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-3/PROMOTION_MODEL.md",
+        "title": "engineeringos/phase-3/PROMOTION_MODEL.md",
+        "bytes": 45,
+        "content": "﻿# PROMOTION_MODEL\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-3/REVIEW_MODEL.md",
+        "title": "engineeringos/phase-3/REVIEW_MODEL.md",
+        "bytes": 42,
+        "content": "﻿# REVIEW_MODEL\r\n\r\nStatus: Placeholder\r\n\r\n"
+      },
+      {
+        "path": "engineeringos/phase-3/ROLLBACK_MODEL.md",
+        "title": "engineeringos/phase-3/ROLLBACK_MODEL.md",
+        "bytes": 44,
+        "content": "﻿# ROLLBACK_MODEL\r\n\r\nStatus: Placeholder\r\n\r\n"
+      }
+    ],
+    "ecp": {
+      "timelineExists": true,
+      "timelineEvents": [
+        {
+          "ts": "2026-06-26T19:41:01.674Z",
+          "type": "ECP_CREATED",
+          "ecp": "ECP-0001",
+          "detail": "Checkpoint created at 3940600 on fbosv4-dev"
+        },
+        {
+          "ts": "2026-06-26T19:41:22.273Z",
+          "type": "VERIFIED",
+          "ecp": "ECP-0001",
+          "detail": "All gates PASS"
+        },
+        {
+          "ts": "2026-06-26T19:41:22.427Z",
+          "type": "PROMOTED_TO_3R",
+          "ecp": "ECP-0001",
+          "detail": "Promoted to 3R as 3r-fbos4-2026-06-26-ecp-0001 (auto) at 3940600"
+        },
+        {
+          "ts": "2026-06-27T04:47:36.113Z",
+          "type": "ECP_CREATED",
+          "ecp": "ECP-0002",
+          "detail": "Checkpoint created at 572703c on fbosv4-dev"
+        },
+        {
+          "ts": "2026-06-28T14:04:07.209Z",
+          "type": "ECP_CREATED",
+          "ecp": "ECP-0003",
+          "detail": "Checkpoint created at c738a2c on fbosv4-dev"
+        },
+        {
+          "ts": "2026-06-28T14:04:12.897Z",
+          "type": "VERIFIED",
+          "ecp": "ECP-0003",
+          "detail": "All gates PASS"
+        },
+        {
+          "ts": "2026-06-28T14:04:13.122Z",
+          "type": "PROMOTED_TO_3R",
+          "ecp": "ECP-0003",
+          "detail": "Promoted to 3R as 3r-fbos4-2026-06-28-ecp-0003 (auto) at c738a2c"
+        },
+        {
+          "ts": "2026-06-29T23:54:35.991Z",
+          "type": "ECP_CREATED",
+          "ecp": "ECP-0004",
+          "detail": "Checkpoint created at 7de6192 on fbosv4-recovery"
+        },
+        {
+          "ts": "2026-07-01T23:07:27.490Z",
+          "type": "ECP_CREATED",
+          "ecp": "ECP-0005",
+          "detail": "Checkpoint created at 1888bbe on fbosv4-recovery"
+        },
+        {
+          "ts": "2026-07-02T07:32:57.694Z",
+          "type": "VERIFIED",
+          "ecp": "ECP-0005",
+          "detail": "Gates FAIL: build"
+        },
+        {
+          "ts": "2026-07-02T07:32:57.696Z",
+          "type": "PROMOTION_BLOCKED",
+          "ecp": "ECP-0005",
+          "detail": "Safety hold — failing gate(s): build"
+        },
+        {
+          "ts": "2026-07-02T07:34:47.037Z",
+          "type": "VERIFIED",
+          "ecp": "ECP-0005",
+          "detail": "Gates FAIL: build"
+        },
+        {
+          "ts": "2026-07-02T07:34:47.038Z",
+          "type": "PROMOTION_BLOCKED",
+          "ecp": "ECP-0005",
+          "detail": "Safety hold — failing gate(s): build"
+        },
+        {
+          "ts": "2026-07-02T08:24:17.107Z",
+          "type": "VERIFIED",
+          "ecp": "ECP-0005",
+          "detail": "Gates FAIL: build"
+        },
+        {
+          "ts": "2026-07-02T08:24:17.109Z",
+          "type": "PROMOTION_BLOCKED",
+          "ecp": "ECP-0005",
+          "detail": "Safety hold — failing gate(s): build"
+        },
+        {
+          "ts": "2026-07-02T08:24:27.786Z",
+          "type": "ECP_CREATED",
+          "ecp": "ECP-0006",
+          "detail": "Checkpoint created at 3244096 on fbosv4-recovery"
+        },
+        {
+          "ts": "2026-07-02T08:27:11.763Z",
+          "type": "RESTORE",
+          "detail": "Recovery branch recovery/ecp-0005-831694 created at 1888bbe (target: ECP-0005)"
+        },
+        {
+          "ts": "2026-07-02T08:35:12.793Z",
+          "type": "VERIFIED",
+          "ecp": "ECP-0006",
+          "detail": "Gates FAIL: build"
+        },
+        {
+          "ts": "2026-07-02T08:35:12.795Z",
+          "type": "PROMOTION_BLOCKED",
+          "ecp": "ECP-0006",
+          "detail": "Safety hold — failing gate(s): build"
+        },
+        {
+          "ts": "2026-07-02T11:08:38.651Z",
+          "type": "VERIFIED",
+          "ecp": "ECP-0006",
+          "detail": "Gates FAIL: build"
+        },
+        {
+          "ts": "2026-07-02T11:08:38.653Z",
+          "type": "PROMOTION_BLOCKED",
+          "ecp": "ECP-0006",
+          "detail": "Safety hold — failing gate(s): build"
+        },
+        {
+          "ts": "2026-07-02T11:15:09.308Z",
+          "type": "VERIFIED",
+          "ecp": "ECP-0006",
+          "detail": "Gates FAIL: build"
+        },
+        {
+          "ts": "2026-07-02T11:15:09.311Z",
+          "type": "PROMOTION_BLOCKED",
+          "ecp": "ECP-0006",
+          "detail": "Safety hold — failing gate(s): build"
+        },
+        {
+          "ts": "2026-07-02T11:21:38.515Z",
+          "type": "VERIFIED",
+          "ecp": "ECP-0006",
+          "detail": "Gates FAIL: build"
+        },
+        {
+          "ts": "2026-07-02T11:21:38.517Z",
+          "type": "PROMOTION_BLOCKED",
+          "ecp": "ECP-0006",
+          "detail": "Safety hold — failing gate(s): build"
+        },
+        {
+          "ts": "2026-07-02T11:45:35.486Z",
+          "type": "PROMOTION_BLOCKED",
+          "ecp": "ECP-0006",
+          "detail": "Manual promotion refused — failing gate(s): build"
+        },
+        {
+          "ts": "2026-07-02T11:46:25.247Z",
+          "type": "PROMOTION_BLOCKED",
+          "ecp": "ECP-0006",
+          "detail": "Manual promotion refused — failing gate(s): build"
+        },
+        {
+          "ts": "2026-07-02T20:39:59.738Z",
+          "type": "RESTORE",
+          "detail": "Recovery branch recovery/3r-fbos4-2026-06-28-ecp-0003-799670 created at c738a2c (target: 3r-fbos4-2026-06-28-ecp-0003)"
+        },
+        {
+          "ts": "2026-07-04T12:59:01.471Z",
+          "type": "VERIFIED",
+          "ecp": "ECP-0006",
+          "detail": "All final gates PASS - EngineeringOS E02-E12 final acceptance verified; ready for 3R"
+        }
+      ],
+      "latestRecord": {
+        "id": "ECP-0006",
+        "type": "engineering-checkpoint",
+        "version": 2,
+        "createdAt": "2026-07-02T08:24:27.786Z",
+        "state": "READY_FOR_3R",
+        "repository": "RPOSFIN/fbosv4",
+        "branch": "fbosv4-recovery",
+        "commit": "32440962ac933c462d80894cb007b2aae8d8cb84",
+        "commitShort": "3244096",
+        "lastCommitMessage": "EngineeringOS S2: Foundation Complete",
+        "gitClean": false,
+        "gitStatus": [
+          " M ecp/ECP-0005.json",
+          " M ecp/timeline.json",
+          " M package.json",
+          " M tsconfig.json",
+          "?? AI_BOOTSTRAP.md",
+          "?? architecture-tree.txt",
+          "?? arena-home.html",
+          "?? ecp/ECP-0006.json",
+          "?? embed.html",
+          "?? engineeringos-installer.ps1",
+          "?? engineeringos-tree.txt",
+          "?? engineeringos/engineeringos/",
+          "?? engineeringos/kernel/",
+          "?? engineeringos/reports/",
+          "?? engineeringos_repair_backup_20260704_161402/",
+          "?? repo-tree.txt",
+          "?? triggercmd-test.txt"
+        ],
+        "sprint": "EngineeringOS E02-E12 Final Acceptance",
+        "verifiedAt": "2026-07-04T12:59:01.471Z",
+        "readyFor3R": true,
+        "finalAcceptance": {
+          "status": "VERIFIED",
+          "mode": "final-acceptance-freeze",
+          "verifiedAt": "2026-07-04T12:59:01.471Z",
+          "gates": {
+            "engineeringosValidate": "PASS",
+            "engineeringosResume": "PASS",
+            "engineeringosDashboard": "PASS",
+            "engineeringosPackage": "PASS",
+            "typecheck": "PASS",
+            "build": "PASS",
+            "dbVerify": "PASS"
+          },
+          "readyFor3R": true,
+          "promotedTo3R": false,
+          "notes": [
+            "Final acceptance did not modify app architecture or business modules.",
+            "Build and database verification required outbound network access.",
+            "Existing 3R pointer is preserved; ECP-0006 is marked ready for 3R."
+          ]
+        }
+      },
+      "latestRecordPath": "ecp/ECP-0006.json",
+      "files": [
+        "ecp/ECP-0001.json",
+        "ecp/ECP-0002.json",
+        "ecp/ECP-0003.json",
+        "ecp/ECP-0004.json",
+        "ecp/ECP-0005.json",
+        "ecp/ECP-0006.json"
+      ]
+    }
+  }
+}
