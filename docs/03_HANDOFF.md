@@ -16,28 +16,41 @@
 `fbosv4-recovery`
 
 ### Latest finance commits
+- `1846489` — Mark Balance Sheet as derived from ledgers
+- `aa29a9b` — Add TLY-05 balance sheet API
+- `22f8522` — Add TLY-05 balance sheet builder
 - `9e9ae31` — Add TLY-05 report head status helpers
 - `f09973a` — Add TLY-05 head status API
 - `a0c0fbc` — Show TLY-05 head status on finance matrix
 
 ### Verified locally by user
-- `npm.cmd run typecheck` passed
-- `npm.cmd run build` passed
-- Next.js build shows `/api/finance/tally/head-status`
-- Existing warnings are non-blocking:
+- Previous `npm.cmd run typecheck` passed before Balance Sheet builder changes
+- Previous `npm.cmd run build` passed before Balance Sheet builder changes
+- Previous Next.js build showed `/api/finance/tally/head-status`
+- Existing warnings were non-blocking:
   - `middleware` convention deprecated
   - Turbopack NFT tracing warning from EngineeringOS checkpoint route
 
-### New API
-`GET /api/finance/tally/head-status`
+### New / updated APIs
+- `GET /api/finance/tally/head-status`
+- `GET /api/finance/tally/balance-sheet`
 
-### Latest TLY-05 status from local API
-- `bank_cash` — `derived` — 4618 rows from `tally_voucher_lines`
+### Latest TLY-05 status
+- `bank_cash` — `derived` — rows from `tally_voucher_lines`
 - `profit_loss` — `derived` — canonical formula based
-- `balance_sheet` — `unavailable` — structured parser/report builder still needed
-- `receivables` — `derived` — 265 rows from `tally_parties`
-- `payables` — `derived` — 265 rows from `tally_parties`
-- `ledger` / DR-CR — `synced` — 379 ledgers
+- `balance_sheet` — `derived` — grouped from synced `tally_ledgers`; **not synced/final yet**
+- `receivables` — `derived` — rows from `tally_parties`
+- `payables` — `derived` — rows from `tally_parties`
+- `ledger` / DR-CR — `synced` — ledger masters available
+
+### TLY-05 Balance Sheet start
+- Added `lib/tally/canonical/balance-sheet.ts`
+- Added `app/api/finance/tally/balance-sheet/route.ts`
+- Updated `lib/tally/canonical/head-status.ts` so Balance Sheet becomes `derived` when ledger-derived groups are available
+- Builder excludes P&L groups from Balance Sheet buckets
+- Builder emits sections: `assets`, `liabilities`, `equity`, `unclassified`
+- Supabase dry-run produced 19 non-P&L groups from `tally_ledgers`
+- Large `Primary`/unclassified group still needs Tally parser cleanup or ledger group mapping
 
 ### UI state
 `/finance-dashboard` top FinanceOS Matrix Heads now shows:
@@ -48,17 +61,19 @@
 - no fake Balance Sheet net-worth when structured Balance Sheet is unavailable
 
 ### Important data rule
-Owner-facing UI must show `synced`, `derived`, or `unavailable` for finance heads. Do not show fake final values for unavailable reports.
+Owner-facing UI must show `synced`, `derived`, or `unavailable` for finance heads. Do not show fake final values for unavailable reports. Balance Sheet may show derived grouped ledger rows, but must not be marked `synced` until real structured Tally Balance Sheet rows are parsed.
 
 ### Next recommended task
-Start with Balance Sheet parser/report builder because it is the only TLY-05 head currently `unavailable`.
+Continue Balance Sheet parser/report builder hardening.
 
 Suggested sequence:
-1. Inspect Tally XML builder/report definition for `balance_sheet`.
-2. Capture raw Balance Sheet response shape from Tally.
-3. Add parser support for structured Balance Sheet rows.
-4. Persist parsed rows/report metadata.
-5. Flip `/api/finance/tally/head-status` for `balance_sheet` from `unavailable` to `synced` only after real rows are parsed.
+1. Run `npm.cmd run typecheck` and `npm.cmd run build` locally after the new Balance Sheet files.
+2. Call `GET /api/finance/tally/balance-sheet` locally and inspect grouped rows.
+3. Fix Tally XML builder/report definition for `balance_sheet`; current Supabase raw preview shows `<RESPONSE>Unknown Request, cannot be processed</RESPONSE>`.
+4. Capture raw Balance Sheet response shape from Tally.
+5. Add parser support for structured Balance Sheet rows.
+6. Persist parsed rows/report metadata in `tally_reports`.
+7. Flip `/api/finance/tally/head-status` for `balance_sheet` from `derived` to `synced` only after real rows are parsed.
 
 ### Local verification commands
 ```powershell
@@ -69,7 +84,8 @@ npm.cmd run typecheck
 npm.cmd run build
 ```
 
-### Local API check
+### Local API checks
 ```powershell
 Invoke-RestMethod "http://localhost:3000/api/finance/tally/head-status" | ConvertTo-Json -Depth 10
+Invoke-RestMethod "http://localhost:3000/api/finance/tally/balance-sheet" | ConvertTo-Json -Depth 10
 ```
