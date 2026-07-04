@@ -29,6 +29,14 @@ export type FinanceRow = {
   voucher_date?: string | null;
   voucher_no?: string | null;
   description?: string | null;
+  source?: string | null;
+  status?: string | null;
+  debit?: number | null;
+  credit?: number | null;
+  ledger_name?: string | null;
+  reference?: string | null;
+  narration?: string | null;
+  gst_no?: string | null;
 };
 
 function daysSince(dateStr: string | null | undefined): number {
@@ -45,16 +53,36 @@ function agingBucket(days: number) {
   return "90+";
 }
 
-export function buildFinanceMatrix(rows: FinanceRow[]) {
-  const receivables = rows.filter((r) =>
-    (r.record_type || "").toLowerCase().includes("receivable")
-  );
-  const payables = rows.filter((r) =>
-    (r.record_type || "").toLowerCase().includes("payable")
-  );
+function classifyFinanceRow(r: FinanceRow): "receivable" | "payable" | "neutral" {
+  const type = (r.record_type || "").toLowerCase();
+  if (type.includes("receivable") || type.includes("receipt") || type.includes("sales")) {
+    return "receivable";
+  }
+  if (type.includes("payable") || type.includes("payment") || type.includes("purchase")) {
+    return "payable";
+  }
 
-  const receivableTotal = receivables.reduce((s, r) => s + Number(r.amount || 0), 0);
-  const payableTotal = payables.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const amount = Number(r.amount || 0);
+  const debit = Number(r.debit || 0);
+  const credit = Number(r.credit || 0);
+  if (credit > debit || amount > 0) return "receivable";
+  if (debit > credit || amount < 0) return "payable";
+  return "neutral";
+}
+
+function rowAmount(r: FinanceRow): number {
+  const amount = Number(r.amount || 0);
+  if (amount !== 0) return Math.abs(amount);
+  return Math.max(Number(r.debit || 0), Number(r.credit || 0), 0);
+}
+
+export function buildFinanceMatrix(rows: FinanceRow[]) {
+  const realRows = rows.filter((r) => (r.source || "tally").toLowerCase() === "tally");
+  const receivables = realRows.filter((r) => classifyFinanceRow(r) === "receivable");
+  const payables = realRows.filter((r) => classifyFinanceRow(r) === "payable");
+
+  const receivableTotal = receivables.reduce((s, r) => s + rowAmount(r), 0);
+  const payableTotal = payables.reduce((s, r) => s + rowAmount(r), 0);
 
   const recvAging = { "0-30": 0, "31-60": 0, "61-90": 0, "90+": 0 };
   const payAging = { "0-30": 0, "31-60": 0, "61-90": 0, "90+": 0 };
@@ -72,16 +100,17 @@ export function buildFinanceMatrix(rows: FinanceRow[]) {
 
   for (const r of receivables) {
     const days = daysSince(r.voucher_date);
-    const amt = Number(r.amount || 0);
+    const amt = rowAmount(r);
     const bucket = agingBucket(days) as keyof typeof recvAging;
     recvAging[bucket] += amt;
     if (days > 30) {
       overdueAmount += amt;
-      if (r.party_name) overdueParties.add(r.party_name);
+      const party = r.party_name || r.ledger_name;
+      if (party) overdueParties.add(party);
     }
     partyWise.push({
-      party: r.party_name || r.description || "Unknown",
-      bill: r.voucher_no || "—",
+      party: r.party_name || r.ledger_name || r.description || "Unknown",
+      bill: r.voucher_no || r.reference || "—",
       dueDate: r.voucher_date || null,
       overdueDays: days,
       amount: amt,
@@ -90,31 +119,34 @@ export function buildFinanceMatrix(rows: FinanceRow[]) {
 
   for (const r of payables) {
     const days = daysSince(r.voucher_date);
-    const amt = Number(r.amount || 0);
+    const amt = rowAmount(r);
     const bucket = agingBucket(days) as keyof typeof payAging;
     payAging[bucket] += amt;
   }
 
   partyWise.sort((a, b) => b.amount - a.amount);
 
-  const sales = receivableTotal * 0.016;
-  const collections = receivableTotal * 0.005;
-  const expenses = payableTotal * 0.005;
-  const revenue = sales || receivableTotal * 0.02;
-  const directCost = expenses * 0.8;
+  const sales = receivables
+    .filter((r) => (r.record_type || "").toLowerCase().includes("sales"))
+    .reduce((s, r) => s + rowAmount(r), 0) || receivableTotal;
+  const collections = receivables
+    .filter((r) => (r.record_type || "").toLowerCase().includes("receipt"))
+    .reduce((s, r) => s + rowAmount(r), 0);
+  const expenses = payableTotal;
+  const revenue = sales;
+  const directCost = expenses;
   const grossProfit = revenue - directCost;
   const operatingExpenses = expenses;
   const ebitda = grossProfit - operatingExpenses;
   const netProfitPct = revenue > 0 ? Math.round((ebitda / revenue) * 100) : 0;
   const freeCash = Math.max(0, collections - expenses);
-  const openingCash = freeCash * 0.5;
+  const openingCash = 0;
   const closingCash = openingCash + collections - expenses;
 
   const currentAssets = receivableTotal;
   const currentLiabilities = payableTotal;
   const netWorth = currentAssets - currentLiabilities;
-  const currentRatio =
-    currentLiabilities > 0 ? (currentAssets / currentLiabilities).toFixed(1) : "—";
+  const currentRatio = currentLiabilities > 0 ? (currentAssets / currentLiabilities).toFixed(1) : "—";
   const receivableDays = receivables.length
     ? Math.round(receivables.reduce((s, r) => s + daysSince(r.voucher_date), 0) / receivables.length)
     : 0;
@@ -134,27 +166,15 @@ export function buildFinanceMatrix(rows: FinanceRow[]) {
     )
   );
 
-  const cashRisk =
-    freeCash < 100_000 ? "CRITICAL" : freeCash < 500_000 ? "HIGH" : "LOW";
-  const collectionRisk =
-    overdueAmount > receivableTotal * 0.5 ? "HIGH" : overdueAmount > 0 ? "MEDIUM" : "LOW";
+  const cashRisk = freeCash < 100_000 ? "CRITICAL" : freeCash < 500_000 ? "HIGH" : "LOW";
+  const collectionRisk = overdueAmount > receivableTotal * 0.5 ? "HIGH" : overdueAmount > 0 ? "MEDIUM" : "LOW";
 
   const issues: string[] = [];
-  if (overdueAmount > 0) {
-    issues.push(`Overdue ${fmtMoney(overdueAmount)} from ${overdueParties.size} parties`);
-  }
-  if (freeCash < 500_000) {
-    issues.push(`Free Cash low: ${fmtMoney(freeCash)}`);
-  }
-  if (payableTotal > receivableTotal) {
-    issues.push(`Payables exceed receivables by ${fmtMoney(payableTotal - receivableTotal)}`);
-  }
-  if (healthScore < 50) {
-    issues.push(`Business health score critical: ${healthScore}/100`);
-  }
-  if (receivableDays > 90) {
-    issues.push(`Average receivable days high: ${receivableDays} days`);
-  }
+  if (overdueAmount > 0) issues.push(`Overdue ${fmtMoney(overdueAmount)} from ${overdueParties.size} parties`);
+  if (freeCash < 500_000) issues.push(`Free Cash low: ${fmtMoney(freeCash)}`);
+  if (payableTotal > receivableTotal) issues.push(`Payables exceed receivables by ${fmtMoney(payableTotal - receivableTotal)}`);
+  if (healthScore < 50) issues.push(`Business health score critical: ${healthScore}/100`);
+  if (receivableDays > 90) issues.push(`Average receivable days high: ${receivableDays} days`);
 
   return {
     top: {
@@ -173,11 +193,11 @@ export function buildFinanceMatrix(rows: FinanceRow[]) {
     },
     raw: { receivableTotal, payableTotal, freeCash, healthScore, sales, collections, expenses },
     trends: {
-      salesTrend: Math.min(10, Math.round((sales / Math.max(receivableTotal, 1)) * 100)),
-      collectionTrend: Math.min(10, Math.round((collections / Math.max(receivableTotal, 1)) * 100)),
-      receivableTrend: receivableTotal > payableTotal ? 0 : 3,
-      payableTrend: 0,
-      profitTrend: Math.min(10, Math.round(netProfitPct / 10)),
+      salesTrend: receivableTotal > 0 ? Math.min(10, Math.round((sales / Math.max(receivableTotal, 1)) * 10)) : 0,
+      collectionTrend: receivableTotal > 0 ? Math.min(10, Math.round((collections / Math.max(receivableTotal, 1)) * 10)) : 0,
+      receivableTrend: receivableTotal > payableTotal ? 6 : 3,
+      payableTrend: payableTotal > receivableTotal ? 8 : 3,
+      profitTrend: Math.min(10, Math.max(0, Math.round(netProfitPct / 10))),
       businessHealth: healthScore,
     },
     pnl: {
