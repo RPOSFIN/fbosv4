@@ -254,5 +254,17 @@
     "type": "PROMOTED_TO_3R",
     "ecp": "ECP-0006",
     "detail": "Promoted to 3R as 3r-fbos4-2026-07-04-ecp-0006-8339 (auto) at 3244096"
+  },
+  {
+    "ts": "2026-07-04T14:06:14.842Z",
+    "type": "VERIFIED",
+    "ecp": "ECP-0006",
+    "detail": "All gates PASS"
+  },
+  {
+    "ts": "2026-07-04T14:06:15.216Z",
+    "type": "PROMOTED_TO_3R",
+    "ecp": "ECP-0006",
+    "detail": "Promoted to 3R as 3r-fbos4-2026-07-04-ecp-0006-5216 (auto) at bf8f03f"
   }
 ]
