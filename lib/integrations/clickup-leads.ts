@@ -1,6 +1,6 @@
-import { getAdminClient } from "@/lib/supabase/admin";
 import { CLICKUP_LEAD_STATUSES } from "@/lib/integrations/lead-crm-schema";
 import { importLeadsWithDedupe, type LeadUpsertResult } from "@/lib/leads/dedupe";
+import { getAdminClient } from "@/lib/supabase/admin";
 
 export type ClickUpLeadTask = {
   id: string;
@@ -44,7 +44,7 @@ export async function syncClickUpTasksToLeads(
   return importLeadsWithDedupe(rows);
 }
 
-/** Keep pipeline statuses; normalize QUOTED → QUOATED to match ClickUp list */
+/** Keep pipeline statuses; normalize QUOTED → QUOATED to match existing CRM status spelling. */
 export function mapClickUpStatusToLead(status?: string): string {
   if (!status) return "NEW";
   const s = status.trim().toUpperCase().replace(/\s+/g, " ");
@@ -59,33 +59,19 @@ export function mapClickUpStatusToLead(status?: string): string {
   return "NEW";
 }
 
-export async function getClickUpTasksForSales(limit = 10) {
+export async function getClickUpTasksForSales(limit = 50, status?: string) {
   const supabase = getAdminClient();
   if (!supabase) return [];
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("clickup_tasks")
-    .select("id, external_id, name, status, list_name, synced_at")
+    .select("id, external_id, name, status, list_name, space_name, synced_at")
     .order("synced_at", { ascending: false })
     .limit(limit);
 
-  if (!error && data?.length) return data;
+  if (status) query = query.ilike("status", status);
 
-  const fallback = await supabase
-    .from("tasks")
-    .select("id, task_title, status, created_at")
-    .or("related_entity.eq.clickup,task_title.ilike.[ClickUp]%")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (fallback.error || !fallback.data?.length) return [];
-
-  return fallback.data.map((t) => ({
-    id: t.id,
-    external_id: t.id,
-    name: String(t.task_title).replace(/^\[ClickUp\]\s*/, ""),
-    status: t.status,
-    list_name: null,
-    synced_at: t.created_at,
-  }));
+  const { data, error } = await query;
+  if (error) return [];
+  return data || [];
 }
