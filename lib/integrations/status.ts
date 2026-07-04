@@ -3,7 +3,6 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getConnectorEnvConfig } from "@/lib/integrations/config";
 import {
-  DEFAULT_TALLY_COMPANY_NAME,
   isLocalTallyHost,
   normalizeTallyHost,
 } from "@/lib/integrations/tally-config";
@@ -121,7 +120,7 @@ export async function upsertIntegrationRow(input: {
     config: {
       ...envConfig.details,
       ...(input.config || {}),
-      ...(input.demo ? { demo: true } : {}),
+      demo: Boolean(input.demo),
     },
     last_sync_at: input.last_sync_at ?? null,
     error_message: input.error_message ?? null,
@@ -185,19 +184,21 @@ function mergeRecord(
 
   let status: IntegrationStatus = envStatus;
   if (dbStatus === "error") status = "error";
-  else if (dbStatus === "connected" || (env.configured && name === "gsheet")) {
-    status = "connected";
-  } else if (isDemo) {
-    status = "connected";
-  } else if (name === "tally") {
+  else if (name === "tally") {
     const tallyHost = String(
       row?.config?.tallyHost || row?.config?.host || env.details.host || ""
     );
     const company = String(row?.config?.company || env.details.company || "");
-    const cloudHost =
-      tallyHost && !isLocalTallyHost(normalizeTallyHost(tallyHost));
-    if (cloudHost && company) status = dbStatus === "pending" ? "pending" : "connected";
-    else if (!cloudHost) status = "pending";
+    const cloudHost = tallyHost && !isLocalTallyHost(normalizeTallyHost(tallyHost));
+
+    if (isDemo) status = "pending";
+    else if (dbStatus === "connected") status = "connected";
+    else if (cloudHost && company) status = "pending";
+    else status = "pending";
+  } else if (dbStatus === "connected" || (env.configured && name === "gsheet")) {
+    status = "connected";
+  } else if (isDemo) {
+    status = "pending";
   } else if (!env.configured && name !== "gsheet") {
     status = "pending";
   } else if (dbStatus) {
@@ -258,9 +259,5 @@ export function getIntegrationSummary(records: IntegrationRecord[]) {
       withDemo.find((r) => r.connector_name === "clickup")?.displayStatus ?? "pending",
     tally:
       withDemo.find((r) => r.connector_name === "tally")?.displayStatus ?? "pending",
-    connected: records.filter((r) => r.status === "connected").length,
-    pending: records.filter((r) => r.status === "pending").length,
-    error: records.filter((r) => r.status === "error").length,
-    demo: records.filter((r) => r.demo).length,
   };
 }
