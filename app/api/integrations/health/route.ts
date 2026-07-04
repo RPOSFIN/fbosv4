@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
 import { authorize } from "@/lib/rbac/api-auth";
 import { getIntegrationStatuses } from "@/lib/integrations/status";
-import { loadIntegrationSyncData } from "@/lib/integrations/sync-data";
 
 export async function GET() {
   const auth = await authorize("integrations", "read");
   if ("error" in auth) return auth.error;
 
-  const [statuses, syncData] = await Promise.all([
-    getIntegrationStatuses(),
-    loadIntegrationSyncData(),
-  ]);
+  const statuses = await getIntegrationStatuses();
 
   const connectors: Record<
     string,
@@ -19,6 +15,7 @@ export async function GET() {
       status: string;
       lastSyncAt: string | null;
       demo?: boolean;
+      errorMessage?: string | null;
     }
   > = {};
 
@@ -28,14 +25,13 @@ export async function GET() {
       status: rec.status,
       lastSyncAt: rec.last_sync_at,
       demo: rec.demo,
+      errorMessage: rec.error_message,
     };
   }
 
   return NextResponse.json({
     ok: true,
     connectors,
-    syncData,
-    tables: syncData.tables ?? {},
-    source: syncData.source ?? "supabase",
+    source: "integrations_status_only",
   });
 }
