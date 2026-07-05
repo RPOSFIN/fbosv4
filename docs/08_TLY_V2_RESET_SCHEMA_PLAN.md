@@ -4,6 +4,24 @@
 
 Existing FinanceOS tables are polluted by staging, failed, fake, and legacy rows. Do not delete immediately. Keep them as audit history and build FinanceOS v2 clean tables in parallel.
 
+## Current status
+
+TLY v2 schema is created in Supabase.
+
+Verified v2 tables:
+- `expense_heads_v2`
+- `finance_heads_v2`
+- `owner_finance_snapshot_v2`
+- `reconciliation_issues_v2`
+- `tally_ledgers_v2`
+- `tally_parties_v2`
+- `tally_raw_responses_v2`
+- `tally_sync_runs_v2`
+- `tally_voucher_lines_v2`
+- `tally_vouchers_v2`
+
+Next step: create parser/sync write path into v2 tables.
+
 ## Core principle
 
 Tally provides accounting facts. FBOS decides storage schema, validation rules, owner heads, and UI.
@@ -26,7 +44,7 @@ These should not feed owner totals.
 - tally_reports
 - tally_sync_runs
 
-## New v2 tables recommended
+## New v2 tables created
 
 ### tally_raw_responses_v2
 Stores raw Tally XML response per request.
@@ -43,55 +61,56 @@ Columns:
 - to_date
 - created_at
 
-### tally_ledgers_v2
-Ledger master table.
+### tally_sync_runs_v2
+Clean sync run tracking for v2.
 Columns:
 - id
+- started_at
+- finished_at
+- status
 - company_name
-- ledger_guid
+- from_date
+- to_date
+- requested_reports
+- parsed_counts
+- inserted_counts
+- updated_counts
+- error_count
+- errors
+- qc_status
+
+### tally_ledgers_v2
+Ledger master table.
+Columns include:
+- id
+- company_name
 - ledger_name
 - parent_group
 - primary_group
 - opening_balance
 - closing_balance
-- debit_total
-- credit_total
-- gst_no
-- is_party
-- is_debtor
-- is_creditor
-- is_bank
-- is_cash
-- is_salary
-- is_staff
-- is_porter
-- is_gst
-- raw_source_id
+- classification
 - updated_at
 
 ### tally_parties_v2
 Party/customer/vendor table derived from ledger master, not fake transactions.
-Columns:
+Columns include:
 - id
 - company_name
 - party_name
 - ledger_name
 - party_type
 - gst_no
-- mobile
-- email
-- address
 - opening_balance
 - closing_balance
 - receivable_balance
 - payable_balance
-- source_ledger_id
 - qc_status
 - updated_at
 
 ### tally_vouchers_v2
 Voucher header table.
-Columns:
+Columns include:
 - id
 - company_name
 - voucher_guid
@@ -109,17 +128,16 @@ Columns:
 - credit_total
 - balance_status
 - source_report
-- raw_source_id
 - created_at
 - updated_at
 
 ### tally_voucher_lines_v2
 Voucher ledger line table.
-Columns:
+Columns include:
 - id
 - voucher_id
 - company_name
-- voucher_guid
+- voucher_key
 - voucher_no
 - voucher_type
 - voucher_date
@@ -135,12 +153,11 @@ Columns:
 - gst_rate
 - tax_amount
 - head_key
-- raw_source_id
 - created_at
 
 ### finance_heads_v2
 Owner report heads.
-Columns:
+Columns include:
 - id
 - company_name
 - head_key
@@ -156,7 +173,7 @@ Columns:
 
 ### expense_heads_v2
 Controlled expense channelization.
-Columns:
+Columns include:
 - id
 - company_name
 - head_key
@@ -174,7 +191,7 @@ Columns:
 
 ### reconciliation_issues_v2
 QC/reconciliation issue table.
-Columns:
+Columns include:
 - id
 - company_name
 - issue_type
@@ -190,7 +207,7 @@ Columns:
 
 ### owner_finance_snapshot_v2
 Owner-facing clean summary.
-Columns:
+Columns include:
 - id
 - company_name
 - from_date
@@ -243,8 +260,8 @@ Owner UI must only read v2 clean tables or canonical v2 views. Never read stagin
 
 ## Migration strategy
 
-1. Create v2 tables in parallel.
-2. Parse fresh Tally sync into v2 tables.
+1. Create v2 tables in parallel. ✅ Done
+2. Parse fresh Tally sync into v2 tables. Next
 3. Compare v2 totals against current canonical Tally tables.
 4. Point APIs to v2 views.
 5. Keep old tables read-only for audit.
