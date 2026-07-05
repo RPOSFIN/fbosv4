@@ -90,8 +90,12 @@ export function isRealSalesVoucher(row: CanonicalVoucherMetricRow): boolean {
   return hasVoucherType(row, "sales") && !isProformaVoucher(row) && absAmount(row) > 0;
 }
 
+function normalizeText(value: string | null | undefined): string {
+  return (value || "").trim().toLowerCase();
+}
+
 function isBankOrCashLedger(ledgerName: string | null | undefined): boolean {
-  const text = (ledgerName || "").toLowerCase();
+  const text = normalizeText(ledgerName);
   return (
     text.includes("bank") ||
     text.includes("cash") ||
@@ -101,6 +105,25 @@ function isBankOrCashLedger(ledgerName: string | null | undefined): boolean {
     text.includes("sbi") ||
     text.includes("kotak")
   );
+}
+
+function classifyExpenseHead(line: CanonicalLineMetricRow): string {
+  const ledger = normalizeText(line.ledger_name);
+  const party = normalizeText(line.party_name);
+  const text = `${ledger} ${party}`;
+
+  if (text.includes("salary") || text.includes("payroll") || text.includes("wages")) return "Salary";
+  if (text.includes("staff") || text.includes("employee") || text.includes("manpower")) return "Staff";
+  if (text.includes("porter")) return "Porter";
+  if (text.includes("freight") || text.includes("transport") || text.includes("logistics") || text.includes("courier") || text.includes("road carriers")) return "Freight";
+  if (text.includes("output gst") || text.includes("sale gst") || text.includes("sale local gst") || text.includes("sale igst")) return "GST Outward";
+  if (text.includes("input gst") || text.includes("purchase gst") || text.includes("purchase igst")) return "GST Inward";
+  if (text.includes("gst") || text.includes("igst") || text.includes("cgst") || text.includes("sgst")) return "GST";
+  if (isBankOrCashLedger(line.ledger_name)) return "Bank / Cash";
+  if (text.includes("purchase")) return "Purchase";
+  if (text.includes("sales") || text.includes("sale ")) return "Sales";
+  if (text.includes("round off") || text.includes("suspense") || text.includes("adjustment")) return "Reconciliation";
+  return "Unclassified";
 }
 
 function monthKey(date: string | null | undefined): string | null {
@@ -212,7 +235,6 @@ export function buildExpenseSummaryRows(input: {
   const grouped = new Map<string, CanonicalExpenseSummaryRow>();
   const expenseLines = input.lines.filter((line) => {
     const type = (line.voucher_type || "").toLowerCase();
-    if (isBankOrCashLedger(line.ledger_name)) return false;
     return (
       type.includes("payment") ||
       type.includes("purchase") ||
@@ -223,11 +245,8 @@ export function buildExpenseSummaryRows(input: {
 
   for (const line of expenseLines) {
     const month = monthKey(line.voucher_date);
-    const key = [
-      line.party_name || "",
-      line.ledger_name || "",
-      month || "",
-    ].join("|");
+    const category = classifyExpenseHead(line);
+    const key = [category, line.party_name || "", line.ledger_name || "", month || ""].join("|");
     const current =
       grouped.get(key) ||
       {
@@ -236,7 +255,7 @@ export function buildExpenseSummaryRows(input: {
         to_date: input.to,
         party_name: line.party_name || null,
         ledger_name: line.ledger_name || null,
-        category: line.ledger_name || null,
+        category,
         voucher_count: 0,
         total_debit: 0,
         total_credit: 0,
