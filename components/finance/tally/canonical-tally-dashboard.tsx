@@ -1,11 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, RefreshCw, Search } from "lucide-react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import SimpleBarChart from "@/components/finance/charts/simple-bar-chart";
 import { apiFetch } from "@/lib/api/client";
 
 type ReportOption = { key: string; label: string };
+
+type MatrixResponse = {
+  top?: { sales?: string; collections?: string; expenses?: string; receivable?: string; payable?: string; freeCash?: string };
+  raw?: { sales?: number; collections?: number; expenses?: number; receivableTotal?: number; payableTotal?: number; freeCash?: number };
+  qc?: { source?: string; sales_rows?: number; purchase_rows?: number; sales_source?: string | null; purchase_source?: string | null; note?: string };
+};
 
 type MetricsResponse = {
   source: string;
@@ -141,10 +147,7 @@ function topExpenses(rows: ExpenseRow[], key: "party_name" | "ledger_name") {
     if (value < 1000) continue;
     totals.set(label, (totals.get(label) || 0) + value);
   }
-  return [...totals.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 6)
-    .map(([label, value]) => ({ label, value, tone: key === "party_name" ? "orange" as const : "violet" as const }));
+  return [...totals.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([label, value]) => ({ label, value, tone: key === "party_name" ? "orange" as const : "violet" as const }));
 }
 
 function showParty(row: PartyRow) {
@@ -165,6 +168,7 @@ export default function CanonicalTallyDashboard() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [matrix, setMatrix] = useState<MatrixResponse | null>(null);
   const [metrics, setMetrics] = useState<MetricsResponse | null>(null);
   const [reportData, setReportData] = useState<ReportResponse | null>(null);
   const [voucherData, setVoucherData] = useState<VouchersResponse | null>(null);
@@ -178,7 +182,8 @@ export default function CanonicalTallyDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const [nextMetrics, nextReport, nextVouchers, nextExpenses, nextParties, nextDiagnostics] = await Promise.all([
+      const [nextMatrix, nextMetrics, nextReport, nextVouchers, nextExpenses, nextParties, nextDiagnostics] = await Promise.all([
+        apiFetch<MatrixResponse>("/api/finance/matrix?source=v2"),
         apiFetch<MetricsResponse>(`/api/finance/tally/metrics?${queryString({ from, to })}`),
         apiFetch<ReportResponse>(`/api/finance/tally/reports?${filters}`),
         apiFetch<VouchersResponse>(`/api/finance/tally/vouchers?${filters}`),
@@ -186,6 +191,7 @@ export default function CanonicalTallyDashboard() {
         apiFetch<PartiesResponse>(`/api/finance/tally/parties?${queryString({ party, ledger })}`),
         apiFetch<DiagnosticsResponse>("/api/finance/tally/diagnostics"),
       ]);
+      setMatrix(nextMatrix);
       setMetrics(nextMetrics);
       setReportData(nextReport);
       setVoucherData(nextVouchers);
@@ -226,6 +232,11 @@ export default function CanonicalTallyDashboard() {
   const visibleExpenses = (expenses?.rows || []).filter(showExpense).slice(0, 60);
   const visibleParties = (parties?.rows || []).filter(showParty).slice(0, 80);
 
+  const v2Sales = matrix?.raw?.sales;
+  const v2Purchase = matrix?.raw?.expenses;
+  const v2Receipts = matrix?.raw?.collections;
+  const v2Payments = matrix?.raw?.freeCash !== undefined && v2Receipts !== undefined ? numberValue(v2Receipts) - numberValue(matrix.raw.freeCash) : undefined;
+
   return (
     <main className="w-full max-w-[1920px] mx-auto px-4 sm:px-5 lg:px-6 py-4 lg:py-5 space-y-4">
       <section className="border border-slate-200 bg-white rounded-lg p-4">
@@ -246,80 +257,75 @@ export default function CanonicalTallyDashboard() {
       {error && <section className="border border-rose-200 bg-rose-50 rounded-lg p-3 flex items-start gap-3 text-rose-900"><AlertTriangle size={18} /><p className="text-sm font-medium">{error}</p></section>}
 
       <section className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-        <Metric label="Sales" value={money(metric.total_sales)} />
-        <Metric label="Purchase" value={money(metric.total_purchase)} />
-        <Metric label="Collections" value={money(metric.total_receipts)} />
-        <Metric label="Payments" value={money(metric.total_payments)} />
-        <Metric label="Rows" value={reportData?.row_count ?? metrics?.row_count ?? 0} />
+        <Metric label="Sales V2" value={money(v2Sales ?? metric.total_sales)} />
+        <Metric label="Purchase V2" value={money(v2Purchase ?? metric.total_purchase)} />
+        <Metric label="Collections V2" value={money(v2Receipts ?? metric.total_receipts)} />
+        <Metric label="Payments V2" value={money(v2Payments ?? metric.total_payments)} />
+        <Metric label="Rows V2" value={matrix?.qc?.sales_rows ?? reportData?.row_count ?? metrics?.row_count ?? 0} />
         <Metric label="Diagnostics" value={openDiagnostics.length} />
       </section>
 
-      <section className="border border-slate-200 bg-white rounded-lg p-3">
+      <section className="border border-emerald-200 bg-emerald-50 rounded-lg p-3">
         <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3 text-sm">
-          <Meta label="Source" value={reportData?.source || metrics?.source || "canonical_supabase"} />
-          <Meta label="State" value={reportData?.sync_status || "unknown"} />
-          <Meta label="Last Sync" value={reportData?.last_sync_at || "-"} />
-          <Meta label="Generated" value={reportData?.generated_at || metrics?.generated_at || "-"} />
-          <Meta label="Report From" value={reportData?.from || from} />
-          <Meta label="Report To" value={reportData?.to || to} />
+          <Meta label="Matrix Source" value={matrix?.qc?.source || "finance_heads_v2"} />
+          <Meta label="Sales Rows" value={String(matrix?.qc?.sales_rows ?? "-")} />
+          <Meta label="Purchase Rows" value={String(matrix?.qc?.purchase_rows ?? "-")} />
+          <Meta label="Sales Source" value={matrix?.qc?.sales_source || "-"} />
+          <Meta label="Purchase Source" value={matrix?.qc?.purchase_source || "-"} />
+          <Meta label="Legacy Queue" value="Not used for summary" />
           <Meta label="Report" value={reportData?.report || report} />
-          <Meta label="Excluded" value={String(reportData?.excluded_row_count ?? 0)} />
+          <Meta label="Generated" value={reportData?.generated_at || metrics?.generated_at || "-"} />
         </div>
       </section>
 
-      {visibleDiagnostics.length > 0 && (
-        <section className="border border-amber-200 bg-amber-50 rounded-lg p-3">
-          <div className="flex items-center justify-between gap-3 mb-2"><h3 className="text-xs font-black uppercase tracking-wide text-amber-900">Tally diagnostics</h3><span className="text-xs text-amber-800">showing {visibleDiagnostics.length} of {openDiagnostics.length}</span></div>
-          <div className="divide-y divide-amber-200">
-            {visibleDiagnostics.map((row) => <div key={row.id} className="py-1.5 text-xs flex items-center gap-3"><span className="font-bold text-amber-900 w-20">{row.severity}</span><span className="font-semibold text-slate-900 flex-1 truncate">{row.issue}</span><span className="text-slate-600 flex-1 truncate">{row.suggestion || row.module}</span></div>)}
+      {series.length > 0 && <SimpleBarChart title="Monthly Sales / Purchase / Cash" data={series} keys={["sales", "purchases", "receipts", "payments"]} />}
+
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <Panel title="Vouchers" count={voucherData?.row_count ?? 0}>
+          <div className="overflow-auto max-h-[520px]">
+            <table className="min-w-full text-xs">
+              <thead className="bg-slate-100 text-slate-600 sticky top-0"><tr><th className="p-2 text-left">Date</th><th className="p-2 text-left">No</th><th className="p-2 text-left">Type</th><th className="p-2 text-left">Party</th><th className="p-2 text-right">Amount</th></tr></thead>
+              <tbody>{(voucherData?.rows || []).slice(0, 120).map((row) => <tr key={row.id} className="border-b border-slate-100"><td className="p-2">{row.voucher_date || "-"}</td><td className="p-2 font-semibold">{row.voucher_no || "-"}</td><td className="p-2">{row.voucher_type || "-"}</td><td className="p-2 max-w-[240px] truncate">{row.party_name || row.ledger_name || "-"}</td><td className="p-2 text-right font-bold">{money(row.amount || row.debit_total || row.credit_total)}</td></tr>)}</tbody>
+            </table>
           </div>
-        </section>
-      )}
+        </Panel>
 
-      <section className="grid grid-cols-1 xl:grid-cols-4 gap-3">
-        <SimpleBarChart title="Sales Trend" data={series.map((row) => ({ label: row.month, value: row.sales, tone: "green" }))} />
-        <SimpleBarChart title="Purchase Trend" data={series.map((row) => ({ label: row.month, value: row.purchases, tone: "orange" }))} />
-        <SimpleBarChart title="Receipts / Payments" data={[{ label: "Receipts", value: numberValue(metric.total_receipts), tone: "blue" }, { label: "Payments", value: numberValue(metric.total_payments), tone: "red" }]} />
-        <SimpleBarChart title="Expense Party" data={topExpenses(visibleExpenses, "party_name")} />
+        <Panel title="Expenses" count={visibleExpenses.length}>
+          <SimpleBarChart title="Top Vendors" data={topExpenses(visibleExpenses, "party_name")} keys={["value"]} />
+          <SimpleBarChart title="Top Ledgers" data={topExpenses(visibleExpenses, "ledger_name")} keys={["value"]} />
+        </Panel>
       </section>
 
-      <section className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
-        <DataPanel title="Voucher Table" icon={<Search size={18} />}>
-          <Table headers={["Date", "No", "Type", "Party", "Ledger", "Amount", "Source"]} rows={(voucherData?.rows || []).slice(0, 120).map((row) => [row.voucher_date || "-", row.voucher_no || row.reference || "-", row.voucher_type || "-", row.party_name || "-", row.ledger_name || "-", money(row.amount), row.source_report || "-"])} />
-        </DataPanel>
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <Panel title="Parties" count={visibleParties.length}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[520px] overflow-auto">
+            {visibleParties.map((row) => <div key={`${row.party_name}-${row.ledger_name}`} className="rounded-lg border border-slate-200 p-3 text-sm"><div className="font-bold text-slate-900 truncate">{row.party_name}</div><div className="text-xs text-slate-500">{row.party_type || "Unclassified"}</div><div className="mt-2 grid grid-cols-2 gap-2 text-xs"><span>AR {money(row.receivable_total)}</span><span>AP {money(row.payable_total)}</span><span>Closing {money(row.closing_balance)}</span><span>GST {row.gst_no || "-"}</span></div></div>)}
+          </div>
+        </Panel>
 
-        <DataPanel title="Expense Summary Table">
-          <p className="mb-3 text-xs text-slate-500">Shows month-wise party/vendor/ledger totals from canonical expense/payment/purchase lines. Rows below INR 1,000 are hidden to keep owner view clean.</p>
-          <Table headers={["Month", "Party", "Ledger", "Vouchers", "Debit", "Credit", "Total"]} rows={visibleExpenses.map((row) => [row.month || "-", row.party_name || "-", row.ledger_name || row.category || "-", String(row.voucher_count || 0), money(row.total_debit), money(row.total_credit), money(row.total_amount)])} />
-        </DataPanel>
-
-        <DataPanel title="Party Summary Table">
-          <p className="mb-3 text-xs text-slate-500">Shows parties with receivable, payable, or closing balance of at least INR 1,000. Zero/low-value parties are hidden.</p>
-          <Table headers={["Party", "Type", "Ledger", "GST", "Receivable", "Payable", "Closing"]} rows={visibleParties.map((row) => [row.party_name, row.party_type || "-", row.ledger_name || "-", row.gst_no || "-", money(row.receivable_total), money(row.payable_total), money(row.closing_balance)])} />
-        </DataPanel>
+        <Panel title="AI Diagnostics" count={openDiagnostics.length}>
+          <div className="space-y-2">
+            {visibleDiagnostics.map((row) => <div key={row.id} className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm"><div className="font-bold text-amber-900">{row.module} · {row.severity}</div><p className="text-amber-800">{row.issue}</p>{row.suggestion && <p className="mt-1 text-xs text-amber-700">{row.suggestion}</p>}</div>)}
+            {!visibleDiagnostics.length && <p className="text-sm text-slate-500">No open diagnostics.</p>}
+          </div>
+        </Panel>
       </section>
-
-      {loading && <div className="fixed bottom-4 right-4 border border-slate-200 bg-white rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">Loading canonical FinanceOS</div>}
     </main>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="min-w-[150px] flex-1"><span className="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">{label}</span>{children}</label>;
+  return <label className="flex-1 min-w-[160px] space-y-1"><span className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</span>{children}</label>;
 }
 
-function Metric({ label, value }: { label: string; value: string | number }) {
-  return <article className="border border-slate-200 bg-white rounded-lg p-3 min-h-[72px]"><p className="text-xs uppercase tracking-wide text-slate-500 font-bold">{label}</p><p className="mt-1 text-lg font-black text-slate-950 break-words">{value}</p></article>;
+function Metric({ label, value }: { label: string; value: React.ReactNode }) {
+  return <div className="rounded-lg border border-slate-200 bg-white p-3"><div className="text-xs font-bold uppercase text-slate-500">{label}</div><div className="mt-1 text-lg font-black text-slate-950">{value}</div></div>;
 }
 
-function Meta({ label, value }: { label: string; value: string }) {
-  return <div className="min-w-0"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p><p className="mt-1 truncate font-semibold text-slate-900" title={value}>{value}</p></div>;
+function Meta({ label, value }: { label: string; value: React.ReactNode }) {
+  return <div><div className="text-xs font-bold uppercase text-slate-500">{label}</div><div className="mt-1 font-semibold text-slate-900 break-words">{value}</div></div>;
 }
 
-function DataPanel({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
-  return <section className="border border-slate-200 bg-white rounded-lg p-4"><div className="flex items-center gap-2 mb-3">{icon}<h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">{title}</h3></div>{children}</section>;
-}
-
-function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
-  return <div className="overflow-x-auto max-h-[320px]"><table className="w-full text-sm"><thead className="sticky top-0 bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200"><tr>{headers.map((header) => <th key={header} className="text-left px-3 py-2 whitespace-nowrap">{header}</th>)}</tr></thead><tbody>{rows.length === 0 ? <tr><td className="px-3 py-4 text-slate-500" colSpan={headers.length}>No canonical rows</td></tr> : rows.map((row, rowIndex) => <tr key={`${rowIndex}-${row.join("|")}`} className="border-t border-slate-100 hover:bg-slate-50">{row.map((cell, cellIndex) => <td key={`${cellIndex}-${cell}`} className="px-3 py-2 max-w-[240px] truncate" title={cell}>{cell}</td>)}</tr>)}</tbody></table></div>;
+function Panel({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
+  return <section className="rounded-lg border border-slate-200 bg-white p-4"><div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-black uppercase tracking-wide text-slate-900">{title}</h3><span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold text-slate-600">{count}</span></div>{children}</section>;
 }
