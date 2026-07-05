@@ -237,6 +237,8 @@ export default function CanonicalTallyDashboard() {
   const v2Receipts = matrix?.raw?.collections;
   const v2Payments = matrix?.raw?.freeCash !== undefined && v2Receipts !== undefined ? numberValue(v2Receipts) - numberValue(matrix.raw.freeCash) : undefined;
 
+  const monthlySalesBars = series.map((row) => ({ label: row.month, value: row.sales, tone: "green" as const }));
+
   return (
     <main className="w-full max-w-[1920px] mx-auto px-4 sm:px-5 lg:px-6 py-4 lg:py-5 space-y-4">
       <section className="border border-slate-200 bg-white rounded-lg p-4">
@@ -278,7 +280,7 @@ export default function CanonicalTallyDashboard() {
         </div>
       </section>
 
-      {series.length > 0 && <SimpleBarChart title="Monthly Sales / Purchase / Cash" data={series} keys={["sales", "purchases", "receipts", "payments"]} />}
+      {monthlySalesBars.length > 0 && <SimpleBarChart title="Monthly Sales" data={monthlySalesBars} />}
 
       <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <Panel title="Vouchers" count={voucherData?.row_count ?? 0}>
@@ -291,8 +293,8 @@ export default function CanonicalTallyDashboard() {
         </Panel>
 
         <Panel title="Expenses" count={visibleExpenses.length}>
-          <SimpleBarChart title="Top Vendors" data={topExpenses(visibleExpenses, "party_name")} keys={["value"]} />
-          <SimpleBarChart title="Top Ledgers" data={topExpenses(visibleExpenses, "ledger_name")} keys={["value"]} />
+          <SimpleBarChart title="Top Vendors" data={topExpenses(visibleExpenses, "party_name")} />
+          <SimpleBarChart title="Top Ledgers" data={topExpenses(visibleExpenses, "ledger_name")} />
         </Panel>
       </section>
 
