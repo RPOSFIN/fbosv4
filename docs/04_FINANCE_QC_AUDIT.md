@@ -15,6 +15,48 @@ This audit covers FinanceOS/Tally data quality, table counts, owner UI rules, an
 - `tally_ai_diagnostics`: 39
 - `tally_sync_runs`: 12
 
+## Fix applied after user screenshot review
+
+### Sundry Debtors / Creditors not picked
+Confirmed problem:
+- `tally_parties` had 247 blank `party_type` rows.
+- 254 parties matched `tally_ledgers` by ledger name.
+- 250 matched ledgers were under `Sundry Debtors` or `Sundry Creditors`.
+
+Applied Supabase data fix:
+- Filled missing `tally_parties.party_type` from matched `tally_ledgers.group_name`.
+- Also filled opening/closing balance from ledgers when missing.
+
+Post-fix count:
+- `tally_parties`: 265 rows
+- missing `party_type`: 15
+- `Sundry Debtors`: 170
+- `Sundry Creditors`: 80
+
+Applied Supabase guard:
+- Migration `fill_tally_party_type_from_ledgers`
+- Trigger: `trg_fill_tally_party_type_from_ledgers`
+- Future inserts/updates on `tally_parties` auto-fill missing `party_type`, opening balance, and closing balance from matching `tally_ledgers`.
+
+### Debit / credit / amount same
+Confirmed problem:
+- `tally_vouchers`: 6533 rows
+- `amount = debit_total = credit_total`: 6425 rows
+- `debit_total = credit_total`: 6425 rows
+- `debit_total <> credit_total`: 108 rows
+
+By source report:
+- `party_withdrawal`: 3026 rows, 3023 balanced, 3 mismatch
+- `sales`: 1514 rows, 1460 balanced, 54 mismatch
+- `receipt`: 1358 rows, 1358 balanced, 0 mismatch
+- `purchase`: 635 rows, 584 balanced, 51 mismatch
+
+Rule:
+- In Tally double-entry, debit total and credit total being equal is normal.
+- Owner UI must not show `amount`, `debit_total`, and `credit_total` side-by-side as three independent values when they are the same.
+- Label `amount` as voucher value, label debit/credit as balanced sides, and show mismatch count as QC.
+- The 108 debit/credit mismatch rows should be a reconciliation warning.
+
 ## Critical data-quality findings
 
 ### 1. finance_import_queue is not owner-safe
@@ -56,7 +98,7 @@ Rule:
 - Prefer `tally_voucher_lines` / `tally_vouchers` over `finance_import_queue` and `finance_transactions` for owner totals until import queue is rebuilt.
 
 ### 4. tally_parties field coverage
-Observed QC:
+Original QC:
 - rows: 265
 - `party_type` null/blank: 247
 - `gst_no` null/blank: 69
@@ -64,6 +106,11 @@ Observed QC:
 - `opening_balance` null: 247
 - `opening_balance` zero: 18
 - payroll rows: 0
+
+After fix:
+- `party_type` null/blank: 15
+- `Sundry Debtors`: 170
+- `Sundry Creditors`: 80
 
 Rule:
 - Hide email from owner UI unless it becomes a required/available field.
@@ -139,6 +186,7 @@ Rule:
    - hide generated/last sync timestamps in owner meta
    - make money/null formatter return dash for null/undefined/blank
    - round money display to owner-safe values
+   - show debit/credit mismatch count as QC instead of treating all balanced vouchers as error
 2. Patch `components/finance/tally/legacy-matrix-heads.tsx`:
    - make null values show dash, not zero
    - keep Balance Sheet net worth unavailable unless synced
@@ -152,7 +200,7 @@ Rule:
    - missing voucher date
    - missing party name
    - missing ledger name
-   - debit equals credit zero/mismatch
+   - debit/credit mismatch rows only; do not fail balanced double-entry rows
    - amount zero on synced sales
 6. Continue Balance Sheet XML/parser work:
    - verify `93c6539` XML request against local Tally
