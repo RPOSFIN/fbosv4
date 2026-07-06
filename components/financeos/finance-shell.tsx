@@ -8,72 +8,55 @@ export function FinanceShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-slate-100">
-      <div className="sticky top-0 z-30 border-b border-white/10 bg-[#070b14]/90 backdrop-blur-xl">
-        <div className="flex flex-col gap-3 px-4 py-4 lg:flex-row lg:items-center lg:justify-between lg:px-6">
-          <div>
-            <div className="text-xs uppercase tracking-[0.35em] text-cyan-300">FBOS Command Center</div>
-            <h1 className="text-2xl font-semibold tracking-tight">FinanceOS</h1>
+    <div className="min-h-screen bg-[#eef3fb] text-slate-900">
+      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[76px_minmax(0,1fr)]">
+        <aside className="hidden bg-[#0f4aa2] text-white lg:flex lg:flex-col">
+          <div className="border-b border-white/15 px-2 py-4 text-center">
+            <div className="mx-auto h-8 w-8 rounded bg-white/15" />
+            <p className="mt-2 text-[10px] font-bold leading-tight">FBOS</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
-            <StatusPill label={initialFinanceDashboard.financialYear} />
-            <StatusPill label={initialFinanceDashboard.currentMonth} />
-            <StatusPill label="Last sync: pending" tone="warning" />
-            <StatusPill label={`Supabase: ${initialFinanceDashboard.supabaseStatus}`} tone="info" />
-            <StatusPill label={`Tally: ${initialFinanceDashboard.tallyStatus}`} tone="warning" />
-            <button className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-cyan-100 transition hover:bg-cyan-400/20">Sync</button>
-            <div className="hidden min-w-56 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-slate-500 md:block">Quick search</div>
-            <span className="rounded-full bg-white/10 px-3 py-2">Notifications</span>
-            <span className="rounded-full bg-white/10 px-3 py-2">Profile</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid min-h-[calc(100vh-88px)] grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_320px]">
-        <aside className="hidden border-r border-white/10 bg-white/[0.03] p-4 lg:block">
-          <div className="mb-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-            <p className="text-sm font-medium">Finance Control</p>
-            <p className="text-xs text-slate-500">Clean module navigation</p>
-          </div>
-          <nav className="space-y-1">
+          <nav className="flex-1 space-y-1 px-1 py-3">
             {financeNavigation.map(([label, href]) => {
               const active = pathname === href;
               return (
-                <Link key={href} href={href} className={active ? "block rounded-xl border border-cyan-300/30 bg-cyan-300/15 px-3 py-2 text-sm text-cyan-100" : "block rounded-xl px-3 py-2 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"}>
+                <Link key={href} href={href} className={active ? "block rounded bg-white px-2 py-2 text-[10px] font-semibold text-[#0f4aa2]" : "block rounded px-2 py-2 text-[10px] text-blue-50 hover:bg-white/10"}>
                   {label}
                 </Link>
               );
             })}
           </nav>
-        </aside>
-
-        <main className="min-w-0 p-4 lg:p-6">{children}</main>
-
-        <aside className="hidden border-l border-white/10 bg-white/[0.03] p-4 xl:block">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">Right Panel</h2>
-          <div className="space-y-3">
-            {initialFinanceDashboard.alerts.map((alert) => (
-              <div key={alert.id} className="rounded-2xl border border-white/10 bg-white/[0.05] p-4">
-                <p className="text-sm font-semibold text-white">{alert.title}</p>
-                <p className="mt-2 text-xs leading-5 text-slate-400">{alert.body}</p>
-              </div>
-            ))}
-            {["Pending approval", "Pending payments", "Pending receipts", "Cash alerts", "Bank alerts"].map((item) => (
-              <div key={item} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-300">{item}</span>
-                  <span className="rounded-full bg-white/10 px-2 py-1 text-xs text-slate-400">0</span>
-                </div>
-              </div>
-            ))}
+          <div className="space-y-1 border-t border-white/15 p-2 text-[9px] text-blue-50">
+            <p>Supabase ●</p>
+            <p>Tally ●</p>
+            <p>Sync ready</p>
           </div>
         </aside>
+
+        <div className="min-w-0">
+          <header className="sticky top-0 z-30 border-b border-blue-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0f4aa2]">Finance Dashboard</p>
+                <h1 className="text-sm font-bold text-slate-900">Finance Complete Dashboard - All Metrics Live</h1>
+              </div>
+              <div className="flex flex-wrap items-center gap-1 text-[10px]">
+                <Badge label={initialFinanceDashboard.financialYear} />
+                <Badge label={initialFinanceDashboard.currentMonth} />
+                <Badge label="Supabase" tone="green" />
+                <Badge label="Tally" tone="blue" />
+                <button className="rounded border border-blue-600 bg-blue-600 px-2 py-1 font-semibold text-white">Sync</button>
+                <button className="rounded border border-blue-300 bg-white px-2 py-1 text-blue-700">Search</button>
+              </div>
+            </div>
+          </header>
+          <main className="p-2 lg:p-3">{children}</main>
+        </div>
       </div>
     </div>
   );
 }
 
-function StatusPill({ label, tone = "neutral" }: { label: string; tone?: "neutral" | "info" | "warning" }) {
-  const toneClass = tone === "info" ? "border-blue-300/30 bg-blue-400/10 text-blue-100" : tone === "warning" ? "border-orange-300/30 bg-orange-400/10 text-orange-100" : "border-white/10 bg-white/5 text-slate-300";
-  return <span className={`rounded-full border px-3 py-2 ${toneClass}`}>{label}</span>;
+function Badge({ label, tone = "blue" }: { label: string; tone?: "blue" | "green" }) {
+  const cls = tone === "green" ? "border-green-200 bg-green-50 text-green-700" : "border-blue-200 bg-blue-50 text-blue-700";
+  return <span className={`rounded border px-2 py-1 font-semibold ${cls}`}>{label}</span>;
 }
