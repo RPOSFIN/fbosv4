@@ -139,6 +139,10 @@ function queryString(values: Record<string, string>) {
   return params.toString();
 }
 
+function uniqueStrings(values: Array<string | null | undefined>) {
+  return [...new Set(values.map((value) => (value || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+}
+
 function topExpenses(rows: ExpenseRow[], key: "party_name" | "ledger_name") {
   const totals = new Map<string, number>();
   for (const row of rows) {
@@ -231,6 +235,24 @@ export default function CanonicalTallyDashboard() {
   const visibleDiagnostics = openDiagnostics.slice(0, 4);
   const visibleExpenses = (expenses?.rows || []).filter(showExpense).slice(0, 60);
   const visibleParties = (parties?.rows || []).filter(showParty).slice(0, 80);
+  const partyOptions = useMemo(
+    () => uniqueStrings([
+      party,
+      ...(parties?.rows || []).map((row) => row.party_name),
+      ...(voucherData?.rows || []).map((row) => row.party_name),
+      ...(expenses?.rows || []).map((row) => row.party_name),
+    ]),
+    [expenses?.rows, parties?.rows, party, voucherData?.rows]
+  );
+  const ledgerOptions = useMemo(
+    () => uniqueStrings([
+      ledger,
+      ...(parties?.rows || []).map((row) => row.ledger_name),
+      ...(voucherData?.rows || []).map((row) => row.ledger_name),
+      ...(expenses?.rows || []).map((row) => row.ledger_name),
+    ]),
+    [expenses?.rows, ledger, parties?.rows, voucherData?.rows]
+  );
 
   const v2Sales = matrix?.raw?.sales;
   const v2Purchase = matrix?.raw?.expenses;
@@ -246,8 +268,8 @@ export default function CanonicalTallyDashboard() {
           <Field label="From"><input className={CONTROL_CLASS} type="date" value={from} onChange={(event) => setFrom(event.target.value)} /></Field>
           <Field label="To"><input className={CONTROL_CLASS} type="date" value={to} onChange={(event) => setTo(event.target.value)} /></Field>
           <Field label="Report"><select className={CONTROL_CLASS} value={report} onChange={(event) => setReport(event.target.value)}>{reportOptions.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}</select></Field>
-          <Field label="Party / Vendor"><input className={CONTROL_CLASS} value={party} onChange={(event) => setParty(event.target.value)} /></Field>
-          <Field label="Ledger"><input className={CONTROL_CLASS} value={ledger} onChange={(event) => setLedger(event.target.value)} /></Field>
+          <Field label="Party / Vendor"><select className={CONTROL_CLASS} value={party} onChange={(event) => setParty(event.target.value)}><option value="">All Parties / Vendors</option>{partyOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select></Field>
+          <Field label="Ledger"><select className={CONTROL_CLASS} value={ledger} onChange={(event) => setLedger(event.target.value)}><option value="">All Ledgers</option>{ledgerOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select></Field>
           <Field label="Voucher Type"><select className={CONTROL_CLASS} value={voucherType} onChange={(event) => setVoucherType(event.target.value)}>{VOUCHER_TYPES.map((type) => <option key={type || "all"} value={type}>{type || "All"}</option>)}</select></Field>
           <div className="flex items-center gap-2">
             <button className={ICON_BUTTON_CLASS} type="button" onClick={load} disabled={loading} title="Refresh"><RefreshCw size={18} /></button>
