@@ -14,7 +14,7 @@ function rangeStart(range: string) {
     "30d": 30,
     "90d": 90,
   };
-  if (range === "today") return new Date(now.toISOString().slice(0, 10)).toISOString();
+  if (range === "today") return new Date(now.toISOString().slice(0, 10)).toISOString().slice(0, 10);
   const d = days[range] ?? 3;
   now.setDate(now.getDate() - d);
   return now.toISOString().slice(0, 10);
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const limit = Math.min(500, Math.max(1, Number(url.searchParams.get("limit") || "100")));
-  const range = url.searchParams.get("range") || "3d";
+  const range = url.searchParams.get("range") || "all";
   const status = url.searchParams.get("status")?.trim() || "";
   const search = url.searchParams.get("search")?.trim() || "";
   const from = url.searchParams.get("from") || rangeStart(range);
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
   let query = supabase
     .from("followups")
     .select("id, lead_id, company_name, contact_person, next_followup, status, notes, created_at, updated_at", { count: "exact" })
-    .order("next_followup", { ascending: true })
+    .order("next_followup", { ascending: true, nullsFirst: false })
     .limit(limit);
 
   if (from) query = query.gte("next_followup", from);
@@ -92,15 +92,25 @@ export async function PATCH(request: Request) {
 
   const body = await request.json().catch(() => ({}));
   const id = String(body.id || "").trim();
-  const status = String(body.status || "").trim();
   if (!id) return apiError("id is required", 400);
-  if (!status) return apiError("status is required", 400);
+
+  const patch: Record<string, string | null> = {};
+  if (body.status !== undefined) {
+    const status = String(body.status || "").trim();
+    if (!status) return apiError("status is required", 400);
+    patch.status = status;
+  }
+  if (body.next_followup !== undefined) {
+    const nextFollowup = String(body.next_followup || "").trim();
+    patch.next_followup = nextFollowup || null;
+  }
+  if (Object.keys(patch).length === 0) return apiError("Nothing to update", 400);
 
   const { data, error } = await supabase
     .from("followups")
-    .update({ status, updated_by: auth.ctx.userId, updated_at: new Date().toISOString() })
+    .update({ ...patch, updated_by: auth.ctx.userId, updated_at: new Date().toISOString() })
     .eq("id", id)
-    .select("id, status, updated_at")
+    .select("id, status, next_followup, updated_at")
     .single();
 
   if (error) return apiError(error.message, 500);
