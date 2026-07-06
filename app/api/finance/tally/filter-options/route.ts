@@ -27,6 +27,22 @@ function uniqueStrings(values: Array<string | null | undefined>) {
   return [...new Set(values.map((value) => (value || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
 }
 
+async function ledgerBalances(supabase: ReturnType<typeof getAdminClient>, ledgers: string[]) {
+  if (!supabase || ledgers.length === 0) return {};
+  const { data } = await supabase
+    .from("tally_ledgers_v2")
+    .select("ledger_name, closing_balance, opening_balance, parent_group, primary_group")
+    .in("ledger_name", ledgers)
+    .limit(5000);
+
+  return Object.fromEntries((data || []).map((row) => [row.ledger_name, {
+    closing_balance: Number(row.closing_balance || 0),
+    opening_balance: Number(row.opening_balance || 0),
+    parent_group: row.parent_group || null,
+    primary_group: row.primary_group || null,
+  }]));
+}
+
 export async function GET(request: Request) {
   const auth = await authorize("dashboard", "read");
   if ("error" in auth) return auth.error;
@@ -50,6 +66,7 @@ export async function GET(request: Request) {
       .limit(5000);
 
     if (error) return apiError(error.message, 500);
+    const ledgerOptions = uniqueStrings((data || []).map((row) => row.ledger_name));
 
     return apiSuccess({
       source: "expense_heads_v2",
@@ -57,7 +74,8 @@ export async function GET(request: Request) {
       from,
       to,
       party_options: uniqueStrings((data || []).map((row) => row.party_name)),
-      ledger_options: uniqueStrings((data || []).map((row) => row.ledger_name)),
+      ledger_options: ledgerOptions,
+      ledger_balances: await ledgerBalances(supabase, ledgerOptions),
     });
   }
 
@@ -69,6 +87,7 @@ export async function GET(request: Request) {
       .limit(5000);
 
     if (error) return apiError(error.message, 500);
+    const ledgerOptions = uniqueStrings((data || []).map((row) => row.ledger_name));
 
     return apiSuccess({
       source: "tally_parties_v2",
@@ -76,7 +95,8 @@ export async function GET(request: Request) {
       from,
       to,
       party_options: uniqueStrings((data || []).map((row) => row.party_name)),
-      ledger_options: uniqueStrings((data || []).map((row) => row.ledger_name)),
+      ledger_options: ledgerOptions,
+      ledger_balances: await ledgerBalances(supabase, ledgerOptions),
     });
   }
 
@@ -92,6 +112,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await db;
   if (error) return apiError(error.message, 500);
+  const ledgerOptions = uniqueStrings((data || []).map((row) => row.party_ledger_name));
 
   return apiSuccess({
     source: "tally_vouchers_v2",
@@ -100,6 +121,7 @@ export async function GET(request: Request) {
     to,
     voucher_type: typeFilter || "",
     party_options: uniqueStrings((data || []).map((row) => row.party_name)),
-    ledger_options: uniqueStrings((data || []).map((row) => row.party_ledger_name)),
+    ledger_options: ledgerOptions,
+    ledger_balances: await ledgerBalances(supabase, ledgerOptions),
   });
 }
