@@ -1,54 +1,105 @@
 import { initialFinanceDashboard } from "@/lib/financeos/finance-data";
 
+type Tone = "green" | "red" | "blue" | "orange" | "purple";
+
+const kpiTones: Tone[] = ["green", "blue", "red", "blue", "orange", "red", "green", "green", "green", "purple", "purple", "green", "red", "orange", "blue"];
+const sourceRows = ["Revenue", "Purchase", "Receipts", "Payments", "Ledger Mapping", "GST Status", "Loan Limits"];
+const expenseRows = ["Jai Parkash", "Riya", "Staff Welfare", "Other Expenses", "General Office"];
+const agingRows = ["0-30 Days", "31-60 Days", "61-90 Days", "90+ Days", "Total Outstanding"];
+
 export function FinanceDashboard() {
   const data = initialFinanceDashboard;
-  const chartNames = ["Revenue Trend", "Expense Trend", "Cash Flow", "Receivable Aging", "Payable Aging", "Monthly Comparison", "Owner Wise Expenses", "Expense Head Analysis", "Bank Balance Trend", "GST Trend"];
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-3xl border border-white/10 bg-white/[0.06] p-6">
-        <p className="text-xs uppercase tracking-[0.35em] text-purple-300">CEO Command Center</p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight lg:text-4xl">FinanceOS V3</h2>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">Dashboard-first finance command center for cash, profit, receivables, payables, loans, reports and executive decisions.</p>
-        <div className="mt-5 grid gap-2 text-xs sm:grid-cols-4">
-          {[data.financialYear, data.currentMonth, data.supabaseStatus, data.tallyStatus].map((item) => <div key={item} className="rounded-2xl border border-white/10 bg-black/20 p-3 text-slate-300">{item}</div>)}
+    <div className="space-y-2 text-[11px]">
+      <Panel title="Finance Complete Dashboard - All Metrics Live">
+        <div className="grid gap-1 sm:grid-cols-2 xl:grid-cols-5">
+          {data.kpis.map((metric, index) => <Kpi key={metric.id} title={metric.label} tone={kpiTones[index % kpiTones.length]} />)}
         </div>
-      </section>
+      </Panel>
 
-      <Section title="Home Dashboard" subtitle="Large KPI cards" />
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        {data.kpis.map((metric) => (
-          <div key={metric.id} className="rounded-2xl border border-blue-300/20 bg-blue-400/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-400">{metric.label}</p>
-            <p className="mt-3 text-2xl font-semibold text-white">Data required</p>
-            <p className="mt-3 text-xs leading-5 text-slate-400">{metric.description}</p>
-          </div>
-        ))}
+      <Panel title="Score Metrics">
+        <div className="grid gap-1 md:grid-cols-2 xl:grid-cols-3">
+          <Score title="Cash Health" value="0 / 10" tone="green" />
+          <Score title="Liquidity Score" value="10 / 10" tone="blue" />
+          <Score title="Receivable Score" value="10 / 10" tone="orange" />
+          <Score title="Expense Health" value="10 / 10" tone="purple" />
+          <Score title="Profit Score" value="0 / 10" tone="red" />
+          <Score title="Business Rating" value="60 / 100" tone="blue" />
+        </div>
+      </Panel>
+
+      <div className="grid gap-2 xl:grid-cols-2">
+        <Panel title="P&L / Source Status">
+          {sourceRows.map((row, idx) => <Line key={row} left={row} right={idx < 2 ? "ok" : "--"} tone={idx < 2 ? "green" : "blue"} />)}
+        </Panel>
+        <Panel title="Cash Flow / Alerts">
+          {["Opening Cash", "Cash In", "Cash Out", "Closing Cash", "Free Cash"].map((row, idx) => <Line key={row} left={row} right={idx === 4 ? "review" : "--"} tone={idx === 4 ? "orange" : "blue"} />)}
+        </Panel>
       </div>
 
-      <Section title="Executive Cards" subtitle="Health, score and action cards" />
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-        {data.health.map((item) => (
-          <div key={item.id} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-            <div className="flex items-start justify-between gap-3"><p className="text-sm font-semibold text-white">{item.label}</p><span className="rounded-full bg-white/10 px-2 py-1 text-xs text-slate-400">--</span></div>
-            <p className="mt-3 text-sm text-slate-300">{item.status}</p>
-            <p className="mt-2 text-xs leading-5 text-slate-500">{item.action}</p>
-          </div>
-        ))}
+      <div className="grid gap-2 xl:grid-cols-2">
+        <Panel title="Receivables Aging">
+          {agingRows.map((row, idx) => <Line key={row} left={row} right="--" tone={idx === 4 ? "purple" : "orange"} />)}
+        </Panel>
+        <Panel title="Payables Aging">
+          {agingRows.map((row, idx) => <Line key={row} left={row} right="--" tone={idx === 4 ? "purple" : "red"} />)}
+        </Panel>
       </div>
 
-      <Section title="Charts" subtitle="Responsive panels ready for live source data" />
-      <div className="grid gap-4 xl:grid-cols-2">
-        {chartNames.map((title) => <Chart key={title} title={title} />)}
+      <div className="grid gap-2 xl:grid-cols-3">
+        <Panel title="Expense Control">
+          {expenseRows.map((row, idx) => <Progress key={row} label={row} value={[80, 92, 55, 100, 20][idx]} />)}
+        </Panel>
+        <Panel title="Bank Loan Matrix">
+          {["Outstanding", "Interest Rate", "EMI", "Due Date", "DSCR", "Loan Health"].map((row) => <Line key={row} left={row} right="Data required" tone="blue" />)}
+        </Panel>
+        <Panel title="Shark Tank India Matrix">
+          {["Business Valuation", "Revenue", "EBITDA", "Burn Rate", "Runway", "AI Score"].map((row) => <Line key={row} left={row} right="Data required" tone="purple" />)}
+        </Panel>
       </div>
+
+      <Panel title="Transactions - Latest Rows">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px] border-collapse bg-white text-left text-[10px]">
+            <thead className="sticky top-0 bg-blue-50 text-blue-800">
+              <tr>{["Date", "Voucher", "Ledger", "Type", "Debit", "Credit", "Status", "Source"].map((head) => <th key={head} className="border border-blue-100 px-2 py-1">{head}</th>)}</tr>
+            </thead>
+            <tbody>
+              <tr><td colSpan={8} className="border border-blue-100 px-2 py-4 text-center text-slate-500">Connect Supabase/Tally source to show live transaction rows.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </Panel>
     </div>
   );
 }
 
-function Section({ title, subtitle }: { title: string; subtitle: string }) {
-  return <div><h3 className="text-xl font-semibold text-white">{title}</h3><p className="mt-1 text-sm text-slate-500">{subtitle}</p></div>;
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return <section className="rounded border border-blue-200 bg-white p-2 shadow-sm"><h2 className="mb-2 border-b border-blue-100 pb-1 text-[11px] font-bold uppercase tracking-wide text-blue-800">{title}</h2>{children}</section>;
 }
 
-function Chart({ title }: { title: string }) {
-  return <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5"><h4 className="font-semibold text-white">{title}</h4><div className="mt-5 h-48 rounded-2xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-slate-500">Source pending</div></div>;
+function Kpi({ title, tone }: { title: string; tone: Tone }) {
+  return <div className="min-h-16 rounded border border-blue-100 bg-slate-50 p-2"><p className="text-[10px] text-slate-500">{title}</p><p className={`mt-2 text-sm font-bold ${textTone(tone)}`}>₹0</p><p className="mt-1 text-[9px] text-slate-400">source pending</p></div>;
+}
+
+function Score({ title, value, tone }: { title: string; value: string; tone: Tone }) {
+  return <div className="rounded border border-blue-100 bg-slate-50 p-2"><p className="text-[10px] text-slate-500">{title}</p><p className={`text-right text-sm font-bold ${textTone(tone)}`}>{value}</p></div>;
+}
+
+function Line({ left, right, tone }: { left: string; right: string; tone: Tone }) {
+  return <div className="flex items-center justify-between border-b border-blue-100 py-1"><span className="text-slate-600">{left}</span><span className={`font-semibold ${textTone(tone)}`}>{right}</span></div>;
+}
+
+function Progress({ label, value }: { label: string; value: number }) {
+  const tone = value >= 100 ? "bg-red-500" : value >= 90 ? "bg-orange-500" : value >= 80 ? "bg-yellow-500" : "bg-green-500";
+  return <div className="border-b border-blue-100 py-1"><div className="flex justify-between"><span>{label}</span><span>{value}%</span></div><div className="mt-1 h-1.5 rounded bg-slate-200"><div className={`h-1.5 rounded ${tone}`} style={{ width: `${Math.min(value, 100)}%` }} /></div></div>;
+}
+
+function textTone(tone: Tone) {
+  if (tone === "green") return "text-green-600";
+  if (tone === "red") return "text-red-600";
+  if (tone === "orange") return "text-orange-500";
+  if (tone === "purple") return "text-purple-600";
+  return "text-blue-600";
 }
