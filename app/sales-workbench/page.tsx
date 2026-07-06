@@ -122,6 +122,7 @@ export default function SalesCallCoachPage() {
   const [crmSearch, setCrmSearch] = useState("");
   const [crmFrom, setCrmFrom] = useState("");
   const [crmTo, setCrmTo] = useState("");
+  const [selectedLeadId, setSelectedLeadId] = useState("");
   const [transcript, setTranscript] = useState("");
   const [recording, setRecording] = useState(false);
   const [analysis, setAnalysis] = useState<AnalyzeResult | null>(null);
@@ -134,6 +135,8 @@ export default function SalesCallCoachPage() {
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
   const [followupBusyId, setFollowupBusyId] = useState<string | null>(null);
   const [followupMessage, setFollowupMessage] = useState("");
+
+  const selectedLead = leads.find((lead) => lead.id === selectedLeadId) || null;
 
   const refreshAiSuggestions = useCallback(() => {
     apiFetch<{ suggestions: AiSuggestion[] }>("/api/sales/ai-suggestions?limit=5")
@@ -242,7 +245,7 @@ export default function SalesCallCoachPage() {
     try {
       const res = await apiFetch<AnalyzeResult>("/api/call-coach/analyze", {
         method: "POST",
-        body: JSON.stringify({ transcript, save: true }),
+        body: JSON.stringify({ transcript, save: true, leadId: selectedLeadId || null }),
       });
       setAnalysis(res);
       refreshAiSuggestions();
@@ -272,6 +275,7 @@ export default function SalesCallCoachPage() {
       });
       setFollowupMessage("Followup created for tomorrow.");
       refreshAiSuggestions();
+      window.dispatchEvent(new Event("sales:followups-changed"));
     } catch (e) {
       console.error(e);
       setFollowupMessage(e instanceof Error ? e.message : "Failed to create followup");
@@ -384,7 +388,7 @@ export default function SalesCallCoachPage() {
                 </thead>
                 <tbody>
                   {leads.map((l) => (
-                    <tr key={l.id} className="border-t border-slate-100 hover:bg-slate-50">
+                    <tr key={l.id} className={`border-t border-slate-100 hover:bg-slate-50 ${selectedLeadId === l.id ? "bg-blue-50" : ""}`}>
                       <td className="p-3 font-medium">{l.company_name || "—"}</td>
                       <td className={`p-3 ${statusColor(l.status)}`}>{l.status || "—"}</td>
                       <td className="p-3 text-slate-600">{l.contact_person || "—"}</td>
@@ -399,6 +403,18 @@ export default function SalesCallCoachPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-3 rounded-lg border border-blue-100 bg-blue-50 p-3">
+              <label className="mb-1 block text-xs font-bold uppercase text-blue-700">Link this AI call to CRM lead</label>
+              <select value={selectedLeadId} onChange={(e) => setSelectedLeadId(e.target.value)} className="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-slate-800">
+                <option value="">No lead selected — save as general AI suggestion</option>
+                {leads.slice(0, 250).map((lead) => (
+                  <option key={lead.id} value={lead.id}>{lead.company_name || "Unnamed Lead"} · {lead.contact_person || "No contact"} · {lead.mobile || "No mobile"}</option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-blue-700">
+                {selectedLead ? `Selected: ${selectedLead.company_name || "Lead"}. Followup will link to this lead.` : "Select a lead before Analyze so followup gets mobile/email actions."}
+              </p>
+            </div>
             <div className="flex gap-2 mb-3">
               <TabBtn active={tab === "live"} onClick={() => setTab("live")}>Live Recording</TabBtn>
               <TabBtn active={tab === "manual"} onClick={() => setTab("manual")}>Manual Text Entry</TabBtn>
@@ -423,7 +439,7 @@ export default function SalesCallCoachPage() {
               className="w-full h-44 border border-slate-200 rounded-lg p-3 text-[15px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30"
             />
             <button type="button" onClick={analyze} disabled={analyzing || !transcript.trim()} className="mt-3 w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm disabled:opacity-50">
-              {analyzing ? "Analyzing…" : "Analyze & Save with AI Coach"}
+              {analyzing ? "Analyzing…" : selectedLead ? "Analyze & Save to Selected Lead" : "Analyze & Save with AI Coach"}
             </button>
             {analysis && (
               <div className="mt-4 p-4 bg-blue-50 rounded-lg text-sm space-y-2">
