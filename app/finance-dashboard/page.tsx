@@ -1,10 +1,13 @@
-export default function Page() {
+import CommandHeader from "@/components/command-center/command-header";
+import CanonicalTallyDashboard from "@/components/finance/tally/canonical-tally-dashboard";
+import V2MatrixHeads from "@/components/finance/tally/v2-matrix-heads";
+
+export default function FinanceDashboardPage() {
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold">Finance Dashboard</h1>
-      <div className="border rounded-xl p-5 mt-5">
-        Finance summary ready
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <CommandHeader title="Finance Dashboard" badge="CANONICAL TALLY SSOT" />
+      <V2MatrixHeads />
+      <CanonicalTallyDashboard />
     </div>
   );
 }
