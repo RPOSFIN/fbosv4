@@ -13,16 +13,34 @@ async function getLeadsSupabase() {
   return getServerSupabase();
 }
 
+function rangeStart(range: string) {
+  const now = new Date();
+  if (range === "all" || range === "custom") return null;
+  const days: Record<string, number> = {
+    "3d": 3,
+    "7d": 7,
+    "30d": 30,
+    "90d": 90,
+    "1y": 365,
+  };
+  const d = days[range] ?? 30;
+  now.setDate(now.getDate() - d);
+  return now.toISOString();
+}
+
 export async function GET(request: Request) {
   const auth = await authorize("leads", "read");
   if ("error" in auth) return auth.error;
 
   const url = new URL(request.url);
   const page = Math.max(1, Number(url.searchParams.get("page") || "1"));
-  const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit") || "50")));
+  const limit = Math.min(1000, Math.max(1, Number(url.searchParams.get("limit") || "50")));
   const search = url.searchParams.get("search")?.trim() || "";
   const status = url.searchParams.get("status")?.trim() || "";
   const source = url.searchParams.get("source")?.trim() || "";
+  const range = url.searchParams.get("range")?.trim() || "";
+  const from = url.searchParams.get("from")?.trim() || (range ? rangeStart(range) : "");
+  const to = url.searchParams.get("to")?.trim() || "";
   const paginated = url.searchParams.has("page") || url.searchParams.has("limit");
 
   const supabase = await getLeadsSupabase();
@@ -45,10 +63,12 @@ export async function GET(request: Request) {
   }
   if (status) query = query.eq("status", status);
   if (source) query = query.eq("source", source);
+  if (from) query = query.gte("created_at", from);
+  if (to) query = query.lte("created_at", `${to}T23:59:59.999Z`);
 
   if (paginated) {
-    const from = (page - 1) * limit;
-    query = query.range(from, from + limit - 1);
+    const fromRow = (page - 1) * limit;
+    query = query.range(fromRow, fromRow + limit - 1);
   }
 
   const { data, error, count } = await query;
