@@ -8,6 +8,8 @@ type Followup = {
   lead_id?: string | null;
   company_name?: string | null;
   contact_person?: string | null;
+  mobile?: string | null;
+  email?: string | null;
   next_followup?: string | null;
   status?: string | null;
   notes?: string | null;
@@ -44,7 +46,10 @@ function buildParams(input: Record<string, string | number | undefined>) {
 }
 
 function cleanPhone(value?: string | null) {
-  return String(value || "").replace(/\D/g, "");
+  const phone = String(value || "").replace(/\D/g, "");
+  if (!phone) return "";
+  if (phone.length === 10) return `91${phone}`;
+  return phone;
 }
 
 export default function FollowupsPanel() {
@@ -76,6 +81,11 @@ export default function FollowupsPanel() {
 
   useEffect(() => {
     refresh();
+    function onChanged() {
+      refresh();
+    }
+    window.addEventListener("sales:followups-changed", onChanged);
+    return () => window.removeEventListener("sales:followups-changed", onChanged);
   }, [refresh]);
 
   async function updateStatus(id: string, nextStatus: string) {
@@ -125,13 +135,18 @@ export default function FollowupsPanel() {
             No followups found for this filter.
           </p>
         ) : followups.map((f) => {
-          const phone = cleanPhone(f.notes);
+          const phone = cleanPhone(f.mobile);
           return (
             <div key={f.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="text-sm font-semibold text-slate-800">{f.company_name || "Followup"}</p>
                   <p className="text-xs text-slate-500">{f.contact_person || "—"} · {f.next_followup || "No date"}</p>
+                  {(f.mobile || f.email) && (
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      {f.mobile || "No mobile"}{f.email ? ` · ${f.email}` : ""}
+                    </p>
+                  )}
                 </div>
                 <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-600 border border-slate-200">
                   {f.status || "Pending"}
@@ -149,6 +164,7 @@ export default function FollowupsPanel() {
                 </button>
                 {phone && <a className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700" href={`tel:+${phone}`}>Call</a>}
                 {phone && <a className="rounded-md border border-emerald-300 px-2.5 py-1 text-xs font-semibold text-emerald-700" href={`https://wa.me/${phone}`} target="_blank" rel="noreferrer">WhatsApp</a>}
+                {f.email && <a className="rounded-md border border-blue-300 px-2.5 py-1 text-xs font-semibold text-blue-700" href={`mailto:${f.email}`}>Email</a>}
               </div>
             </div>
           );
