@@ -49,7 +49,38 @@ export async function GET(request: Request) {
   const { data, error, count } = await query;
   if (error) return apiError(error.message, 500);
 
-  return apiSuccess({ followups: data || [], total: count || 0, range, status, from, to });
+  const rows = data || [];
+  const leadIds = [...new Set(rows.map((row) => row.lead_id).filter(Boolean))] as string[];
+  const leadMap = new Map<string, { mobile?: string | null; email?: string | null; company_name?: string | null; contact_person?: string | null }>();
+
+  if (leadIds.length) {
+    const { data: leadRows } = await supabase
+      .from("leads")
+      .select("id, company_name, contact_person, mobile, email")
+      .in("id", leadIds);
+
+    for (const lead of leadRows || []) {
+      leadMap.set(lead.id as string, {
+        company_name: lead.company_name,
+        contact_person: lead.contact_person,
+        mobile: lead.mobile,
+        email: lead.email,
+      });
+    }
+  }
+
+  const followups = rows.map((row) => {
+    const lead = row.lead_id ? leadMap.get(row.lead_id as string) : null;
+    return {
+      ...row,
+      company_name: row.company_name || lead?.company_name || null,
+      contact_person: row.contact_person || lead?.contact_person || null,
+      mobile: lead?.mobile || null,
+      email: lead?.email || null,
+    };
+  });
+
+  return apiSuccess({ followups, total: count || 0, range, status, from, to });
 }
 
 export async function PATCH(request: Request) {
