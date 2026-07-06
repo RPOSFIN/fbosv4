@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1050" viewBox="0 0 1600 1050">
+  <defs>
+    <style>
+      .bg { fill: #080b12; }
+      .grid { stroke: #1f2937; stroke-width: 1; opacity: 0.25; }
+      .zone { fill: none; stroke-width: 4; stroke-dasharray: 12 10; rx: 28; }
+      .zone-title { font: 700 26px Arial, sans-serif; fill: #0b1020; }
+      .node { fill: #111827; stroke: #64748b; stroke-width: 2; rx: 14; }
+      .node-blue { fill: #0f172a; stroke: #38bdf8; stroke-width: 2; rx: 14; }
+      .node-green { fill: #10231b; stroke: #34d399; stroke-width: 2; rx: 14; }
+      .node-yellow { fill: #2b230b; stroke: #facc15; stroke-width: 2; rx: 14; }
+      .node-pink { fill: #251020; stroke: #f472b6; stroke-width: 2; rx: 14; }
+      .node-purple { fill: #1d1533; stroke: #a78bfa; stroke-width: 2; rx: 14; }
+      .db { fill: #101827; stroke: #60a5fa; stroke-width: 2; rx: 18; }
+      .txt { font: 600 16px Arial, sans-serif; fill: #e5e7eb; text-anchor: middle; }
+      .small { font: 12px Arial, sans-serif; fill: #94a3b8; text-anchor: middle; }
+      .tiny { font: 11px Arial, sans-serif; fill: #cbd5e1; text-anchor: middle; }
+      .edge { stroke: #94a3b8; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .edge-green { stroke: #34d399; stroke-width: 3; fill: none; marker-end: url(#arrowGreen); }
+      .edge-pink { stroke: #f472b6; stroke-width: 3; fill: none; marker-end: url(#arrowPink); }
+      .label { fill: #f8fafc; font: 700 18px Arial, sans-serif; text-anchor: middle; }
+      .sub { fill: #94a3b8; font: 13px Arial, sans-serif; text-anchor: middle; }
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#94a3b8" />
+    </marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#34d399" />
+    </marker>
+    <marker id="arrowPink" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#f472b6" />
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1050" class="bg" />
+  <g>
+    <path d="M0 40 H1600 M0 80 H1600 M0 120 H1600 M0 160 H1600 M0 200 H1600 M0 240 H1600 M0 280 H1600 M0 320 H1600 M0 360 H1600 M0 400 H1600 M0 440 H1600 M0 480 H1600 M0 520 H1600 M0 560 H1600 M0 600 H1600 M0 640 H1600 M0 680 H1600 M0 720 H1600 M0 760 H1600 M0 800 H1600 M0 840 H1600 M0 880 H1600 M0 920 H1600 M0 960 H1600 M0 1000 H1600" class="grid"/>
+    <path d="M40 0 V1050 M80 0 V1050 M120 0 V1050 M160 0 V1050 M200 0 V1050 M240 0 V1050 M280 0 V1050 M320 0 V1050 M360 0 V1050 M400 0 V1050 M440 0 V1050 M480 0 V1050 M520 0 V1050 M560 0 V1050 M600 0 V1050 M640 0 V1050 M680 0 V1050 M720 0 V1050 M760 0 V1050 M800 0 V1050 M840 0 V1050 M880 0 V1050 M920 0 V1050 M960 0 V1050 M1000 0 V1050 M1040 0 V1050 M1080 0 V1050 M1120 0 V1050 M1160 0 V1050 M1200 0 V1050 M1240 0 V1050 M1280 0 V1050 M1320 0 V1050 M1360 0 V1050 M1400 0 V1050 M1440 0 V1050 M1480 0 V1050 M1520 0 V1050 M1560 0 V1050" class="grid"/>
+  </g>
+
+  <text x="800" y="45" style="font:800 34px Arial,sans-serif;fill:#f8fafc;text-anchor:middle">Sales OS Backend Agent Graph</text>
+  <text x="800" y="72" class="sub">Input Bus → Normalize → Dedupe → Enrich → Convert → CRM / Followup / Quote / Client</text>
+
+  <rect x="55" y="105" width="330" height="820" class="zone" stroke="#facc15"/>
+  <rect x="150" y="90" width="140" height="34" rx="17" fill="#facc15"/>
+  <text x="220" y="113" class="zone-title">INPUTS</text>
+
+  <rect x="450" y="105" width="680" height="390" class="zone" stroke="#38bdf8"/>
+  <rect x="685" y="90" width="210" height="34" rx="17" fill="#38bdf8"/>
+  <text x="790" y="113" class="zone-title">CORE AGENT</text>
+
+  <rect x="450" y="545" width="680" height="380" class="zone" stroke="#f472b6"/>
+  <rect x="650" y="530" width="280" height="34" rx="17" fill="#f472b6"/>
+  <text x="790" y="553" class="zone-title">SPECIALIZED AGENTS</text>
+
+  <rect x="1185" y="105" width="360" height="820" class="zone" stroke="#34d399"/>
+  <rect x="1285" y="90" width="160" height="34" rx="17" fill="#34d399"/>
+  <text x="1365" y="113" class="zone-title">OUTPUTS</text>
+
+  <!-- Input nodes -->
+  <g>
+    <rect x="95" y="145" width="110" height="48" class="node-yellow"/><text x="150" y="174" class="txt">Manual</text>
+    <rect x="235" y="145" width="110" height="48" class="node-yellow"/><text x="290" y="174" class="txt">CSV</text>
+    <rect x="95" y="215" width="110" height="48" class="node-yellow"/><text x="150" y="244" class="txt">GSheet</text>
+    <rect x="235" y="215" width="110" height="48" class="node-yellow"/><text x="290" y="244" class="txt">ClickUp</text>
+    <rect x="95" y="285" width="110" height="48" class="node-yellow"/><text x="150" y="314" class="txt">IndiaMART</text>
+    <rect x="235" y="285" width="110" height="48" class="node-yellow"/><text x="290" y="314" class="txt">TradeIndia</text>
+    <rect x="95" y="355" width="110" height="48" class="node-yellow"/><text x="150" y="384" class="txt">Website</text>
+    <rect x="235" y="355" width="110" height="48" class="node-yellow"/><text x="290" y="384" class="txt">Sweb</text>
+    <rect x="95" y="425" width="110" height="48" class="node-yellow"/><text x="150" y="454" class="txt">WhatsApp</text>
+    <rect x="235" y="425" width="110" height="48" class="node-yellow"/><text x="290" y="454" class="txt">Email</text>
+    <rect x="95" y="495" width="110" height="48" class="node-yellow"/><text x="150" y="524" class="txt">Calling</text>
+    <rect x="235" y="495" width="110" height="48" class="node-yellow"/><text x="290" y="524" class="txt">Reference</text>
+    <rect x="95" y="565" width="250" height="48" class="node-yellow"/><text x="220" y="594" class="txt">Existing Clients</text>
+    <rect x="95" y="635" width="250" height="48" class="node-yellow"/><text x="220" y="664" class="txt">BIS / MCA / FSSAI</text>
+    <rect x="95" y="705" width="250" height="48" class="node-yellow"/><text x="220" y="734" class="txt">GST / TIN / TSIN</text>
+  </g>
+
+  <!-- Core nodes -->
+  <rect x="470" y="205" width="150" height="60" class="node-blue"/><text x="545" y="232" class="txt">Input Bus</text><text x="545" y="250" class="small">/api/sales/intake</text>
+  <rect x="675" y="205" width="150" height="60" class="node-blue"/><text x="750" y="232" class="txt">Normalize</text><text x="750" y="250" class="small">clean + map</text>
+  <rect x="880" y="190" width="190" height="90" class="db"/><text x="975" y="225" class="txt">sales_inbox_events</text><text x="975" y="248" class="small">raw source memory</text>
+  <rect x="500" y="345" width="170" height="75" class="node-purple"/><text x="585" y="376" class="txt">Dedupe Gate</text><text x="585" y="398" class="small">company/mobile/email</text>
+  <rect x="725" y="345" width="170" height="75" class="db"/><text x="810" y="376" class="txt">sales_lead_matches</text><text x="810" y="398" class="small">match memory</text>
+  <rect x="950" y="345" width="150" height="75" class="node-green"/><text x="1025" y="376" class="txt">Convert Gate</text><text x="1025" y="398" class="small">lead/client/task</text>
+
+  <!-- Specialized nodes -->
+  <rect x="485" y="615" width="150" height="70" class="node-pink"/><text x="560" y="644" class="txt">Enrichment</text><text x="560" y="665" class="small">BIS/MCA/GST</text>
+  <rect x="675" y="615" width="165" height="70" class="node-pink"/><text x="758" y="644" class="txt">Call Coach</text><text x="758" y="665" class="small">record + transcript</text>
+  <rect x="880" y="615" width="165" height="70" class="node-pink"/><text x="963" y="644" class="txt">AI Assistant</text><text x="963" y="665" class="small">OpenAI / Ollama</text>
+  <rect x="485" y="750" width="150" height="70" class="node-pink"/><text x="560" y="779" class="txt">Comms</text><text x="560" y="800" class="small">WA + Email</text>
+  <rect x="675" y="750" width="165" height="70" class="node-pink"/><text x="758" y="779" class="txt">Calculator</text><text x="758" y="800" class="small">price/margin/GST</text>
+  <rect x="880" y="750" width="165" height="70" class="node-pink"/><text x="963" y="779" class="txt">ClickUp Mirror</text><text x="963" y="800" class="small">execution only</text>
+
+  <!-- Output DB nodes -->
+  <rect x="1215" y="165" width="140" height="62" class="db"/><text x="1285" y="193" class="txt">leads</text><text x="1285" y="213" class="small">CRM master</text>
+  <rect x="1380" y="165" width="140" height="62" class="db"/><text x="1450" y="193" class="txt">lead_history</text><text x="1450" y="213" class="small">audit trail</text>
+  <rect x="1215" y="265" width="140" height="62" class="db"/><text x="1285" y="293" class="txt">followups</text><text x="1285" y="313" class="small">next action</text>
+  <rect x="1380" y="265" width="140" height="62" class="db"/><text x="1450" y="293" class="txt">tasks</text><text x="1450" y="313" class="small">work items</text>
+  <rect x="1215" y="365" width="140" height="62" class="db"/><text x="1285" y="393" class="txt">quotations</text><text x="1285" y="413" class="small">quote flow</text>
+  <rect x="1380" y="365" width="140" height="62" class="db"/><text x="1450" y="393" class="txt">clients</text><text x="1450" y="413" class="small">won leads</text>
+  <rect x="1215" y="505" width="305" height="62" class="db"/><text x="1368" y="533" class="txt">sales_communications</text><text x="1368" y="553" class="small">WhatsApp + Email timeline</text>
+  <rect x="1215" y="605" width="305" height="62" class="db"/><text x="1368" y="633" class="txt">sales_call_logs</text><text x="1368" y="653" class="small">calls + recordings</text>
+  <rect x="1215" y="705" width="305" height="62" class="db"/><text x="1368" y="733" class="txt">sales_ai_suggestions</text><text x="1368" y="753" class="small">summaries + next action</text>
+  <rect x="1215" y="805" width="305" height="62" class="db"/><text x="1368" y="833" class="txt">sales_calculations</text><text x="1368" y="853" class="small">pricing + quotation helper</text>
+
+  <!-- Edges inputs to bus -->
+  <path d="M345 170 C390 170 410 235 470 235" class="edge"/>
+  <path d="M345 240 C390 240 410 235 470 235" class="edge"/>
+  <path d="M345 310 C390 310 410 235 470 235" class="edge"/>
+  <path d="M345 380 C390 380 410 235 470 235" class="edge"/>
+  <path d="M345 450 C390 450 410 235 470 235" class="edge"/>
+  <path d="M345 520 C390 520 410 235 470 235" class="edge"/>
+  <path d="M345 590 C390 590 410 235 470 235" class="edge"/>
+
+  <!-- Core edges -->
+  <path d="M620 235 L675 235" class="edge-green"/>
+  <path d="M825 235 L880 235" class="edge-green"/>
+  <path d="M975 280 C975 320 585 305 585 345" class="edge"/>
+  <path d="M670 382 L725 382" class="edge"/>
+  <path d="M895 382 L950 382" class="edge-green"/>
+
+  <!-- Specialized edges -->
+  <path d="M585 420 C585 500 560 560 560 615" class="edge-pink"/>
+  <path d="M560 685 C560 710 560 725 560 750" class="edge-pink"/>
+  <path d="M635 650 L675 650" class="edge-pink"/>
+  <path d="M840 650 L880 650" class="edge-pink"/>
+  <path d="M840 785 L880 785" class="edge-pink"/>
+  <path d="M760 685 C760 710 760 725 760 750" class="edge-pink"/>
+
+  <!-- Output edges -->
+  <path d="M1100 382 C1160 382 1160 196 1215 196" class="edge-green"/>
+  <path d="M1100 382 C1170 382 1300 196 1380 196" class="edge-green"/>
+  <path d="M1100 382 C1160 382 1160 296 1215 296" class="edge-green"/>
+  <path d="M1100 382 C1170 382 1300 296 1380 296" class="edge-green"/>
+  <path d="M1100 382 L1215 396" class="edge-green"/>
+  <path d="M1100 382 C1180 430 1300 396 1380 396" class="edge-green"/>
+  <path d="M635 785 C900 785 1000 536 1215 536" class="edge-pink"/>
+  <path d="M840 650 C1000 650 1100 636 1215 636" class="edge-pink"/>
+  <path d="M1045 650 C1120 650 1130 736 1215 736" class="edge-pink"/>
+  <path d="M840 785 C1000 785 1080 836 1215 836" class="edge-pink"/>
+
+  <text x="800" y="980" style="font:700 22px Arial,sans-serif;fill:#facc15;text-anchor:middle">Golden Rule: No external source writes directly into leads. Every source passes through Input Bus → Gates → Memory Tables.</text>
+</svg>
