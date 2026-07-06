@@ -72,15 +72,10 @@ export async function GET(request: Request) {
   const tasksByName = new Map(tasks.map((t) => [key(t.name), t]).filter(([name]) => name));
   const leadsByCompany = new Map(leads.map((lead) => [key(lead.company_name), lead]).filter(([name]) => name));
 
-  const missingClickUpTask = leads
-    .filter((lead) => !lead.clickup_task_id && !tasksByName.has(key(lead.company_name)))
-    .slice(0, limit);
+  const allMissingClickUpTask = leads.filter((lead) => !lead.clickup_task_id && !tasksByName.has(key(lead.company_name)));
+  const allMissingSupabaseLead = tasks.filter((task) => !leadsByCompany.has(key(task.name)));
 
-  const missingSupabaseLead = tasks
-    .filter((task) => !leadsByCompany.has(key(task.name)))
-    .slice(0, limit);
-
-  const statusMismatches = leads
+  const allStatusMismatches = leads
     .map((lead) => {
       const task = lead.clickup_task_id ? tasksByExternalId.get(lead.clickup_task_id) : tasksByName.get(key(lead.company_name));
       if (!task) return null;
@@ -97,8 +92,11 @@ export async function GET(request: Request) {
         clickup_status_normalized: clickupStatus,
       };
     })
-    .filter(Boolean)
-    .slice(0, limit);
+    .filter(Boolean);
+
+  const missingClickUpTask = allMissingClickUpTask.slice(0, limit);
+  const missingSupabaseLead = allMissingSupabaseLead.slice(0, limit);
+  const statusMismatches = allStatusMismatches.slice(0, limit);
 
   const taskFieldAudit = tasks.reduce(
     (acc, task) => {
@@ -134,9 +132,9 @@ export async function GET(request: Request) {
       clickup_tasks: taskCount ?? tasks.length,
       sampled_leads: leads.length,
       sampled_clickup_tasks: tasks.length,
-      missing_clickup_task_count: Math.max(0, (leadCount ?? leads.length) - ((leadCount ?? leads.length) - missingClickUpTask.length)),
-      missing_supabase_lead_sample_count: missingSupabaseLead.length,
-      status_mismatch_sample_count: statusMismatches.length,
+      missing_clickup_task_sample_count: allMissingClickUpTask.length,
+      missing_supabase_lead_sample_count: allMissingSupabaseLead.length,
+      status_mismatch_sample_count: allStatusMismatches.length,
     },
     byClickUpStatus,
     byNormalizedStatus,
