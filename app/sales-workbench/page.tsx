@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import CommandHeader from "@/components/command-center/command-header";
 import MetricCard from "@/components/command-center/metric-card";
+import FollowupsPanel from "@/components/sales/followups-panel";
 import { pageShell } from "@/components/command-center/theme";
 import { apiFetch } from "@/lib/api/client";
 import {
@@ -456,6 +457,8 @@ export default function SalesCallCoachPage() {
                 ))}
               </div>
             </div>
+
+            <FollowupsPanel />
 
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <h3 className="font-bold text-slate-800 text-sm mb-3">QUICK ACTIONS: CALL & EMAIL TEAM</h3>
