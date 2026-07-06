@@ -7,7 +7,6 @@ import HorizontalClock from "@/components/command-center/horizontal-clock";
 import RouteStatusPanel from "@/components/command-center/route-status-panel";
 import AffirmationCarousel from "@/components/command-center/affirmation-carousel";
 import MetricCard from "@/components/command-center/metric-card";
-import TrendBar from "@/components/command-center/trend-bar";
 import { pageShell, panelPad } from "@/components/command-center/theme";
 import { apiFetch } from "@/lib/api/client";
 import { useRouteAlarm } from "@/hooks/use-route-alarm";
@@ -16,7 +15,6 @@ type CommandData = {
   sales: { totalLeads: number; won: number; pendingFollowups: number; dormantLeads: number };
   operations: { artworkPending: number; dispatchDelayed: number; overdueOrders: number; highPriority: number };
   finance: { receivableLabel: string; payableLabel: string; freeCashLabel: string; healthScore: number };
-  trends: { salesTrend: number; collectionTrend: number; profitTrend: number; receivableTrend: number };
   alerts: { freeCashWarning: string | null };
 };
 
@@ -66,7 +64,7 @@ export default function Page() {
         {loading ? (
           <p className="text-slate-500 text-[15px]">Loading live data…</p>
         ) : data ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             <LivePanel title="Sales (Live)" href="/sales-workbench">
               <MetricCard label="Total Leads" value={data.sales.totalLeads} accent="blue" />
               <MetricCard label="WON" value={data.sales.won} accent="green" />
@@ -84,12 +82,6 @@ export default function Page() {
               <MetricCard label="Payable" value={data.finance.payableLabel} accent="orange" />
               <MetricCard label="Free Cash" value={data.finance.freeCashLabel} accent="blue" />
               <MetricCard label="Health" value={`${data.finance.healthScore}/100`} accent="purple" />
-            </LivePanel>
-            <LivePanel title="Trends (Live)" href="/finance-dashboard">
-              <TrendBar label="Sales" score={data.trends.salesTrend} color="bg-emerald-600" />
-              <TrendBar label="Collection" score={data.trends.collectionTrend} color="bg-blue-600" />
-              <TrendBar label="Profit" score={data.trends.profitTrend} color="bg-violet-600" />
-              <TrendBar label="Receivable" score={data.trends.receivableTrend} color="bg-orange-500" />
             </LivePanel>
           </div>
         ) : null}
