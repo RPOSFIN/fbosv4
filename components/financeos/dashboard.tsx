@@ -18,6 +18,12 @@ export function FinanceDashboard() {
         </div>
       </Panel>
 
+      <section className="rounded border border-blue-200 bg-white p-2 shadow-sm">
+        <div className="grid gap-2 lg:grid-cols-8">
+          {["From", "To", "Report", "Party / Vendor", "Ledger", "Voucher Type", "Refresh", "Sync"].map((item) => <div key={item} className="rounded border border-blue-200 bg-slate-50 px-2 py-2 font-semibold text-slate-700">{item}</div>)}
+        </div>
+      </section>
+
       <Panel title="Score Metrics">
         <div className="grid gap-1 md:grid-cols-2 xl:grid-cols-3">
           <Score title="Cash Health" value="0 / 10" tone="green" />
