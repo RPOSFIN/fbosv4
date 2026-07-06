@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import CommandHeader from "@/components/command-center/command-header";
 import MetricCard from "@/components/command-center/metric-card";
-import { pageShell, panelPad } from "@/components/command-center/theme";
+import { pageShell } from "@/components/command-center/theme";
 import { apiFetch } from "@/lib/api/client";
 import {
   startBehaviourSession,
@@ -23,9 +23,35 @@ type Lead = {
 };
 
 type AnalyzeResult = {
+  suggestionId?: string | null;
   tone: string;
   suggestions: string[];
   crmActions: string[];
+  nextAction?: string;
+  summary?: string;
+};
+
+type AiSuggestion = {
+  id: string;
+  tone?: string | null;
+  summary?: string | null;
+  next_action?: string | null;
+  accepted_at?: string | null;
+  rejected_at?: string | null;
+  created_at?: string | null;
+};
+
+type ClickUpSummary = {
+  total: number;
+  byNormalizedStatus: Record<string, number>;
+  recent: Array<{
+    id: string;
+    name: string;
+    status?: string | null;
+    normalized_status?: string;
+    list_name?: string | null;
+    synced_at?: string | null;
+  }>;
 };
 
 export default function SalesCallCoachPage() {
@@ -40,6 +66,20 @@ export default function SalesCallCoachPage() {
   const behSessionRef = useRef<string | null>(null);
   const lastTranscriptLen = useRef(0);
   const [behaviour, setBehaviour] = useState({ react: 0, respond: 0, sessions: 0 });
+  const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
+  const [clickup, setClickup] = useState<ClickUpSummary | null>(null);
+
+  const refreshAiSuggestions = useCallback(() => {
+    apiFetch<{ suggestions: AiSuggestion[] }>("/api/sales/ai-suggestions?limit=5")
+      .then((res) => setAiSuggestions(res.suggestions || []))
+      .catch(console.error);
+  }, []);
+
+  const refreshClickUp = useCallback(() => {
+    apiFetch<ClickUpSummary>("/api/sales/clickup/summary?limit=8")
+      .then(setClickup)
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     const stats = getBehaviourStats();
@@ -60,7 +100,9 @@ export default function SalesCallCoachPage() {
         setStats({ total: rows.length, won, lost, active: rows.length - won - lost });
       })
       .catch(console.error);
-  }, []);
+    refreshAiSuggestions();
+    refreshClickUp();
+  }, [refreshAiSuggestions, refreshClickUp]);
 
   function startRecording() {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -78,9 +120,7 @@ export default function SalesCallCoachPage() {
       for (let i = e.resultIndex; i < e.results.length; i++) {
         text += e.results[i][0].transcript;
       }
-      if (text && behSessionRef.current) {
-        ingestTranscriptChunk(behSessionRef.current, text);
-      }
+      if (text && behSessionRef.current) ingestTranscriptChunk(behSessionRef.current, text);
       setTranscript((prev) => prev + " " + text);
     };
     rec.onerror = () => stopRecording();
@@ -119,13 +159,26 @@ export default function SalesCallCoachPage() {
     try {
       const res = await apiFetch<AnalyzeResult>("/api/call-coach/analyze", {
         method: "POST",
-        body: JSON.stringify({ transcript }),
+        body: JSON.stringify({ transcript, save: true }),
       });
       setAnalysis(res);
+      refreshAiSuggestions();
     } catch (e) {
       console.error(e);
     } finally {
       setAnalyzing(false);
+    }
+  }
+
+  async function markSuggestion(id: string, decision: "accepted" | "rejected") {
+    try {
+      await apiFetch("/api/sales/ai-suggestions", {
+        method: "PATCH",
+        body: JSON.stringify({ id, decision }),
+      });
+      refreshAiSuggestions();
+    } catch (e) {
+      console.error(e);
     }
   }
 
@@ -137,6 +190,8 @@ export default function SalesCallCoachPage() {
     return "text-orange-600 font-bold";
   }
 
+  const normalizedClickUp = clickup?.byNormalizedStatus || {};
+
   return (
     <div className="min-h-screen">
       <CommandHeader title="Sales & Call Coach" />
@@ -146,8 +201,8 @@ export default function SalesCallCoachPage() {
           <MetricCard label="WON" value={stats.won} sub="Converted" accent="green" />
           <MetricCard label="ACTIVE" value={stats.active} sub="Pipeline" accent="orange" />
           <MetricCard label="LOST" value={stats.lost} sub="Closed" accent="slate" />
-          <MetricCard label="CEO Reacts" value={behaviour.react} sub="While recording" accent="red" />
-          <MetricCard label="CEO Responds" value={behaviour.respond} sub="localStorage" accent="green" />
+          <MetricCard label="AI Saved" value={aiSuggestions.length} sub="latest suggestions" accent="purple" />
+          <MetricCard label="ClickUp" value={clickup?.total || 0} sub="mirror tasks" accent="green" />
         </div>
         {recording && (
           <p className="text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
@@ -201,9 +256,7 @@ export default function SalesCallCoachPage() {
                 type="button"
                 onClick={recording ? stopRecording : startRecording}
                 className={`mb-3 px-4 py-2 rounded-lg text-sm font-semibold ${
-                  recording
-                    ? "bg-red-600 text-white animate-pulse"
-                    : "bg-slate-800 text-white"
+                  recording ? "bg-red-600 text-white animate-pulse" : "bg-slate-800 text-white"
                 }`}
               >
                 {recording ? "● Stop Recording" : "● Start Recording"}
@@ -229,47 +282,99 @@ export default function SalesCallCoachPage() {
               disabled={analyzing || !transcript.trim()}
               className="mt-3 w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm disabled:opacity-50"
             >
-              {analyzing ? "Analyzing…" : "Analyze with AI (Sales Psychology)"}
+              {analyzing ? "Analyzing…" : "Analyze & Save with AI Coach"}
             </button>
             {analysis && (
               <div className="mt-4 p-4 bg-blue-50 rounded-lg text-sm space-y-2">
-                <p className="font-semibold text-blue-900">Tone: {analysis.tone}</p>
+                <p className="font-semibold text-blue-900">
+                  Tone: {analysis.tone} {analysis.suggestionId ? `· Saved ${analysis.suggestionId.slice(0, 8)}` : ""}
+                </p>
                 <ul className="list-disc pl-5 text-slate-700 space-y-1">
                   {analysis.suggestions.map((s, i) => (
                     <li key={i}>{s}</li>
                   ))}
                 </ul>
-                <p className="text-xs text-slate-500 mt-2">
-                  CRM: {analysis.crmActions.join(" · ")}
-                </p>
+                {analysis.nextAction && <p className="text-sm font-semibold text-slate-700">Next: {analysis.nextAction}</p>}
+                <p className="text-xs text-slate-500 mt-2">CRM: {analysis.crmActions.join(" · ")}</p>
               </div>
             )}
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h3 className="font-bold text-slate-800 text-sm mb-3">
-              QUICK ACTIONS: CALL & EMAIL TEAM
-            </h3>
-            <div className="space-y-3">
-              <ContactRow name="Rahul (Sales)" email="rahul@flexiflair.com" />
-              <div className="border-t pt-3">
-                <p className="text-xs font-semibold text-slate-500 uppercase mb-2">
-                  WhatsApp / Email
-                </p>
-                <a
-                  href="https://wa.me/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block text-sm text-emerald-600 hover:underline"
-                >
-                  Open WhatsApp Web →
-                </a>
-                <a
-                  href="mailto:sales@flexiflair.com"
-                  className="block text-sm text-blue-600 hover:underline mt-1"
-                >
-                  Email sales team →
-                </a>
+          <div className="space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <h3 className="font-bold text-slate-800 text-sm mb-3">AI SUGGESTIONS</h3>
+              <div className="space-y-3 max-h-[360px] overflow-auto pr-1">
+                {aiSuggestions.length === 0 ? (
+                  <p className="text-sm text-slate-500">No saved AI suggestions yet.</p>
+                ) : (
+                  aiSuggestions.map((s) => (
+                    <div key={s.id} className="rounded-lg border border-slate-200 p-3 bg-slate-50">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-bold text-blue-700 uppercase">{s.tone || "analysis"}</p>
+                        <p className="text-[11px] text-slate-400">
+                          {s.created_at ? new Date(s.created_at).toLocaleDateString("en-IN") : ""}
+                        </p>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-700 line-clamp-3">{s.summary || "—"}</p>
+                      {s.next_action && <p className="mt-2 text-xs font-semibold text-slate-600">Next: {s.next_action}</p>}
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => markSuggestion(s.id, "accepted")}
+                          className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50"
+                          disabled={Boolean(s.accepted_at)}
+                        >
+                          {s.accepted_at ? "Accepted" : "Accept"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => markSuggestion(s.id, "rejected")}
+                          className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-600 disabled:opacity-50"
+                          disabled={Boolean(s.rejected_at)}
+                        >
+                          {s.rejected_at ? "Rejected" : "Reject"}
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <h3 className="font-bold text-slate-800 text-sm mb-3">CLICKUP MIRROR</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <MiniStat label="Followup" value={normalizedClickUp.FOLLOWUP_SCHEDULED || 0} />
+                <MiniStat label="Not Connected" value={normalizedClickUp.NOT_CONNECTED || 0} />
+                <MiniStat label="Details Shared" value={normalizedClickUp.DETAILS_SHARED || 0} />
+                <MiniStat label="Not Interested" value={normalizedClickUp.NOT_INTERESTED || 0} />
+              </div>
+              <div className="mt-4 space-y-2 max-h-[260px] overflow-auto pr-1">
+                {(clickup?.recent || []).map((task) => (
+                  <div key={task.id} className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+                    <p className="text-sm font-semibold text-slate-800 line-clamp-1">{task.name}</p>
+                    <p className="text-xs text-slate-500">
+                      {task.status || "—"} → <span className="font-semibold text-blue-700">{task.normalized_status}</span>
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-[11px] text-slate-500">ClickUp is a mirror only, not CRM master.</p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <h3 className="font-bold text-slate-800 text-sm mb-3">QUICK ACTIONS: CALL & EMAIL TEAM</h3>
+              <div className="space-y-3">
+                <ContactRow name="Rahul (Sales)" email="rahul@flexiflair.com" />
+                <div className="border-t pt-3">
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-2">WhatsApp / Email</p>
+                  <a href="https://wa.me/" target="_blank" rel="noreferrer" className="block text-sm text-emerald-600 hover:underline">
+                    Open WhatsApp Web →
+                  </a>
+                  <a href="mailto:sales@flexiflair.com" className="block text-sm text-blue-600 hover:underline mt-1">
+                    Email sales team →
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -279,15 +384,7 @@ export default function SalesCallCoachPage() {
   );
 }
 
-function TabBtn({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
+function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
@@ -300,6 +397,15 @@ function TabBtn({
     >
       {children}
     </button>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+      <p className="text-[11px] uppercase font-semibold text-slate-500">{label}</p>
+      <p className="text-xl font-black text-slate-900">{value}</p>
+    </div>
   );
 }
 
