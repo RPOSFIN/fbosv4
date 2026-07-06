@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import CommandHeader from "@/components/command-center/command-header";
 import MetricCard from "@/components/command-center/metric-card";
 import FollowupsPanel from "@/components/sales/followups-panel";
+import SalesDataQualityPanel from "@/components/sales/data-quality-panel";
+import ClickUpDeepAuditPanel from "@/components/sales/clickup-deep-audit-panel";
 import { pageShell } from "@/components/command-center/theme";
 import { apiFetch } from "@/lib/api/client";
 import {
@@ -310,6 +312,11 @@ export default function SalesCallCoachPage() {
             ● Behaviour capture ON — react/response counts saved locally ({behaviour.sessions} sessions)
           </p>
         )}
+
+        <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
+          <SalesDataQualityPanel onLeadUpdated={refreshCrmLeads} />
+          <ClickUpDeepAuditPanel />
+        </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <LeadPanel
