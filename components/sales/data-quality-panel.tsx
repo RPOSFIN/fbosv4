@@ -48,7 +48,7 @@ const emptyStats = {
   leads_with_mobile: 0,
 };
 
-export default function SalesDataQualityPanel() {
+export default function SalesDataQualityPanel({ onLeadUpdated }: { onLeadUpdated?: () => void }) {
   const [filter, setFilter] = useState<QualityFilter>("missing_mobile");
   const [search, setSearch] = useState("");
   const [stats, setStats] = useState(emptyStats);
@@ -56,6 +56,10 @@ export default function SalesDataQualityPanel() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ contact_person: "", mobile: "", email: "" });
+  const [message, setMessage] = useState("");
 
   const refresh = useCallback(() => {
     const params = new URLSearchParams({ filter, limit: "50" });
@@ -80,6 +84,38 @@ export default function SalesDataQualityPanel() {
     refresh();
   }, [refresh]);
 
+  function startEdit(lead: QualityLead) {
+    setEditingId(lead.id);
+    setMessage("");
+    setDraft({
+      contact_person: lead.contact_person || "",
+      mobile: lead.mobile || "",
+      email: lead.email || "",
+    });
+  }
+
+  async function saveLead(id: string) {
+    setSavingId(id);
+    setError("");
+    setMessage("");
+    try {
+      await apiFetch("/api/sales/data-quality", {
+        method: "PATCH",
+        body: JSON.stringify({ id, ...draft }),
+      });
+      setEditingId(null);
+      setMessage("Lead contact updated. Followup actions will use fresh Supabase CRM data.");
+      refresh();
+      onLeadUpdated?.();
+      window.dispatchEvent(new Event("sales:lead-contact-updated"));
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : "Failed to update lead contact");
+    } finally {
+      setSavingId(null);
+    }
+  }
+
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
       <div className="border-b bg-amber-50 px-4 py-3">
@@ -93,6 +129,7 @@ export default function SalesDataQualityPanel() {
           </button>
         </div>
         {error && <p className="mt-2 rounded-md bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">{error}</p>}
+        {message && <p className="mt-2 rounded-md bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">{message}</p>}
       </div>
 
       <div className="p-4 space-y-4">
@@ -114,7 +151,7 @@ export default function SalesDataQualityPanel() {
 
         <p className="text-xs font-semibold text-slate-500">Showing {leads.length} of {total} matching leads</p>
 
-        <div className="overflow-auto max-h-[320px]">
+        <div className="overflow-auto max-h-[360px]">
           <table className="w-full text-sm">
             <thead className="bg-slate-100 text-slate-600 text-xs uppercase sticky top-0">
               <tr>
@@ -123,20 +160,46 @@ export default function SalesDataQualityPanel() {
                 <th className="text-left p-3">Mobile</th>
                 <th className="text-left p-3">Email</th>
                 <th className="text-left p-3">Status</th>
+                <th className="text-left p-3">Action</th>
               </tr>
             </thead>
             <tbody>
               {leads.length === 0 ? (
-                <tr><td colSpan={5} className="p-4 text-sm text-slate-500">No leads found for this filter.</td></tr>
-              ) : leads.map((lead) => (
-                <tr key={lead.id} className="border-t border-slate-100 hover:bg-slate-50">
-                  <td className="p-3 font-medium">{lead.company_name || "—"}</td>
-                  <td className="p-3 text-slate-600">{lead.contact_person || <Missing />}</td>
-                  <td className="p-3 font-mono text-xs">{lead.clean_mobile || lead.mobile || <Missing />}</td>
-                  <td className="p-3 text-slate-600">{lead.email || <Missing />}</td>
-                  <td className="p-3 text-xs font-bold text-blue-700">{lead.status || "—"}</td>
-                </tr>
-              ))}
+                <tr><td colSpan={6} className="p-4 text-sm text-slate-500">No leads found for this filter.</td></tr>
+              ) : leads.map((lead) => {
+                const isEditing = editingId === lead.id;
+                return (
+                  <tr key={lead.id} className="border-t border-slate-100 hover:bg-slate-50 align-top">
+                    <td className="p-3 font-medium min-w-[180px]">{lead.company_name || "—"}</td>
+                    <td className="p-3 text-slate-600 min-w-[150px]">
+                      {isEditing ? (
+                        <input value={draft.contact_person} onChange={(e) => setDraft((d) => ({ ...d, contact_person: e.target.value }))} className="w-full rounded border border-slate-200 px-2 py-1 text-xs" placeholder="Contact person" />
+                      ) : lead.contact_person || <Missing />}
+                    </td>
+                    <td className="p-3 font-mono text-xs min-w-[140px]">
+                      {isEditing ? (
+                        <input value={draft.mobile} onChange={(e) => setDraft((d) => ({ ...d, mobile: e.target.value }))} className="w-full rounded border border-slate-200 px-2 py-1 text-xs" placeholder="10 digit mobile" />
+                      ) : lead.clean_mobile || lead.mobile || <Missing />}
+                    </td>
+                    <td className="p-3 text-slate-600 min-w-[180px]">
+                      {isEditing ? (
+                        <input value={draft.email} onChange={(e) => setDraft((d) => ({ ...d, email: e.target.value }))} className="w-full rounded border border-slate-200 px-2 py-1 text-xs" placeholder="Email" />
+                      ) : lead.email || <Missing />}
+                    </td>
+                    <td className="p-3 text-xs font-bold text-blue-700">{lead.status || "—"}</td>
+                    <td className="p-3 min-w-[140px]">
+                      {isEditing ? (
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" onClick={() => saveLead(lead.id)} disabled={savingId === lead.id} className="rounded bg-emerald-600 px-2 py-1 text-xs font-bold text-white disabled:opacity-50">{savingId === lead.id ? "Saving…" : "Save"}</button>
+                          <button type="button" onClick={() => setEditingId(null)} className="rounded border border-slate-300 px-2 py-1 text-xs font-bold text-slate-600">Cancel</button>
+                        </div>
+                      ) : (
+                        <button type="button" onClick={() => startEdit(lead)} className="rounded bg-blue-600 px-2 py-1 text-xs font-bold text-white">Edit</button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
