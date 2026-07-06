@@ -56,29 +56,19 @@ export async function GET() {
   const bankCash = getAmount(heads, "bank_cash");
   const receivables = getAmount(heads, "receivables");
   const payables = getAmount(heads, "payables");
-  const operatingExpenses = getAmount(heads, "operating_expenses");
-  const gst = getAmount(heads, "gst");
-  const profitLoss = getAmount(heads, "profit_loss");
-  const balanceSheet = getAmount(heads, "balance_sheet");
-  const ledger = getAmount(heads, "ledger");
 
   const grossProfit = sales - purchase;
-  const netProfit = profitLoss || grossProfit - operatingExpenses;
   const netCashFlow = receipts - payments;
   const workingCapitalGap = receivables - payables;
-  const grossProfitPct = sales > 0 ? Math.round((grossProfit / sales) * 100) : 0;
-  const netProfitPct = sales > 0 ? Math.round((netProfit / sales) * 100) : 0;
-  const healthScore = Math.min(
-    100,
-    Math.max(0, Math.round((netProfitPct / 100) * 40 + (bankCash >= 0 ? 30 : 10) + 30))
-  );
+  const netProfitPct = sales > 0 ? Math.round((grossProfit / sales) * 100) : 0;
+  const healthScore = Math.min(100, Math.max(0, Math.round((netProfitPct / 100) * 40 + (bankCash >= 0 ? 30 : 10) + 30)));
 
   return apiSuccess({
     top: {
       sales: fmtMoney(sales),
       collections: fmtMoney(receipts),
       payments: fmtMoney(payments),
-      expenses: fmtMoney(operatingExpenses),
+      expenses: fmtMoney(payments),
       purchase: fmtMoney(purchase),
       bankCash: fmtMoney(bankCash),
       netCashFlow: fmtMoney(netCashFlow),
@@ -103,13 +93,7 @@ export async function GET() {
       purchase,
       payments,
       collections: receipts,
-      expenses: operatingExpenses,
-      operatingExpenses,
-      gst,
-      grossProfit,
-      netProfit,
-      balanceSheet,
-      ledger,
+      expenses: payments,
     },
     trends: {
       salesTrend: 0,
@@ -123,13 +107,9 @@ export async function GET() {
       revenue: fmtMoney(sales),
       directCost: fmtMoney(purchase),
       grossProfit: fmtMoney(grossProfit),
-      operatingExpenses: fmtMoney(operatingExpenses),
-      ebitda: fmtMoney(netProfit),
-      netProfit: fmtMoney(netProfit),
-      grossProfitPct: `${grossProfitPct}%`,
+      operatingExpenses: fmtMoney(0),
+      ebitda: fmtMoney(grossProfit),
       netProfitPct: `${netProfitPct}%`,
-      qcStatus: getQc(heads, "profit_loss"),
-      source: getSource(heads, "profit_loss"),
     },
     cashflow: {
       openingCash: fmtMoney(0),
@@ -150,10 +130,6 @@ export async function GET() {
       bankCash: fmtMoney(bankCash),
       netWorth: fmtMoney(workingCapitalGap + bankCash),
       currentRatio: payables > 0 ? ((receivables + Math.max(bankCash, 0)) / payables).toFixed(1) : "—",
-      derivedTotal: fmtMoney(balanceSheet),
-      ledgerDelta: fmtMoney(ledger),
-      qcStatus: getQc(heads, "balance_sheet"),
-      source: getSource(heads, "balance_sheet"),
     },
     bankLoan: {
       ebitdaPct: `${netProfitPct}%`,
@@ -173,8 +149,6 @@ export async function GET() {
     reconciliation: {
       bank: getQc(heads, "bank_cash") === "ok" ? "OK" : "Needs Review",
       salePurchaseGap: fmtMoney(Math.abs(sales - purchase)),
-      gst: getQc(heads, "gst") === "ok" ? "OK" : "Needs Review",
-      balanceSheet: getQc(heads, "balance_sheet") === "ok" ? "OK" : "Needs Review",
     },
     qc: {
       source: "finance_heads_v2",
@@ -185,11 +159,6 @@ export async function GET() {
       bank_cash_rows: getRows(heads, "bank_cash"),
       receivable_rows: getRows(heads, "receivables"),
       payable_rows: getRows(heads, "payables"),
-      operating_expense_rows: getRows(heads, "operating_expenses"),
-      gst_rows: getRows(heads, "gst"),
-      profit_loss_rows: getRows(heads, "profit_loss"),
-      balance_sheet_rows: getRows(heads, "balance_sheet"),
-      ledger_rows: getRows(heads, "ledger"),
       sales_source: getSource(heads, "sales"),
       purchase_source: getSource(heads, "purchase"),
       receipt_source: getSource(heads, "receipts"),
@@ -197,11 +166,6 @@ export async function GET() {
       bank_cash_source: getSource(heads, "bank_cash"),
       receivable_source: getSource(heads, "receivables"),
       payable_source: getSource(heads, "payables"),
-      operating_expense_source: getSource(heads, "operating_expenses"),
-      gst_source: getSource(heads, "gst"),
-      profit_loss_source: getSource(heads, "profit_loss"),
-      balance_sheet_source: getSource(heads, "balance_sheet"),
-      ledger_source: getSource(heads, "ledger"),
       sales_qc: getQc(heads, "sales"),
       purchase_qc: getQc(heads, "purchase"),
       receipt_qc: getQc(heads, "receipts"),
@@ -209,11 +173,6 @@ export async function GET() {
       bank_cash_qc: getQc(heads, "bank_cash"),
       receivable_qc: getQc(heads, "receivables"),
       payable_qc: getQc(heads, "payables"),
-      operating_expense_qc: getQc(heads, "operating_expenses"),
-      gst_qc: getQc(heads, "gst"),
-      profit_loss_qc: getQc(heads, "profit_loss"),
-      balance_sheet_qc: getQc(heads, "balance_sheet"),
-      ledger_qc: getQc(heads, "ledger"),
       note: "Matrix values read from FinanceOS v2 heads. Legacy finance_import_queue and finance_transactions are not owner sources.",
     },
     issues: [],
