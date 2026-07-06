@@ -116,22 +116,23 @@ export default function CanonicalTallyDashboardV2() {
         <Card label="Collections V2" value={money(matrix?.raw?.collections)} />
         <Card label="Free Cash V2" value={money(matrix?.raw?.freeCash)} />
         <Card label="Rows" value={vouchers?.row_count || 0} />
-        <Card label="Option Source" value={options.source || "v2"} />
+        <Card label="Ledger Options" value={ledgerOptions.length} />
       </section>
 
-      <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm grid grid-cols-2 lg:grid-cols-5 gap-3">
         <Meta label="Report" value={report} />
         <Meta label="Voucher Type" value={options.voucher_type || voucherType || "Auto"} />
         <Meta label="Party Options" value={partyOptions.length} />
         <Meta label="Ledger Options" value={ledgerOptions.length} />
+        <Meta label="Option Source" value={options.source || "v2"} />
       </section>
 
       <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <Panel title="Vouchers" count={vouchers?.row_count || 0}>
-          <table className="min-w-full text-xs"><thead className="bg-slate-100 text-slate-600"><tr><th className="p-2 text-left">Date</th><th className="p-2 text-left">No</th><th className="p-2 text-left">Type</th><th className="p-2 text-left">Party</th><th className="p-2 text-right">Amount</th></tr></thead><tbody>{(vouchers?.rows || []).slice(0, 120).map((row) => <tr key={row.id} className="border-b border-slate-100"><td className="p-2">{row.voucher_date || "-"}</td><td className="p-2 font-semibold">{row.voucher_no || "-"}</td><td className="p-2">{row.voucher_type || "-"}</td><td className="p-2">{row.party_name || row.ledger_name || "-"}</td><td className="p-2 text-right font-bold">{money(row.amount || row.debit_total || row.credit_total)}</td></tr>)}</tbody></table>
+          <table className="min-w-full text-xs"><thead className="bg-slate-100 text-slate-600"><tr><th className="p-2 text-left">Date</th><th className="p-2 text-left">No</th><th className="p-2 text-left">Type</th><th className="p-2 text-left">Party</th><th className="p-2 text-left">Ledger</th><th className="p-2 text-right">Amount</th></tr></thead><tbody>{(vouchers?.rows || []).slice(0, 120).map((row) => <tr key={row.id} className="border-b border-slate-100"><td className="p-2">{row.voucher_date || "-"}</td><td className="p-2 font-semibold">{row.voucher_no || "-"}</td><td className="p-2">{row.voucher_type || "-"}</td><td className="p-2">{row.party_name || "-"}</td><td className="p-2">{row.ledger_name || "-"}</td><td className="p-2 text-right font-bold">{money(row.amount || row.debit_total || row.credit_total)}</td></tr>)}</tbody></table>
         </Panel>
-        <Panel title="Expenses" count={expenses?.row_count || 0}>
-          <div className="space-y-2">{(expenses?.rows || []).slice(0, 30).map((row, index) => <div key={`${row.party_name}-${row.ledger_name}-${index}`} className="rounded border border-slate-200 p-2 text-sm"><div className="font-bold">{row.party_name || row.ledger_name || "Unassigned"}</div><div className="text-xs text-slate-500">{row.category || "expense"} · {money(row.total_amount)}</div></div>)}</div>
+        <Panel title="Ledgers / Expenses" count={expenses?.row_count || ledgerOptions.length || 0}>
+          <div className="space-y-2">{(expenses?.rows || []).slice(0, 30).map((row, index) => <div key={`${row.party_name}-${row.ledger_name}-${index}`} className="rounded border border-slate-200 p-2 text-sm"><div className="font-bold">{row.ledger_name || row.party_name || "Unassigned"}</div><div className="text-xs text-slate-500">{row.category || "ledger"} · {money(row.total_amount)}</div></div>)}{!(expenses?.rows || []).length && ledgerOptions.slice(0, 40).map((name) => <div key={name} className="rounded border border-slate-200 p-2 text-sm font-semibold">{name}</div>)}</div>
         </Panel>
       </section>
     </main>
