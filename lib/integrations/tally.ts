@@ -14,6 +14,7 @@ export type TallySyncResult = {
   endpoint?: string;
   message: string;
   recordsQueued?: number;
+  recordsImported?: number;
   preview?: Record<string, unknown>;
   fixSteps?: string[];
 };
@@ -21,67 +22,150 @@ export type TallySyncResult = {
 /** @deprecated Use TallySyncResult */
 export type TallyImportResult = TallySyncResult;
 
-async function queueFinanceRecords(
-  records: Array<{
-    company?: string;
-    record_type: string;
-    description?: string;
-    amount: number;
-    voucher_date?: string | null;
-    source: "demo" | "tally" | "xml";
-    raw_xml?: string;
-  }>
-): Promise<number> {
+type FinanceRecord = {
+  company?: string;
+  record_type: string;
+  description?: string;
+  amount: number;
+  voucher_date?: string | null;
+  source: "demo" | "tally" | "xml";
+  raw_xml?: string;
+  voucher_no?: string | null;
+  reference?: string | null;
+  ledger_name?: string | null;
+};
+
+type PersistResult = { queued: number; imported: number; errors: string[] };
+
+function clean(value: string | undefined | null) {
+  return (value || "").replace(/<!\[CDATA\[|\]\]>/g, "").trim();
+}
+
+function tag(block: string, name: string) {
+  return clean(block.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)<\\/${name}>`, "i"))?.[1]);
+}
+
+function attr(block: string, name: string) {
+  return clean(block.match(new RegExp(`${name}="([^"]+)"`, "i"))?.[1]);
+}
+
+function parseTallyDate(raw: string) {
+  const value = clean(raw).replace(/-/g, "");
+  if (/^\d{8}$/.test(value)) return `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
+  return null;
+}
+
+function parseAmount(raw: string) {
+  const normalized = clean(raw).replace(/,/g, "");
+  const amount = Number.parseFloat(normalized);
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+function parseTallyVoucherXml(xml: string) {
+  const vouchers: Array<Omit<FinanceRecord, "company" | "source" | "raw_xml">> = [];
+  const blocks = xml.match(/<VOUCHER[\s\S]*?<\/VOUCHER>/gi) || [];
+
+  for (const block of blocks) {
+    const voucherType = attr(block, "VCHTYPE") || tag(block, "VOUCHERTYPENAME") || "voucher";
+    const voucherNo = tag(block, "VOUCHERNUMBER") || tag(block, "REFERENCE") || tag(block, "GUID") || null;
+    const narration = tag(block, "NARRATION");
+    const voucherDate = parseTallyDate(tag(block, "DATE"));
+    const entries = block.match(/<ALLLEDGERENTRIES\.LIST[\s\S]*?<\/ALLLEDGERENTRIES\.LIST>/gi) || [];
+
+    if (entries.length === 0) {
+      vouchers.push({
+        record_type: voucherType.toLowerCase(),
+        description: narration || voucherType,
+        amount: parseAmount(tag(block, "AMOUNT")),
+        voucher_date: voucherDate,
+        voucher_no: voucherNo,
+        reference: voucherNo,
+        ledger_name: tag(block, "PARTYLEDGERNAME") || null,
+      });
+      continue;
+    }
+
+    for (const entry of entries) {
+      const ledger = tag(entry, "LEDGERNAME") || tag(block, "PARTYLEDGERNAME") || voucherType;
+      const amount = parseAmount(tag(entry, "AMOUNT"));
+      vouchers.push({
+        record_type: voucherType.toLowerCase(),
+        description: narration || `${voucherType} · ${ledger}`,
+        amount,
+        voucher_date: voucherDate,
+        voucher_no: voucherNo,
+        reference: voucherNo || `${voucherType}-${voucherDate || "no-date"}-${ledger}-${amount}`,
+        ledger_name: ledger,
+      });
+    }
+  }
+
+  return vouchers;
+}
+
+function buildVoucherExportXml(company: string) {
+  return `<ENVELOPE>
+<HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Collection</TYPE><ID>FinanceOSVouchers</ID></HEADER>
+<BODY><DESC>
+<STATICVARIABLES><SVCURRENTCOMPANY>${company}</SVCURRENTCOMPANY><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT></STATICVARIABLES>
+<TDL><TDLMESSAGE>
+<COLLECTION NAME="FinanceOSVouchers" ISMODIFY="No"><TYPE>Voucher</TYPE><FETCH>DATE,VOUCHERTYPENAME,VOUCHERNUMBER,REFERENCE,PARTYLEDGERNAME,NARRATION,ALLLEDGERENTRIES.LIST,LEDGERNAME,AMOUNT</FETCH></COLLECTION>
+</TDLMESSAGE></TDL>
+</DESC></BODY>
+</ENVELOPE>`;
+}
+
+async function persistFinanceRecords(records: FinanceRecord[]): Promise<PersistResult> {
   const supabase = getAdminClient();
-  if (!supabase || !records.length) return 0;
+  if (!supabase) return { queued: 0, imported: 0, errors: ["Supabase admin client unavailable"] };
+  if (!records.length) return { queued: 0, imported: 0, errors: [] };
 
-  const { error: tableErr } = await supabase
-    .from("finance_import_queue")
-    .select("id", { head: true, count: "exact" });
-
-  if (tableErr) return 0;
-
-  const payload = records.map((r) => ({
+  const errors: string[] = [];
+  const queuePayload = records.map((r) => ({
     company: r.company || null,
     record_type: r.record_type,
     description: r.description || null,
     amount: r.amount,
     voucher_date: r.voucher_date || null,
-    status: "queued" as const,
+    status: "queued",
     source: r.source,
     raw_xml: r.raw_xml || null,
+    voucher_no: r.voucher_no || null,
+    reference: r.reference || r.voucher_no || null,
+    ledger_name: r.ledger_name || null,
   }));
 
-  const { data, error } = await supabase
+  const { data: queued, error: queueError } = await supabase
     .from("finance_import_queue")
-    .insert(payload)
+    .insert(queuePayload)
+    .select("id, reference, voucher_no");
+
+  if (queueError) errors.push(`finance_import_queue: ${queueError.message}`);
+
+  const txPayload = records.map((r, index) => ({
+    source: r.source,
+    company: r.company || null,
+    transaction_type: r.record_type,
+    voucher_type: r.record_type,
+    voucher_no: r.voucher_no || null,
+    voucher_date: r.voucher_date || null,
+    ledger_name: r.ledger_name || r.description || null,
+    amount: r.amount,
+    reference_no: r.reference || r.voucher_no || queued?.[index]?.reference || queued?.[index]?.voucher_no || null,
+    queue_id: queued?.[index]?.id || null,
+    sync_status: r.source === "tally" ? "pending_tally" : "synced",
+    sync_note: r.description || null,
+    tally_sync_at: r.source === "tally" ? new Date().toISOString() : null,
+  }));
+
+  const { data: imported, error: txError } = await supabase
+    .from("finance_transactions")
+    .insert(txPayload)
     .select("id");
 
-  if (!error) return data?.length || 0;
+  if (txError) errors.push(`finance_transactions: ${txError.message}`);
 
-  const { data: logged, error: logErr } = await supabase
-    .from("activity_logs")
-    .insert(
-      records.map((r) => ({
-        entity_type: "finance_import",
-        action: "queued",
-        notes: JSON.stringify({
-          company: r.company,
-          record_type: r.record_type,
-          description: r.description,
-          amount: r.amount,
-          source: r.source,
-        }),
-      }))
-    )
-    .select("id");
-
-  if (logErr) {
-    console.warn("[tally] queue records:", logErr.message);
-    return 0;
-  }
-
-  return logged?.length || 0;
+  return { queued: queued?.length || 0, imported: imported?.length || 0, errors };
 }
 
 async function checkTallyGateway(endpoint: string): Promise<boolean> {
@@ -100,11 +184,9 @@ async function checkTallyGateway(endpoint: string): Promise<boolean> {
 
 async function syncTallyDemo(): Promise<TallySyncResult> {
   const xml = process.env.TALLY_DEMO_XML?.trim() || TALLY_DEMO_XML;
-  const company =
-    process.env.TALLY_COMPANY_NAME?.trim() || "Flexiflair Demo Co";
+  const company = process.env.TALLY_COMPANY_NAME?.trim() || "Flexiflair Demo Co";
   const vouchers = parseTallyDemoXml(xml);
-
-  const recordsQueued = await queueFinanceRecords(
+  const persisted = await persistFinanceRecords(
     vouchers.map((v) => ({
       company,
       record_type: v.record_type,
@@ -113,20 +195,18 @@ async function syncTallyDemo(): Promise<TallySyncResult> {
       voucher_date: v.voucher_date,
       source: "demo" as const,
       raw_xml: xml.slice(0, 500),
+      reference: `${v.record_type}-${v.voucher_date || "demo"}-${v.amount}`,
+      ledger_name: v.description,
     }))
   );
 
   return {
-    ok: true,
+    ok: persisted.errors.length === 0,
     demo: true,
-    message: `Demo mode — ${vouchers.length} finance record(s) parsed${recordsQueued ? `, ${recordsQueued} queued` : ""}`,
-    recordsQueued: recordsQueued || vouchers.length,
-    preview: {
-      company,
-      action: "sync_ledgers_demo",
-      records: vouchers.length,
-      sample: vouchers.slice(0, 2),
-    },
+    message: `Demo mode — ${vouchers.length} finance record(s) parsed, ${persisted.queued} queued, ${persisted.imported} imported${persisted.errors.length ? ` (${persisted.errors.join("; ")})` : ""}`,
+    recordsQueued: persisted.queued,
+    recordsImported: persisted.imported,
+    preview: { company, action: "sync_ledgers_demo", records: vouchers.length, sample: vouchers.slice(0, 2) },
   };
 }
 
@@ -137,163 +217,83 @@ export async function syncTally(): Promise<TallySyncResult> {
 
   if (!host) {
     const demo = await syncTallyDemo();
-    return {
-      ...demo,
-      ok: true,
-      demo: true,
-      message: `Tally cloud host not set — enter IP/hostname below and click Save & Test (port ${port}, company: ${company || "not set"})`,
-      fixSteps: [
-        "Integration Hub → Tally card → enter Cloud Host → Save & Test",
-        `Port ${port} (TALLY_PORT) · Company: ${company || "set TALLY_COMPANY_NAME"}`,
-        "Ensure Tally Cloud XML gateway is enabled on that port",
-      ],
-    };
+    return { ...demo, ok: false, demo: true, message: `Tally cloud host not set — records were demo only. Set TALLY_HOST and TALLY_COMPANY_NAME for live sync.` };
   }
 
   if (isLocalTallyHost(host)) {
     const demo = await syncTallyDemo();
     return {
       ...demo,
-      ok: true,
+      ok: false,
       demo: true,
       endpoint,
-      message: `TALLY_HOST is localhost — Tally is on Cloud, not local. Set TALLY_HOST to your cloud server IP/hostname (gateway port ${port}). Current: localhost:${port}`,
-      fixSteps: [
-        `Remove TALLY_HOST=localhost from .env.local`,
-        `Set TALLY_HOST=your-tally-cloud-server-ip-or-hostname (port ${port} via TALLY_PORT)`,
-        "Or enter cloud hostname in Integration Hub → Tally card below",
-        `Company: "${company || "not set"}" — must match Tally exactly`,
-        ...tallyCloudFixSteps("your-cloud-server", port).slice(1),
-      ],
+      message: `TALLY_HOST is localhost — Tally is on Cloud, not local. Set TALLY_HOST to your cloud server IP/hostname (gateway port ${port}).`,
+      fixSteps: [`Set TALLY_HOST=your-tally-cloud-server-ip-or-hostname`, `Set TALLY_PORT=${port}`, `Set TALLY_COMPANY_NAME exactly as shown in Tally`],
     };
   }
 
   if (!company) {
     const reachable = endpoint ? await checkTallyGateway(endpoint) : false;
-
-    if (!reachable) {
-      const demo = await syncTallyDemo();
-      return {
-        ...demo,
-        ok: true,
-        demo: true,
-        endpoint,
-        message: `Tally cloud gateway unreachable at ${endpoint} — showing demo data. Verify XML gateway on port ${port} is open on your cloud server.`,
-        fixSteps: tallyCloudFixSteps(host, port),
-      };
-    }
-
     const demo = await syncTallyDemo();
     return {
       ...demo,
+      ok: false,
       endpoint,
-      message: `TALLY_COMPANY_NAME missing — cloud gateway reachable at ${endpoint}. ${demo.message}. Add company name for live sync.`,
-      fixSteps: [
-        "In Tally: F3 → Company Info → copy exact company name",
-        "Set TALLY_COMPANY_NAME=Your Exact Company Name in .env.local",
-      ],
+      message: reachable ? `Tally gateway reachable at ${endpoint}, but TALLY_COMPANY_NAME is missing. Demo rows imported only.` : `Tally gateway unreachable at ${endpoint}. Demo rows imported only.`,
+      fixSteps: reachable ? ["Set exact TALLY_COMPANY_NAME from Tally F3 Company Info"] : tallyCloudFixSteps(host, port),
     };
   }
 
   const { configured } = getTallyConfig();
-  if (!configured && hostSource === "none") {
-    return syncTallyDemo();
-  }
+  if (!configured && hostSource === "none") return syncTallyDemo();
 
   try {
-    const xmlRequest = `<ENVELOPE><HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Data</TYPE><ID>Ledgers</ID></HEADER><BODY><DESC><STATICVARIABLES><SVCURRENTCOMPANY>${company}</SVCURRENTCOMPANY></STATICVARIABLES></DESC></BODY></ENVELOPE>`;
-
     const res = await fetch(endpoint!, {
       method: "POST",
       headers: { "Content-Type": "text/xml" },
-      body: xmlRequest,
-      signal: AbortSignal.timeout(12000),
+      body: buildVoucherExportXml(company),
+      signal: AbortSignal.timeout(20000),
     });
-
     const xml = await res.text();
-    const vouchers = parseTallyDemoXml(xml);
+    const vouchers = parseTallyVoucherXml(xml);
 
-    if (vouchers.length > 0) {
-      const recordsQueued = await queueFinanceRecords(
-        vouchers.map((v) => ({
-          company,
-          record_type: v.record_type,
-          description: v.description,
-          amount: v.amount,
-          voucher_date: v.voucher_date,
-          source: "tally" as const,
-          raw_xml: xml.slice(0, 2000),
-        }))
-      );
-
-      const sheetPush = await pushTallyRecordsToSheet(
-        vouchers.map((v) => ({
-          company,
-          description: v.description,
-          amount: v.amount,
-          voucher_date: v.voucher_date,
-          record_type: v.record_type,
-        }))
-      );
-
+    if (vouchers.length === 0) {
       return {
-        ok: true,
+        ok: false,
         demo: false,
         endpoint,
-        message: `Tally cloud sync — ${vouchers.length} record(s) from ${endpoint}${recordsQueued ? `, ${recordsQueued} queued` : ""}${sheetPush.ok ? " · pushed to GSheet" : ""}`,
-        recordsQueued,
-        preview: {
-          company,
-          records: vouchers.length,
-          hostSource,
-          sheetWrite: sheetPush.message,
-        },
+        message: `Tally gateway responded but returned 0 voucher rows. Check company name and Tally XML collection permissions. No dummy ledger row was inserted.`,
+        recordsQueued: 0,
+        recordsImported: 0,
+        preview: { company, hostSource, xmlPreview: xml.slice(0, 300) },
       };
     }
-  } catch {
-    // fall through
-  }
 
-  const reachable = endpoint ? await checkTallyGateway(endpoint) : false;
-  if (!reachable) {
-    const demo = await syncTallyDemo();
+    const records = vouchers.map((v) => ({ ...v, company, source: "tally" as const, raw_xml: xml.slice(0, 2000) }));
+    const persisted = await persistFinanceRecords(records);
+    const sheetPush = await pushTallyRecordsToSheet(records.map((v) => ({ company, description: v.description, amount: v.amount, voucher_date: v.voucher_date, record_type: v.record_type })));
+
     return {
-      ...demo,
-      ok: true,
-      demo: true,
+      ok: persisted.errors.length === 0,
+      demo: false,
       endpoint,
-      message: `Cannot reach Tally cloud gateway at ${endpoint} — demo data shown. Check cloud server firewall and XML gateway on port ${port}.`,
-      fixSteps: [
-        `Verify Tally Cloud XML gateway at ${host}:${port}`,
-        `Confirm company name "${company}" matches Tally exactly`,
-        "Ensure cloud server allows inbound connections on the gateway port",
-      ],
+      message: `Tally cloud sync — ${vouchers.length} voucher ledger row(s), ${persisted.queued} queued, ${persisted.imported} imported${sheetPush.ok ? " · pushed to GSheet" : ""}${persisted.errors.length ? ` (${persisted.errors.join("; ")})` : ""}`,
+      recordsQueued: persisted.queued,
+      recordsImported: persisted.imported,
+      preview: { company, records: vouchers.length, hostSource, sheetWrite: sheetPush.message, sample: records.slice(0, 3) },
+    };
+  } catch (error) {
+    const reachable = endpoint ? await checkTallyGateway(endpoint) : false;
+    return {
+      ok: false,
+      demo: false,
+      endpoint,
+      message: reachable ? `Tally gateway reachable but voucher export failed: ${String(error)}` : `Cannot reach Tally cloud gateway at ${endpoint}.`,
+      recordsQueued: 0,
+      recordsImported: 0,
+      fixSteps: tallyCloudFixSteps(host, port),
     };
   }
-
-  const recordsQueued = await queueFinanceRecords([
-    {
-      company,
-      record_type: "ledger",
-      description: `Tally cloud gateway reachable at ${endpoint} — awaiting full XML export for "${company}"`,
-      amount: 0,
-      source: "tally",
-    },
-  ]);
-
-  return {
-    ok: true,
-    demo: false,
-    endpoint,
-    message: `Tally cloud configured — gateway OK at ${endpoint}, sync queued for "${company}"`,
-    recordsQueued: recordsQueued || 1,
-    preview: {
-      company,
-      action: "sync_ledgers_stub",
-      endpoint,
-      hostSource,
-    },
-  };
 }
 
 /** @deprecated Use syncTally */
