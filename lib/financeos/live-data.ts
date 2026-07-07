@@ -5,9 +5,7 @@ import type { FinanceDashboardData, FinanceMetric, FinanceModule } from "./finan
 
 type DbRow = Record<string, unknown>;
 
-export type FinanceTableRow = {
-  cells: string[];
-};
+export type FinanceTableRow = { cells: string[] };
 
 export type FinanceModuleRuntime = {
   item: FinanceModule;
@@ -34,18 +32,8 @@ type FinanceDataset = {
   policies: DbRow[];
   goals: DbRow[];
   transactions: DbRow[];
-};
-
-const EMPTY_DATASET: FinanceDataset = {
-  families: [],
-  familyMembers: [],
-  income: [],
-  expenses: [],
-  investments: [],
-  borrowings: [],
-  policies: [],
-  goals: [],
-  transactions: [],
+  financeTransactions: DbRow[];
+  financeQueue: DbRow[];
 };
 
 export async function getFinanceDashboardRuntime(): Promise<FinanceDashboardRuntime> {
@@ -57,13 +45,13 @@ export async function getFinanceDashboardRuntime(): Promise<FinanceDashboardRunt
     ...initialFinanceDashboard,
     lastSync: new Date().toISOString(),
     supabaseStatus: hasLiveRows ? "Connected" : "Needs configuration",
-    tallyStatus: dataset.transactions.length > 0 ? "Synced" : "Pending sync",
+    tallyStatus: dataset.financeTransactions.length > 0 ? "Synced" : "Pending sync",
     kpis: buildDashboardKpis(totals),
     health: initialFinanceDashboard.health.map((card) => ({
       ...card,
       score: hasLiveRows ? deriveScore(card.id, totals) : null,
       status: hasLiveRows ? "Live Supabase data" : "Data required",
-      action: dataset.transactions.length > 0 ? "Review mapped source rows." : "Sync transactions / ledger rows from Tally or Supabase.",
+      action: dataset.financeTransactions.length > 0 ? "Review mapped Tally ledger rows." : "Run Tally sync to populate finance_transactions.",
     })),
     alerts: buildAlerts(dataset),
     ledgerRows: buildLedgerRows(dataset),
@@ -85,10 +73,10 @@ export async function getFinanceModuleRuntime(slug: string): Promise<FinanceModu
   return {
     item,
     rows,
-    sourceStatus: rows.length > 0 ? "Live Supabase rows" : "No rows in Supabase for this module yet",
+    sourceStatus: rows.length > 0 ? "Live Supabase / Tally rows" : "No rows in Supabase for this module yet",
     metrics: [
       { ...item.metrics[0], value: rows.length, suffix: " rows", description: rows.length > 0 ? "Rows read from Supabase." : "Source table currently empty." },
-      { ...item.metrics[1], value: deriveScore(slug, totals), suffix: "/100", description: "Calculated from available FinanceOS tables." },
+      { ...item.metrics[1], value: deriveScore(slug, totals), suffix: "/100", description: "Calculated from available FinanceOS and Tally rows." },
       { ...item.metrics[2], value: missingSourceCount(dataset), description: "Empty FinanceOS source tables still blocking complete ledger visibility." },
     ],
   };
@@ -97,7 +85,7 @@ export async function getFinanceModuleRuntime(slug: string): Promise<FinanceModu
 async function fetchFinanceDataset(): Promise<FinanceDataset> {
   const supabase = getAdminClient() ?? await createSupabaseServerClient();
 
-  const [families, familyMembers, income, expenses, investments, borrowings, policies, goals, transactions] = await Promise.all([
+  const [families, familyMembers, income, expenses, investments, borrowings, policies, goals, transactions, financeTransactions, financeQueue] = await Promise.all([
     readTable(supabase, "families", "id,name,created_at,owner_user_id"),
     readTable(supabase, "family_members", "id,family_id,name,relationship,role,occupation,is_active,created_at"),
     readTable(supabase, "income", "id,family_id,member_id,income_type,source_name,amount,frequency,start_date,notes,created_at"),
@@ -107,13 +95,15 @@ async function fetchFinanceDataset(): Promise<FinanceDataset> {
     readTable(supabase, "protection_policies", "id,family_id,policy_type,provider,premium,coverage,renewal_date,notes,created_at"),
     readTable(supabase, "goals", "id,family_id,goal_type,goal_owner,goal_name,target_amount,current_amount,target_date,priority,status,created_at"),
     readTable(supabase, "transactions", "id,user_id,amount,type,category,description,date,created_at"),
+    readTable(supabase, "finance_transactions", "id,source,company,transaction_type,voucher_type,voucher_no,voucher_date,ledger_name,amount,reference_no,sync_status,sync_note,tally_sync_at,created_at"),
+    readTable(supabase, "finance_import_queue", "id,company,record_type,description,amount,voucher_date,status,source,voucher_no,reference,ledger_name,created_at"),
   ]);
 
-  return { families, familyMembers, income, expenses, investments, borrowings, policies, goals, transactions };
+  return { families, familyMembers, income, expenses, investments, borrowings, policies, goals, transactions, financeTransactions, financeQueue };
 }
 
 async function readTable(supabase: any, table: string, select: string): Promise<DbRow[]> {
-  const { data, error } = await supabase.from(table).select(select).limit(1000);
+  const { data, error } = await supabase.from(table).select(select).limit(5000);
   if (error) {
     console.error(`[financeos/live-data] ${table} read failed`, error.message);
     return [];
@@ -128,29 +118,33 @@ function calculateTotals(dataset: FinanceDataset) {
   const currentValue = sum(dataset.investments, "current_value");
   const borrowings = sum(dataset.borrowings, "outstanding");
   const emi = sum(dataset.borrowings, "emi");
+  const tallyCredit = sum(dataset.financeTransactions.filter((row) => Number(row.amount ?? 0) > 0), "amount");
+  const tallyDebit = Math.abs(sum(dataset.financeTransactions.filter((row) => Number(row.amount ?? 0) < 0), "amount"));
   const transactionDebit = sum(dataset.transactions.filter((row) => String(row.type).toLowerCase() !== "income"), "amount");
   const transactionCredit = sum(dataset.transactions.filter((row) => String(row.type).toLowerCase() === "income"), "amount");
   const assets = currentValue || invested;
   const netWorth = assets - borrowings;
+  const cashInflow = income + transactionCredit + tallyCredit;
+  const cashOutflow = expenses + transactionDebit + tallyDebit;
 
-  return { income, expenses, invested, currentValue, borrowings, emi, transactionDebit, transactionCredit, assets, netWorth };
+  return { income, expenses, invested, currentValue, borrowings, emi, transactionDebit, transactionCredit, tallyCredit, tallyDebit, assets, netWorth, cashInflow, cashOutflow };
 }
 
 function buildDashboardKpis(totals: ReturnType<typeof calculateTotals>): FinanceMetric[] {
   const values: Record<string, number> = {
-    sales: totals.income + totals.transactionCredit,
-    purchase: totals.expenses + totals.transactionDebit,
-    receipts: totals.transactionCredit,
-    payments: totals.transactionDebit,
+    sales: totals.income + totals.transactionCredit + totals.tallyCredit,
+    purchase: totals.expenses + totals.transactionDebit + totals.tallyDebit,
+    receipts: totals.transactionCredit + totals.tallyCredit,
+    payments: totals.transactionDebit + totals.tallyDebit,
     receivables: 0,
     payables: totals.borrowings,
     "cash-in-bank": 0,
-    "cash-in-hand": 0,
-    "free-cash": totals.income - totals.expenses - totals.emi,
+    "cash-in-hand": totals.cashInflow - totals.cashOutflow,
+    "free-cash": totals.cashInflow - totals.cashOutflow,
     "working-capital": totals.assets - totals.borrowings,
     "net-worth": totals.netWorth,
-    "monthly-profit": totals.income - totals.expenses,
-    "monthly-expenses": totals.expenses,
+    "monthly-profit": totals.cashInflow - totals.cashOutflow,
+    "monthly-expenses": totals.cashOutflow,
     outstanding: totals.borrowings,
     "credit-utilization": totals.borrowings,
   };
@@ -159,7 +153,7 @@ function buildDashboardKpis(totals: ReturnType<typeof calculateTotals>): Finance
     ...metric,
     value: values[metric.id] ?? null,
     prefix: "₹",
-    description: "Live from Supabase FinanceOS tables; 0 means no rows in the source table yet.",
+    description: "Live from Supabase FinanceOS/Tally tables; 0 means no source rows yet.",
   }));
 }
 
@@ -169,13 +163,13 @@ function buildAlerts(dataset: FinanceDataset) {
     {
       id: "supabase-live",
       title: "Supabase source connected",
-      body: `Loaded ${dataset.families.length} families, ${dataset.familyMembers.length} members, ${dataset.investments.length} investments, ${dataset.borrowings.length} borrowings and ${dataset.transactions.length} transactions.`,
+      body: `Loaded ${dataset.financeTransactions.length} Tally ledger rows, ${dataset.financeQueue.length} queued rows, ${dataset.investments.length} investments and ${dataset.borrowings.length} borrowings.`,
       tone: "info" as const,
     },
     {
       id: "empty-ledger-sources",
       title: empty.length ? "Ledger source incomplete" : "Ledger source complete",
-      body: empty.length ? `Empty tables: ${empty.join(", ")}. Ledger screens can only show available rows until these are synced.` : "All FinanceOS source tables have rows.",
+      body: empty.length ? `Empty tables: ${empty.join(", ")}. Run Tally sync for full ledger visibility.` : "All FinanceOS source tables have rows.",
       tone: empty.length ? "warning" as const : "positive" as const,
     },
   ];
@@ -183,6 +177,7 @@ function buildAlerts(dataset: FinanceDataset) {
 
 function buildLedgerRows(dataset: FinanceDataset): FinanceTableRow[] {
   return [
+    ...dataset.financeTransactions.map((row) => ({ cells: [text(row.ledger_name || row.sync_note), text(row.voucher_type || row.transaction_type), "0", Number(row.amount) < 0 ? inr(Math.abs(Number(row.amount))) : "0", Number(row.amount) > 0 ? inr(row.amount) : "0", inr(row.amount), text(row.sync_status)] })),
     ...dataset.investments.map((row) => ({ cells: [text(row.investment_name), text(row.investment_type), inr(row.invested_amount), "0", inr(row.current_value), inr(row.current_value), "Investment"] })),
     ...dataset.borrowings.map((row) => ({ cells: [text(row.loan_name), text(row.loan_type), inr(row.outstanding), inr(row.emi), "0", inr(row.outstanding), "Borrowing"] })),
     ...dataset.income.map((row) => ({ cells: [text(row.source_name), text(row.income_type), "0", "0", inr(row.amount), inr(row.amount), "Income"] })),
@@ -191,13 +186,19 @@ function buildLedgerRows(dataset: FinanceDataset): FinanceTableRow[] {
 }
 
 function buildTransactionRows(dataset: FinanceDataset): FinanceTableRow[] {
-  return dataset.transactions.map((row) => ({
+  const tallyRows = dataset.financeTransactions.map((row) => ({
+    cells: [dateText(row.voucher_date || row.created_at), text(row.voucher_no || row.reference_no || row.id).slice(0, 18), text(row.ledger_name || row.sync_note), text(row.voucher_type || row.transaction_type), Number(row.amount) < 0 ? inr(Math.abs(Number(row.amount))) : "0", Number(row.amount) > 0 ? inr(row.amount) : "0", text(row.sync_status), text(row.source)],
+  }));
+  const appRows = dataset.transactions.map((row) => ({
     cells: [dateText(row.date), text(row.id).slice(0, 8), text(row.category), text(row.type), String(row.type).toLowerCase() === "income" ? "0" : inr(row.amount), String(row.type).toLowerCase() === "income" ? inr(row.amount) : "0", text(row.description), "Supabase"],
   }));
+  return [...tallyRows, ...appRows];
 }
 
 function buildSourceRows(dataset: FinanceDataset): FinanceTableRow[] {
   return [
+    { cells: ["Tally Ledger Rows", String(dataset.financeTransactions.length)] },
+    { cells: ["Tally Queue", String(dataset.financeQueue.length)] },
     { cells: ["Families", String(dataset.families.length)] },
     { cells: ["Members", String(dataset.familyMembers.length)] },
     { cells: ["Income", String(dataset.income.length)] },
@@ -230,10 +231,11 @@ function rowsForModule(slug: string, dataset: FinanceDataset): FinanceTableRow[]
 }
 
 function deriveScore(id: string, totals: ReturnType<typeof calculateTotals>): number {
+  const cash = totals.cashInflow - totals.cashOutflow;
   if (id.includes("debt") || id.includes("loan")) return totals.borrowings > 0 ? 60 : 100;
-  if (id.includes("profit")) return totals.income > totals.expenses ? 80 : 40;
-  if (id.includes("cash") || id.includes("liquidity")) return totals.income - totals.expenses - totals.emi >= 0 ? 70 : 35;
-  return totals.assets || totals.borrowings || totals.income || totals.expenses ? 65 : 0;
+  if (id.includes("profit")) return cash > 0 ? 80 : 40;
+  if (id.includes("cash") || id.includes("liquidity")) return cash >= 0 ? 70 : 35;
+  return totals.assets || totals.borrowings || totals.cashInflow || totals.cashOutflow ? 65 : 0;
 }
 
 function missingSourceCount(dataset: FinanceDataset): number {
