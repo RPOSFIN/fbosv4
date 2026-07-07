@@ -1,20 +1,22 @@
-import type { FinanceModule } from "@/lib/financeos/finance-types";
+import type { FinanceModuleRuntime } from "@/lib/financeos/live-data";
 
-export function FinanceModulePage({ item }: { item: FinanceModule }) {
+export function FinanceModulePage({ runtime }: { runtime: FinanceModuleRuntime }) {
+  const { item, metrics, rows, sourceStatus } = runtime;
+
   return (
     <div className="space-y-2 text-[11px]">
       <section className="rounded border border-blue-200 bg-white p-2 shadow-sm">
         <p className="text-[10px] font-bold uppercase tracking-wide text-blue-700">{item.eyebrow}</p>
         <h2 className="mt-1 text-base font-bold text-slate-900">{item.title}</h2>
         <p className="mt-1 text-[11px] text-slate-500">{item.description}</p>
-        <p className="mt-2 inline-flex rounded border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-700">Source: {item.sourceHint}</p>
+        <p className="mt-2 inline-flex rounded border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-700">Source: {sourceStatus}</p>
       </section>
 
       <div className="grid gap-1 md:grid-cols-3">
-        {item.metrics.map((metric) => (
+        {metrics.map((metric) => (
           <div key={metric.id} className="rounded border border-blue-100 bg-white p-2 shadow-sm">
             <p className="text-[10px] text-slate-500">{metric.label}</p>
-            <p className="mt-2 text-sm font-bold text-blue-600">Data required</p>
+            <p className="mt-2 text-sm font-bold text-blue-600">{formatValue(metric.value, metric.suffix)}</p>
             <p className="mt-1 text-[10px] text-slate-400">{metric.description}</p>
           </div>
         ))}
@@ -31,11 +33,16 @@ export function FinanceModulePage({ item }: { item: FinanceModule }) {
               <tr>{item.tableColumns.map((col) => <th key={col} className="border border-blue-100 px-2 py-1">{col}</th>)}</tr>
             </thead>
             <tbody>
-              <tr><td colSpan={item.tableColumns.length} className="border border-blue-100 px-2 py-6 text-center text-slate-500">Connect source view to show live rows.</td></tr>
+              {rows.length > 0 ? rows.map((row, index) => <tr key={`${item.slug}-${index}`}>{item.tableColumns.map((_, colIndex) => <td key={colIndex} className="border border-blue-100 px-2 py-1">{row.cells[colIndex] ?? "—"}</td>)}</tr>) : <tr><td colSpan={item.tableColumns.length} className="border border-blue-100 px-2 py-6 text-center text-slate-500">No Supabase rows found for this module yet. Sync the related ledger/source table to complete this view.</td></tr>}
             </tbody>
           </table>
         </div>
       </section>
     </div>
   );
+}
+
+function formatValue(value: number | null, suffix?: string) {
+  if (value === null) return "Data required";
+  return `${value}${suffix ?? ""}`;
 }
