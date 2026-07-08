@@ -14,12 +14,18 @@ export function isLocalTallyHost(host: string): boolean {
   return h === "localhost" || h === "127.0.0.1" || h === "::1";
 }
 
+export function shouldAllowLocalTally(): boolean {
+  const value = process.env.TALLY_ALLOW_LOCAL?.trim().toLowerCase();
+  return value === "true" || value === "1" || value === "yes" || value === "y";
+}
+
 export type ResolvedTallyConfig = {
   host: string;
   port: string;
   company: string;
   hostSource: "env" | "db" | "none";
   isCloud: boolean;
+  allowLocal: boolean;
 };
 
 export async function getResolvedTallyConfig(): Promise<ResolvedTallyConfig> {
@@ -28,6 +34,7 @@ export async function getResolvedTallyConfig(): Promise<ResolvedTallyConfig> {
     process.env.TALLY_SERVER_URL?.trim() ||
     "";
   const port = process.env.TALLY_PORT?.trim() || "9000";
+  const allowLocal = shouldAllowLocalTally();
   let dbHost = "";
   let dbCompany = "";
   const supabase = getAdminClient();
@@ -51,7 +58,7 @@ export async function getResolvedTallyConfig(): Promise<ResolvedTallyConfig> {
   let host = "";
   let hostSource: ResolvedTallyConfig["hostSource"] = "none";
 
-  if (envHost && !isLocalTallyHost(envHost)) {
+  if (envHost && (!isLocalTallyHost(envHost) || allowLocal)) {
     host = normalizeTallyHost(envHost);
     hostSource = "env";
   } else if (dbHost) {
@@ -68,6 +75,7 @@ export async function getResolvedTallyConfig(): Promise<ResolvedTallyConfig> {
     company,
     hostSource,
     isCloud: Boolean(host) && !isLocalTallyHost(host),
+    allowLocal,
   };
 }
 
