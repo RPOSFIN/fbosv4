@@ -1,21 +1,29 @@
-import {
-  apiError,
-  apiSuccess,
-  authorize,
-  getServerSupabase,
-} from "@/lib/rbac/api-auth";
+import { apiError, apiSuccess, authorize } from "@/lib/rbac/api-auth";
 import {
   getIntegrationStatuses,
   getIntegrationSummary,
 } from "@/lib/integrations/status";
 import { countTodayFollowups } from "@/lib/followups/fetch";
+import { getAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
   const auth = await authorize("dashboard", "read");
   if ("error" in auth) return auth.error;
 
-  const supabase = await getServerSupabase();
-  const tables = ["leads", "followups", "quotations", "clients", "jobs"] as const;
+  const supabase = getAdminClient();
+  if (!supabase) {
+    return apiError("Database not configured", 503);
+  }
+
+  const tables = [
+    "leads",
+    "followups",
+    "quotations",
+    "clients",
+    "jobs",
+    "finance_import_queue",
+    "clickup_tasks",
+  ] as const;
   const counts: Record<string, number> = {};
 
   for (const table of tables) {
@@ -23,7 +31,10 @@ export async function GET() {
       .from(table)
       .select("*", { count: "exact", head: true });
 
-    if (error) return apiError(error.message, 500);
+    if (error) {
+      counts[table] = 0;
+      continue;
+    }
     counts[table] = count || 0;
   }
 
@@ -42,6 +53,8 @@ export async function GET() {
     quotations: counts.quotations,
     clients: counts.clients,
     jobs: counts.jobs,
+    financeQueue: counts.finance_import_queue,
+    clickupTasks: counts.clickup_tasks,
     integrations: getIntegrationSummary(connectors),
   });
 }

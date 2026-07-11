@@ -85,6 +85,43 @@ async function storeClickUpTasks(
   return inserted?.length || 0;
 }
 
+/** Populate clickup_tasks from leads that already have clickup_task_id (Apps Script / prior sync path). */
+export async function backfillClickUpTasksFromLeads(): Promise<number> {
+  const supabase = getAdminClient();
+  if (!supabase) return 0;
+
+  const { data: leads, error } = await supabase
+    .from("leads")
+    .select("clickup_task_id, company_name, status, source")
+    .not("clickup_task_id", "is", null);
+
+  if (error || !leads?.length) return 0;
+
+  const payload = leads
+    .filter((l) => l.clickup_task_id?.trim())
+    .map((l) => ({
+      external_id: String(l.clickup_task_id).trim(),
+      name: String(l.company_name || "ClickUp task"),
+      status: l.status || null,
+      list_name: l.source === "ClickUp" ? "Lead CRM" : null,
+      synced_at: new Date().toISOString(),
+    }));
+
+  if (!payload.length) return 0;
+
+  const { data, error: upsertErr } = await supabase
+    .from("clickup_tasks")
+    .upsert(payload, { onConflict: "external_id" })
+    .select("id");
+
+  if (upsertErr) {
+    console.warn("[clickup] backfill from leads:", upsertErr.message);
+    return 0;
+  }
+
+  return data?.length || 0;
+}
+
 export async function syncClickUpDemo(): Promise<ClickUpSyncResult> {
   const tasks = CLICKUP_DEMO.tasks.map((t) => {
     const list = CLICKUP_DEMO.lists.find((l) => l.id === t.list_id);
@@ -105,6 +142,7 @@ export async function syncClickUpDemo(): Promise<ClickUpSyncResult> {
 
   const tasksStored = await storeClickUpTasks(tasks);
   const leadResult = await syncClickUpTasksToLeads(CLICKUP_DEMO.tasks);
+  const backfilled = tasksStored === 0 ? await backfillClickUpTasksFromLeads() : 0;
 
   return {
     ok: true,
@@ -113,7 +151,7 @@ export async function syncClickUpDemo(): Promise<ClickUpSyncResult> {
     spaces: CLICKUP_DEMO.spaces,
     lists: CLICKUP_DEMO.lists,
     tasks: CLICKUP_DEMO.tasks,
-    tasksStored,
+    tasksStored: tasksStored || backfilled,
     leadsImported: leadResult.leadsImported,
     leadsUpdated: leadResult.leadsUpdated,
     leadsSkipped: leadResult.leadsSkipped,
@@ -155,13 +193,8 @@ async function fetchClickUpTasksForList(
   storePayload: Parameters<typeof storeClickUpTasks>[0],
   allTasks: ClickUpLeadTask[]
 ): Promise<void> {
-  const tasksRes = await fetch(
-    `https://api.clickup.com/api/v2/list/${list.id}/task?archived=false&page=0&include_closed=true&subtasks=true`,
-    { headers: { Authorization: token } }
-  );
-  if (!tasksRes.ok) return;
-
-  const tasksData = (await tasksRes.json()) as {
+  let page = 0;
+  let tasksData: {
     tasks?: Array<{
       id: string;
       name: string;
@@ -174,22 +207,39 @@ async function fetchClickUpTasksForList(
     }>;
   };
 
-  for (const t of tasksData.tasks || []) {
-    const parsed = parseClickUpLeadTask(t);
-    allTasks.push(parsed);
-    storePayload.push({
-      id: t.id,
-      name: t.name,
-      status: t.status?.status,
-      team_id: ctx.teamId,
-      team_name: ctx.teamName,
-      space_id: list.space_id,
-      space_name: ctx.spaceName,
-      list_id: list.id,
-      list_name: list.name,
-      raw: t,
-    });
-  }
+  do {
+    const pageRes = await fetch(
+      `https://api.clickup.com/api/v2/list/${list.id}/task?archived=false&page=${page}&include_closed=true&subtasks=true`,
+      { headers: { Authorization: token } }
+    );
+    if (!pageRes.ok) {
+      console.warn(
+        `[clickup] list ${list.id} page ${page} failed: HTTP ${pageRes.status}`
+      );
+      break;
+    }
+    tasksData = (await pageRes.json()) as typeof tasksData;
+    const batch = tasksData.tasks || [];
+    if (!batch.length) break;
+
+    for (const t of batch) {
+      const parsed = parseClickUpLeadTask(t);
+      allTasks.push(parsed);
+      storePayload.push({
+        id: t.id,
+        name: t.name,
+        status: t.status?.status,
+        team_id: ctx.teamId,
+        team_name: ctx.teamName,
+        space_id: list.space_id,
+        space_name: ctx.spaceName,
+        list_id: list.id,
+        list_name: list.name,
+        raw: t,
+      });
+    }
+    page += 1;
+  } while ((tasksData.tasks?.length ?? 0) >= 100);
 }
 
 function getClickUpCustomField(
@@ -265,6 +315,13 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
 
   if (!teamsRes.ok) {
     const body = await teamsRes.text();
+    if (teamsRes.status === 401 || body.includes("Token invalid") || body.includes("OAUTH_025")) {
+      const demo = await syncClickUpDemo();
+      return {
+        ...demo,
+        message: `ClickUp token invalid — running demo data. Update CLICKUP_API_TOKEN in .env.local. (${body.slice(0, 80)})`,
+      };
+    }
     return {
       ok: false,
       demo: false,
@@ -401,7 +458,9 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
       );
     }
   } else {
-    const spaceLimit = spaceIdFilter ? spaces.length : 3;
+    const spaceLimit = spaceIdFilter
+      ? spaces.length
+      : Number(process.env.CLICKUP_SPACE_LIMIT || "10");
     for (const space of spaces.slice(0, spaceLimit)) {
       const listsRes = await fetch(
         `https://api.clickup.com/api/v2/space/${space.id}/list?archived=false`,
@@ -414,7 +473,10 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
         lists?: Array<{ id: string; name: string }>;
       };
 
-      const listSlice = spaceIdFilter ? listsData.lists || [] : (listsData.lists || []).slice(0, 2);
+      const listLimit = spaceIdFilter
+        ? (listsData.lists || []).length
+        : Number(process.env.CLICKUP_LIST_LIMIT || "5");
+      const listSlice = (listsData.lists || []).slice(0, listLimit);
 
       for (const list of listSlice) {
         lists.push({ id: list.id, name: list.name, space_id: space.id });
@@ -429,8 +491,12 @@ export async function syncClickUp(): Promise<ClickUpSyncResult> {
     }
   }
 
-  const tasksStored = await storeClickUpTasks(storePayload);
+  let tasksStored = await storeClickUpTasks(storePayload);
   const leadResult = await syncClickUpTasksToLeads(allTasks);
+
+  if (tasksStored === 0) {
+    tasksStored = await backfillClickUpTasksFromLeads();
+  }
 
   const leadParts: string[] = [];
   if (leadResult.leadsImported) leadParts.push(`${leadResult.leadsImported} inserted`);

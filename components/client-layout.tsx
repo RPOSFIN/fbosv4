@@ -1,6 +1,7 @@
 "use client";
 
 import Sidebar from "@/components/sidebar";
+import FlexiflairSplash from "@/components/command-center/flexiflair-splash";
 
 export default function ClientLayout({
   children,
@@ -8,11 +9,10 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-slate-100">
+      <FlexiflairSplash />
       <Sidebar role="super_admin" />
-      <div className="flex-1">
-        {children}
-      </div>
+      <main className="flex-1 min-w-0 text-slate-900">{children}</main>
     </div>
   );
 }

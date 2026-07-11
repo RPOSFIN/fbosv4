@@ -51,6 +51,14 @@ export function getGSheetCsvUrlForGid(gid: string) {
     : "";
 }
 
+/** Public gviz CSV — works when /export returns 401 (sheet not fully public). */
+export function getGSheetGvizCsvUrlForGid(gid: string) {
+  const sheetId = getGoogleSheetId();
+  return sheetId
+    ? `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`
+    : "";
+}
+
 export function getGSheetFixSteps(_lastStatus?: number) {
   return [
     "Verify Google Sheet ID",

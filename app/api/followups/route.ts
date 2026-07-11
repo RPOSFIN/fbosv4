@@ -10,6 +10,13 @@ import {
   fetchTodayFollowups,
   filterPendingForLead,
 } from "@/lib/followups/fetch";
+import { resolveFollowupDbShape } from "@/lib/followups/constants";
+import { denormalizeFollowupForWrite } from "@/lib/followups/query";
+import { getAdminClient } from "@/lib/supabase/admin";
+
+async function getFollowupsSupabase() {
+  return getAdminClient() ?? (await getServerSupabase());
+}
 
 export async function GET(request: Request) {
   const auth = await authorize("followups", "read");
@@ -21,7 +28,7 @@ export async function GET(request: Request) {
   const leadId = searchParams.get("lead_id");
 
   try {
-    const supabase = await getServerSupabase();
+    const supabase = await getFollowupsSupabase();
 
     if (view === "today" && accumulate) {
       const result = await fetchTodayFollowups(supabase);
@@ -46,22 +53,23 @@ export async function POST(request: Request) {
 
   const { ctx } = auth;
   const body = await request.json();
-  const supabase = await getServerSupabase();
+  const supabase = await getFollowupsSupabase();
+  const shape = await resolveFollowupDbShape(supabase);
+
+  const payload = denormalizeFollowupForWrite(
+    {
+      ...body,
+      lead_id: body.lead_id || null,
+      status: body.status || "Pending",
+      created_by: ctx.userId,
+      updated_by: ctx.userId,
+    },
+    shape
+  );
 
   const { data, error } = await supabase
     .from("followups")
-    .insert([
-      {
-        company_name: body.company_name,
-        contact_person: body.contact_person,
-        lead_id: body.lead_id || null,
-        next_followup: body.next_followup || null,
-        status: body.status || "Pending",
-        notes: body.notes,
-        created_by: ctx.userId,
-        updated_by: ctx.userId,
-      },
-    ])
+    .insert([payload])
     .select()
     .single();
 
@@ -73,7 +81,7 @@ export async function POST(request: Request) {
     action: "created",
     user_id: ctx.userId,
     user_name: ctx.fullName || ctx.email,
-    notes: data.company_name,
+    notes: body.company_name || undefined,
   });
 
   return apiSuccess(data, 201);

@@ -4,24 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { canAccessRoute } from "@/lib/rbac/route-access";
 import type { FbosRole } from "@/lib/rbac/permissions";
-
-const workbenchLinks = [
-  { name: "CEO Command Center", href: "/ceo-command-center" },
-];
+import CeoScanButton from "@/components/command-center/ceo-scan-button";
 
 const menu = [
-  { name: "Master Dashboard", href: "/" },
-  { name: "Sales OS", href: "/sales-workbench" },
-  { name: "Operations OS", href: "/operations" },
-  { name: "Finance OS", href: "/finance" },
-  { name: "Execution Hub", href: "/execution-board" },
-  { name: "Internal Chat", href: "/chat-center" },
-  { name: "Knowledge Center", href: "/knowledge-hub" },
-  { name: "AI Center", href: "/ai" },
-  { name: "Data Center", href: "/data" },
-  { name: "Integration Hub", href: "/integrations" },
-  { name: "Admin", href: "/admin" },
-  { name: "Settings", href: "/fbos-settings" },
+  { name: "Master Dashboard", href: "/", icon: "📊" },
+  { name: "Sales & Call Coach", href: "/sales-workbench", icon: "📞" },
+  { name: "Operations (Live)", href: "/operations", icon: "⚙️" },
+  { name: "Finance (Full Matrix)", href: "/finance-dashboard", icon: "💰" },
+  { name: "Execution Hub", href: "/execution-board", icon: "🚀" },
+  { name: "Internal Chat", href: "/chat-center", icon: "💬" },
+  { name: "Compliance", href: "/compliance", icon: "✓" },
+];
+
+const tools = [
+  { name: "Integrations", href: "/integrations", icon: "🔗" },
+  { name: "Settings", href: "/fbos-settings", icon: "⚙️" },
 ];
 
 export default function Sidebar({ role }: { role?: string }) {
@@ -32,54 +29,50 @@ export default function Sidebar({ role }: { role?: string }) {
     item.href === "/" ? true : canAccessRoute(fbosRole, item.href)
   );
 
-  const visibleQuick = workbenchLinks.filter((item) =>
-    canAccessRoute(fbosRole, item.href)
-  );
-
   return (
-    <aside className="w-64 min-h-screen bg-slate-900 text-white p-4 border-r border-slate-800">
-      <h1 className="text-2xl font-bold mb-2">FBOS</h1>
-      <p className="text-xs text-slate-400 mb-6">Flexiflair Business OS</p>
+    <aside className="w-[15rem] shrink-0 min-h-screen bg-white border-r border-slate-200 flex flex-col shadow-sm">
+      <div className="p-4 border-b border-slate-200">
+        <h1 className="text-xl font-black tracking-wide text-slate-900">FLEXIFLAIR</h1>
+        <p className="text-xs text-slate-500 mt-0.5 font-medium">CEO Command Center</p>
+        <CeoScanButton />
+      </div>
 
-      <nav className="space-y-1">
+      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+        <NavSection label="Main" />
         {visibleMenu.map((item) => (
-          <SidebarLink
-            key={item.href}
-            href={item.href}
-            label={item.name}
-            active={pathname === item.href}
-          />
+          <SidebarLink key={item.href} {...item} active={pathname === item.href} />
+        ))}
+
+        <NavSection label="Tools" />
+        {tools.map((item) => (
+          <SidebarLink key={item.href} {...item} active={pathname === item.href} />
         ))}
       </nav>
 
-      {visibleQuick.length > 0 && (
-        <div className="mt-8 pt-4 border-t border-slate-800">
-          <p className="text-xs uppercase tracking-wide text-slate-500 mb-2">
-            Quick Access
-          </p>
-          <div className="space-y-1">
-            {visibleQuick.map((item) => (
-              <SidebarLink
-                key={item.href}
-                href={item.href}
-                label={item.name}
-                active={pathname === item.href}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      <p className="px-4 py-3 text-xs text-slate-400 border-t border-slate-100">
+        Sync controls are in the top bar per connector.
+      </p>
     </aside>
+  );
+}
+
+function NavSection({ label }: { label: string }) {
+  return (
+    <p className="text-xs uppercase tracking-wider text-slate-400 font-semibold px-2 mt-4 mb-1.5 first:mt-0">
+      {label}
+    </p>
   );
 }
 
 function SidebarLink({
   href,
-  label,
+  name,
+  icon,
   active,
 }: {
   href: string;
-  label: string;
+  name: string;
+  icon: string;
   active?: boolean;
 }) {
   return (
@@ -87,11 +80,12 @@ function SidebarLink({
       href={href}
       className={
         active
-          ? "block rounded-lg px-3 py-2 text-sm bg-cyan-600"
-          : "block rounded-lg px-3 py-2 text-sm hover:bg-slate-800"
+          ? "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] bg-blue-600 text-white font-semibold shadow-sm"
+          : "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] text-slate-700 hover:bg-slate-100 font-medium"
       }
     >
-      {label}
+      <span className="text-base">{icon}</span>
+      {name}
     </Link>
   );
 }

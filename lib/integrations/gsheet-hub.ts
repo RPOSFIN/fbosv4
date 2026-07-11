@@ -1,5 +1,6 @@
 import {
   getGSheetCsvUrlForGid,
+  getGSheetGvizCsvUrlForGid,
   getGoogleSheetId,
   getSheetTabGids,
 } from "@/lib/google-config";
@@ -8,10 +9,13 @@ import { getAdminClient } from "@/lib/supabase/admin";
 
 export type HubPullResult = GSheetSyncResult & {
   operationsImported?: number;
+  operationsSkipped?: number;
+  operationsFailed?: number;
   financeImported?: number;
   clientsImported?: number;
   followupsImported?: number;
   tabsSynced?: string[];
+  operationsSourceRows?: number;
 };
 
 function parseCsvLine(line: string): string[] {
@@ -37,14 +41,7 @@ function parseCsvLine(line: string): string[] {
   return cols;
 }
 
-async function fetchRawRows(gid: string): Promise<Record<string, string>[]> {
-  const url = getGSheetCsvUrlForGid(gid);
-  if (!url) return [];
-
-  const res = await fetch(url, { cache: "no-store" });
-  const text = await res.text();
-  if (!res.ok || text.includes("accounts.google.com/ServiceLogin")) return [];
-
+function parseCsvText(text: string): Record<string, string>[] {
   const lines = text.split(/\r?\n/).filter(Boolean);
   if (lines.length < 2) return [];
 
@@ -61,21 +58,80 @@ async function fetchRawRows(gid: string): Promise<Record<string, string>[]> {
   return rows;
 }
 
-async function importOperationsRows(rows: Record<string, string>[]): Promise<number> {
-  const supabase = getAdminClient();
-  if (!supabase || !rows.length) return 0;
+async function fetchRawRows(gid: string): Promise<Record<string, string>[]> {
+  if (!gid) return [];
 
-  let count = 0;
-  for (const raw of rows) {
-    const lower: Record<string, string> = {};
-    for (const [k, v] of Object.entries(raw)) {
-      lower[k.toLowerCase().replace(/\s+/g, "_")] = String(v || "").trim();
+  const urls = [
+    getGSheetGvizCsvUrlForGid(gid),
+    getGSheetCsvUrlForGid(gid),
+  ].filter(Boolean);
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      const text = await res.text();
+      if (!res.ok || text.includes("accounts.google.com/ServiceLogin")) continue;
+      const rows = parseCsvText(text);
+      if (rows.length) return rows;
+    } catch {
+      continue;
     }
-    const job_no =
-      lower.job_no || lower.job_number || lower.job_id || lower.order_no || "";
-    if (!job_no) continue;
+  }
+  return [];
+}
 
-    const clientLabel = lower.client_name || lower.client || "";
+function normalizeSheetKey(key: string): string {
+  return key
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "");
+}
+
+function normalizeSheetRow(raw: Record<string, string>): Record<string, string> {
+  const lower: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw)) {
+    lower[normalizeSheetKey(k)] = String(v || "").trim();
+  }
+  return lower;
+}
+
+function extractJobNo(lower: Record<string, string>): string {
+  return (
+    lower.job_no ||
+    lower.job_number ||
+    lower.job_id ||
+    lower.order_no ||
+    lower.order_id ||
+    lower.orderid ||
+    ""
+  );
+}
+
+type ImportStats = { imported: number; skipped: number; failed: number };
+
+async function importOperationsRows(
+  rows: Record<string, string>[]
+): Promise<ImportStats> {
+  const supabase = getAdminClient();
+  const stats: ImportStats = { imported: 0, skipped: 0, failed: 0 };
+  if (!supabase || !rows.length) return stats;
+
+  for (const raw of rows) {
+    const lower = normalizeSheetRow(raw);
+    const job_no = extractJobNo(lower);
+    if (!job_no) {
+      stats.skipped++;
+      continue;
+    }
+
+    const clientLabel =
+      lower.client_name ||
+      lower.client ||
+      lower.brand_name ||
+      lower.company_name ||
+      "";
     let client_id: string | null = null;
     if (clientLabel) {
       const { data: client } = await supabase
@@ -88,9 +144,13 @@ async function importOperationsRows(rows: Record<string, string>[]): Promise<num
 
     const payload = {
       job_no,
-      status: lower.status || lower.job_status || "Created",
+      status:
+        lower.status ||
+        lower.job_status ||
+        lower.current_status ||
+        lower.production_status ||
+        "Created",
       client_id,
-      updated_at: new Date().toISOString(),
     };
 
     const { data: existing } = await supabase
@@ -101,13 +161,24 @@ async function importOperationsRows(rows: Record<string, string>[]): Promise<num
 
     if (existing?.id) {
       const { error } = await supabase.from("jobs").update(payload).eq("id", existing.id);
-      if (!error) count++;
+      if (error) stats.failed++;
+      else stats.imported++;
     } else {
       const { error } = await supabase.from("jobs").insert(payload);
-      if (!error) count++;
+      if (error) stats.failed++;
+      else stats.imported++;
     }
   }
-  return count;
+  return stats;
+}
+
+async function fetchOperationsRows(tabs: ReturnType<typeof getSheetTabGids>) {
+  const gids = [...new Set([tabs.operations, tabs.jobs].filter(Boolean))];
+  for (const gid of gids) {
+    const rows = await fetchRawRows(gid);
+    if (rows.length) return { rows, gid };
+  }
+  return { rows: [] as Record<string, string>[], gid: gids[0] || "" };
 }
 
 async function importFinanceRows(rows: Record<string, string>[]): Promise<number> {
@@ -237,6 +308,10 @@ async function importFollowupsRows(rows: Record<string, string>[]): Promise<numb
   const supabase = getAdminClient();
   if (!supabase || !rows.length) return 0;
 
+  const { resolveFollowupDbShape } = await import("@/lib/followups/constants");
+  const { denormalizeFollowupForWrite } = await import("@/lib/followups/query");
+  const shape = await resolveFollowupDbShape(supabase);
+
   let count = 0;
   for (const raw of rows) {
     const lower: Record<string, string> = {};
@@ -244,16 +319,21 @@ async function importFollowupsRows(rows: Record<string, string>[]): Promise<numb
       lower[k.toLowerCase().replace(/\s+/g, "_")] = String(v || "").trim();
     }
     const company_name = lower.company_name || lower.company || "";
-    if (!company_name) continue;
+    const hasDate = !!(lower.next_followup || lower.followup_date);
+    if (!shape.legacy && !company_name) continue;
+    if (shape.legacy && !company_name && !hasDate) continue;
 
-    const payload = {
-      company_name,
-      contact_person: lower.contact_person || lower.contact || null,
-      next_followup: lower.next_followup || lower.followup_date || null,
-      status: lower.status || "Pending",
-      notes: lower.notes || null,
-      updated_at: new Date().toISOString(),
-    };
+    const payload = denormalizeFollowupForWrite(
+      {
+        company_name,
+        contact_person: lower.contact_person || lower.contact || null,
+        next_followup: lower.next_followup || lower.followup_date || null,
+        status: lower.status || "Pending",
+        notes: lower.notes || lower.remarks || null,
+        updated_at: new Date().toISOString(),
+      },
+      shape
+    );
 
     const { error } = await supabase.from("followups").insert(payload);
     if (!error) count++;
@@ -271,10 +351,18 @@ export async function syncGSheetHub(): Promise<HubPullResult> {
   if (leadResult.ok) tabsSynced.push(`leads (${tabs.leads})`);
 
   let operationsImported = 0;
-  if (tabs.operations) {
-    const opRows = await fetchRawRows(tabs.operations);
-    operationsImported = await importOperationsRows(opRows);
-    if (opRows.length) tabsSynced.push(`operations (${tabs.operations})`);
+  let operationsSkipped = 0;
+  let operationsFailed = 0;
+  let operationsSourceRows = 0;
+  const opGid = tabs.operations || tabs.jobs;
+  if (opGid) {
+    const { rows: opRows, gid } = await fetchOperationsRows(tabs);
+    operationsSourceRows = opRows.length;
+    const opStats = await importOperationsRows(opRows);
+    operationsImported = opStats.imported;
+    operationsSkipped = opStats.skipped;
+    operationsFailed = opStats.failed;
+    if (opRows.length) tabsSynced.push(`operations (${gid}, ${opRows.length} rows)`);
   }
 
   let financeImported = 0;
@@ -304,21 +392,32 @@ export async function syncGSheetHub(): Promise<HubPullResult> {
 
   const extraParts = [
     operationsImported ? `ops ${operationsImported}` : "",
+    operationsSkipped ? `ops skipped ${operationsSkipped}` : "",
     financeImported ? `finance ${financeImported}` : "",
     clientsImported ? `clients ${clientsImported}` : "",
     followupsImported ? `followups ${followupsImported}` : "",
   ].filter(Boolean);
   const extra = extraParts.length ? ` · ${extraParts.join(" · ")}` : "";
+  const hubOk =
+    leadResult.ok ||
+    operationsImported > 0 ||
+    financeImported > 0 ||
+    clientsImported > 0 ||
+    followupsImported > 0;
 
   return {
     ...leadResult,
+    ok: hubOk,
     operationsImported,
+    operationsSkipped,
+    operationsFailed,
+    operationsSourceRows,
     financeImported,
     clientsImported,
     followupsImported,
     tabsSynced,
-    message: leadResult.ok
-      ? `${leadResult.message}${extra}${sheetId ? ` · tabs: ${tabsSynced.join(", ") || "leads only"}` : ""}`
+    message: hubOk
+      ? `${leadResult.ok ? leadResult.message : "Hub sync partial — leads skipped"}${extra}${sheetId ? ` · tabs: ${tabsSynced.join(", ") || "leads only"}` : ""}${!opGid ? " · WARNING: set GOOGLE_SHEET_GID_OPERATIONS for 02_Order_Master" : operationsSourceRows === 0 ? " · WARNING: operations tab returned 0 rows" : ""}`
       : leadResult.message,
   };
 }

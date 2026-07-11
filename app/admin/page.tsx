@@ -41,23 +41,8 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!isAdmin) return;
-    let active = true;
-
-    (async () => {
-      try {
-        const data = await apiFetch<ProfileRow[]>("/api/admin/users");
-        if (active) setUsers(data);
-      } catch (e) {
-        if (active) {
-          setError(e instanceof Error ? e.message : "Failed to load users");
-        }
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [isAdmin]);
+    loadUsers();
+  }, [isAdmin, loadUsers]);
 
   if (!isAdmin) {
     return (
