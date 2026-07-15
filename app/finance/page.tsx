@@ -3,6 +3,7 @@ import Link from "next/link";
 export default function FinanceWorkbench(){
 
 const modules = [
+["FinanceOS Preview","/financeos"],
 ["Receivables","/receivables"],
 ["Payables","/payables"],
 ["Cashflow","/cashflow"],
@@ -16,7 +17,7 @@ return(
 Finance Workbench
 </h1>
 
-<div className="grid grid-cols-4 gap-4">
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
 
 {modules.map((m)=>(
 <Link
