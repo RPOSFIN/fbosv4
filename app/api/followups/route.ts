@@ -10,6 +10,7 @@ import {
   fetchTodayFollowups,
   filterPendingForLead,
 } from "@/lib/followups/fetch";
+import { buildFollowupInsertPayload, insertFollowupRow } from "@/lib/followups/write";
 
 export async function GET(request: Request) {
   const auth = await authorize("followups", "read");
@@ -48,22 +49,19 @@ export async function POST(request: Request) {
   const body = await request.json();
   const supabase = await getServerSupabase();
 
-  const { data, error } = await supabase
-    .from("followups")
-    .insert([
-      {
-        company_name: body.company_name,
-        contact_person: body.contact_person,
-        lead_id: body.lead_id || null,
-        next_followup: body.next_followup || null,
-        status: body.status || "Pending",
-        notes: body.notes,
-        created_by: ctx.userId,
-        updated_by: ctx.userId,
-      },
-    ])
-    .select()
-    .single();
+  const { data, error } = await insertFollowupRow(
+    supabase,
+    buildFollowupInsertPayload({
+      company_name: body.company_name,
+      contact_person: body.contact_person,
+      lead_id: body.lead_id || null,
+      next_followup: body.next_followup || null,
+      status: body.status || "Pending",
+      notes: body.notes,
+      created_by: ctx.userId,
+      updated_by: ctx.userId,
+    })
+  );
 
   if (error) return apiError(error.message, 500);
 

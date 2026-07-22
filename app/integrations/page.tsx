@@ -59,9 +59,11 @@ export default function IntegrationsPage() {
           fetch("/api/integrations/health").catch(() => null),
         ]);
 
+        let loadedSync: IntegrationSyncData | null = null;
+
         if (syncRes?.ok) {
           const syncJson = await syncRes.json();
-          setSyncData(syncJson?.syncData ?? null);
+          loadedSync = syncJson?.syncData ?? syncJson?.data?.syncData ?? null;
         }
 
         if (healthRes?.ok) {
@@ -74,8 +76,12 @@ export default function IntegrationsPage() {
               status: info?.status ?? "unknown",
             }))
           );
+          if (!loadedSync?.source || loadedSync.source === "unknown") {
+            loadedSync = healthJson?.syncData ?? loadedSync;
+          }
         }
 
+        setSyncData(loadedSync);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
@@ -109,6 +115,10 @@ export default function IntegrationsPage() {
 
   const lastSyncAt: string | null = syncData?.lastSyncAt ?? null;
   const source: string = syncData?.source ?? "unknown";
+  const sourceHint =
+    source === "unknown"
+      ? " — set SUPABASE_SERVICE_ROLE_KEY in .env.local and restart dev server"
+      : "";
 
   // --- Safe formatters ---
   const formatDate = (value: string | null | undefined): string => {
@@ -157,6 +167,9 @@ export default function IntegrationsPage() {
           <h1 className="text-2xl font-bold">Integrations</h1>
           <p className="text-sm text-slate-400 mt-1">
             Source: <span className="text-slate-200">{source}</span>
+            {sourceHint && (
+              <span className="text-amber-400/80 text-xs ml-1">{sourceHint}</span>
+            )}
             {lastSyncAt && (
               <span className="ml-4">
                 Last sync: <span className="text-slate-200">{formatDate(lastSyncAt)}</span>
