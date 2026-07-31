@@ -1,5 +1,27 @@
 # FBOS Context Tracker
 
+> ## Resume Validation (2026-06-26) — read first
+>
+> A fresh-agent resume test found this checkpoint **partially stale**. Corrections below
+> take precedence over older sections until those sections are refreshed:
+>
+> - **Entry point:** `docs/HANDOFF.md` is referenced below as "start here" but **does not exist**
+>   (never committed). Until it is regenerated, start with `docs/ARCHITECTURE.md` →
+>   `docs/SPRINT-STATUS.md` → `AGENTS.md` (`## Cursor Cloud specific instructions`).
+> - **Current sprint:** The sections below (dated 2026-06-12) describe the *Finance Hub + Leads*
+>   sprint. The repo has since advanced to **Sprint 3 — Integrations** per git checkpoints
+>   (`a364445` Pre Sprint3 Integrations rewrite, `63e409a` Sprint 3 Build Recovery PASS,
+>   `bd218b2` Database Foundation PASS, `37e3138` Runtime PASS Integration Routes). The
+>   integrations work lives in `app/integrations/` + `supabase/migrations/003`–`006`.
+>   `SPRINT-STATUS.md` predates Sprint 3 and must be refreshed before it is trustworthy.
+> - **Build status:** `npm run build` currently **FAILS** at `lib/auth/config.ts:15`
+>   (`MOCK_USER.name` is missing on `MOCK_USER` in `lib/auth/disabled.ts`) — committed since the
+>   base import, so the "Build Recovery PASS" checkpoint does not hold for the production build.
+>   `npm run dev` runtime is OK (all routes return 200).
+> - **Supabase:** code-ready (anon/service-role clients, migrations `001`–`006`, `npm run db:verify`
+>   checks 16 tables) but **no hosted credentials are committed** and the Supabase MCP is
+>   unauthenticated; data pages need `.env.local` creds (or a local `supabase start`).
+
 | Threshold | Action | Status |
 |-----------|--------|--------|
 | **70%** | Update docs, sprint status, architecture | **Done** (2026-06-12) |
